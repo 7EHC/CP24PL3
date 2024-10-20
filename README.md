@@ -1,32 +1,32 @@
 # SIT INVEST
-A web application that simulates real-life investing in the stock market.
+A web application that simulates real-life investing in the stock market. <br>
 
 
-Team Members
-Pattarakorn Kuncharoen- Developer
-Purin Peerachotikaphan- Developer
-Piyakorn Panichwong- Developer
+Team Members <br>
+Pattarakorn Kuncharoen- Developer <br>
+Purin Peerachotikaphan- Developer <br>
+Piyakorn Panichwong- Developer <br>
 
 
-Features
-🛒 Virtual Trading
-🧮 DCA Calculator
-🚨 Portfolio Alerts
+Features <br>
+🛒 Virtual Trading <br>
+🧮 DCA Calculator <br>
+🚨 Portfolio Alerts <br>
 
 
-Technologies Used
-Programming Languages:
-🟡 JavaScript
+Technologies Used <br>
+Programming Languages: <br>
+🟡 JavaScript <br>
 
-Frameworks/Libraries:
-Frontend: 
-🎨 Tailwind CSS
-📦 Vuetify
-Backend: 
-⚙️ Express.js
+Frameworks/Libraries: <br>
+Frontend:  <br>
+🎨 Tailwind CSS <br>
+📦 Vuetify <br>
+Backend: <br>
+⚙️ Express.js <br>
 
-Database:
-🗄️ MongoDB
+Database: <br>
+🗄️ MongoDB <br>
 
 Development Tools:
 🖥️ Visual Studio Code
