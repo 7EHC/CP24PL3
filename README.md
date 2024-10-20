@@ -5,9 +5,9 @@ A web application that simulates real-life investing in the stock market.
 
 ## Team Members
 
-- **Pattarakorn Kuncharoen 64130500063** - Developer
-- **Purin Peerachotikaphan 64130500069** - Developer
-- **Piyakorn Panichwong 64130500107** - Developer
+- **64130500063 Pattarakorn Kuncharoen** - Developer
+- **64130500069 Purin Peerachotikaphan** - Developer
+- **64130500107 Piyakorn Panichwong** - Developer
 
 
 ## Features
