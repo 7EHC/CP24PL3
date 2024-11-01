@@ -2,6 +2,8 @@
 import Navbar from './components/Navbar.vue';
 import NavbarDropDown from './components/NavbarDropDown.vue';
 import Home from './views/Home.vue';
+import Port from './views/Port.vue';
+import { RouterView } from 'vue-router';
 </script>
  
 <template>
@@ -18,14 +20,16 @@ import Home from './views/Home.vue';
     md:flex
     sm:flex
     "/>
-
+<!-- ------------------------------------------------------------------------------------------------- -->
         <div class="all  mt-12 
         2xl:ml-64 2xl:mr-64
         xl:ml-64 xl:mr-64 
         md:ml-28 md:mr-28
         sm:ml-28 sm:mr-28 
         ">
-            <Home />
+            <!-- <Home /> -->
+             <!-- <Port /> -->
+              <RouterView />
         </div>
     
 </template>
