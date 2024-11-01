@@ -39,7 +39,7 @@ const search = async (param) => {
   </svg>
 </label>
 
-<div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-fit">
+<div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-screen">
   <div v-for="(res, index) in searchResult" :key="index" class="result w-1/4">
     <div class="block space-y-2">
       <p class="text-3xl font-bold text-yellow-400">{{ res.ticker }}</p>
@@ -48,7 +48,10 @@ const search = async (param) => {
         <span class="highlight">Type:</span>
         {{ res.type === "CS" ? "Common Stock" : res.type }}
       </p>
-      <RouterLink :to="{name:'StockView'}" class="mt-3 float-right bg-yellow-400 text-zinc-800">View</RouterLink>
+      <RouterLink :to="{name:'StockView'}" 
+      class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-slate-900 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-300">
+      View
+    </RouterLink>
     </div>
   </div>
 </div>
@@ -70,7 +73,6 @@ const search = async (param) => {
   padding: 10px;
   border-radius: 10px;
   align-items: center;
-  width: 750px;
   background-color: #161616;
 }
 </style>
