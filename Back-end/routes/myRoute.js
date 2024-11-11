@@ -70,4 +70,14 @@ const portfolio = db.collection('portfolio')
     }
   });
 
+  router.get("/getPort", async (req, res) => {
+    try {
+      const portfolios = await portfolio.find().toArray(); // Fetch all portfolios from MongoDB
+      res.status(200).json(portfolios); // Send portfolio data as JSON
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
 export default router;
