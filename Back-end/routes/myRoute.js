@@ -7,25 +7,7 @@ import db from "../config/database.js";
 
 const router = express.Router()
 const ticker = db.collection('stock_ticker');
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-  // router.get("/songByName/:song", async (req,res)=>{
-  //   try{
-  //     const {song} = req.params
-      
-  //     const songTitle = await details.find({
-  //       "$or":[
-  //         { "title": { "$regex": new RegExp(song,"i")}},
-  //         { "artist": { "$regex": new RegExp(song,"i")}}
-  //       ]
-  //     }).toArray()
-
-  //     res.status(200).json(songTitle)
-  //   }catch(error){
-  //     console.error("Error:", error)
-  //     res.status(500).json({ error: "Internal Server Error" });
-  //   }
-  // })
+const portfolio = db.collection('portfolio')
 
   router.get("/allticker", async (req,res)=>{
     try {
@@ -58,5 +40,34 @@ const ticker = db.collection('stock_ticker');
       res.status(500).json({ error: "Internal Server Error" }); // จัดการข้อผิดพลาด
     }
   })
+
+  router.post("/createPort", async (req, res) => {
+    const { portfolio_name, assets } = req.body;
+  
+    if (!portfolio_name || !assets) {
+      return res.status(400).json({ message: "กรุณากรอกชื่อพอร์ตและข้อมูลหุ้นที่ต้องการสร้าง (portfolio_name และ assets)" });
+    }
+  
+    try {
+      const newPortfolio = {
+        portfolio_name,
+        assets,
+        createdAt: new Date(), 
+      };
+  
+      const result = await portfolio.insertOne(newPortfolio);
+  
+      res.status(201).json({
+        message: "พอร์ตถูกสร้างสำเร็จ",
+        portfolio: {
+          _id: result.insertedId,
+          portfolio_name,
+          assets,
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: "เกิดข้อผิดพลาดในการสร้างพอร์ต", error: error.message });
+    }
+  });
 
 export default router;
