@@ -13,6 +13,20 @@ class StockApi{
         }
       }
 
+      async getPort() {
+        try {
+          const res = await fetch(`http://localhost:5000/stock/getPort`);
+          if (res.ok) {
+            const ports = await res.json();
+            return ports;
+          } else {
+            console.log(`ERROR: Server responded with status ${res.status}`);
+          }
+        } catch (error) {
+          console.log(`ERROR cannot read data: ${error}`);
+        }
+      }
+
       
 }
 

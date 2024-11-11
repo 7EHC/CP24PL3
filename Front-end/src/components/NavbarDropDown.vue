@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { RouterLink,useRouter } from "vue-router";
 
 // State to track whether the dropdown is open or closed
 const isOpen = ref(false)
@@ -25,7 +26,7 @@ const toggleDropdown = () => {
     </button>
 
     <!-- Dropdown Menu -->
-    <transition name="fade" @before-enter="beforeEnter" @enter="enter" @leave="leave">
+    <!-- <transition name="fade" @before-enter="beforeEnter" @enter="enter" @leave="leave">
       <div v-if="isOpen" class="absolute top-16 right-0 w-full bg-zinc-900 text-white transition-all duration-300">
         <div class="flex flex-col items-start p-4 space-y-4">
           <button class="hover:text-yellow-500 duration-200 w-full text-left">HOME</button>
@@ -37,7 +38,21 @@ const toggleDropdown = () => {
           </button>
         </div>
       </div>
-    </transition>
+    </transition> -->
+    <transition name="fade" @before-enter="beforeEnter" @enter="enter" @leave="leave">
+  <div v-if="isOpen" class="absolute top-16 right-0 w-full bg-zinc-900 text-white transition-all duration-300 z-50">
+    <div class="flex flex-col items-start p-4 space-y-4">
+      <RouterLink :to="{name:'Home'}" class="hover:text-yellow-500 duration-200">HOME</RouterLink>
+      <RouterLink :to="{name:'NEWS'}" class="hover:text-yellow-500 duration-200">NEWS</RouterLink>
+      <RouterLink :to="{name:'Calculator'}" class="hover:text-yellow-500 duration-200">DCA CALCULATOR</RouterLink>
+      <RouterLink :to="{name:'Port'}" class="hover:text-yellow-500 duration-200">PORTFOLIO</RouterLink>
+      <button class="border border-yellow-500 text-white px-4 py-1 rounded-full hover:bg-yellow-500 hover:text-black transition-colors duration-200 w-full text-left">
+        LOGIN
+      </button>
+    </div>
+  </div>
+</transition>
+
   </div>
 </template>
  

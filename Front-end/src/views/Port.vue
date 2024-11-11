@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import stockApi from '../composable/FetchStock';
 import { RouterLink,useRouter } from "vue-router";
+import CreatePortSideBar from '../components/CreatePortSideBar.vue';
 
 const searchResult = ref([])
 const searchModel = ref()
@@ -18,8 +19,20 @@ const search = async (param) => {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
-<div class="all">
-<label class="input input-bordered flex items-center gap-2 bg-white border border-zinc-400 border-solid rounded-2xl text-zinc-800 w-80 h-12 p-2">
+<CreatePortSideBar class="side overflow-y-auto fixed top-16 left-0 
+2xl:w-60 
+xl:w-60 
+md:w-40
+sm:w-40
+"/>
+
+<div class="all
+2xl:ml-0
+xl:ml-0
+md:ml-20
+sm:ml-20
+">
+<label class="search-box input input-bordered flex items-center gap-2 bg-white border border-zinc-400 border-solid rounded-2xl text-zinc-800 w-80 h-12 p-2">
   <input 
   type="text" 
   class="grow" 
@@ -39,7 +52,7 @@ const search = async (param) => {
   </svg>
 </label>
 
-<div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-screen">
+<!-- <div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-screen">
   <div v-for="(res, index) in searchResult" :key="index" class="result w-1/4">
     <div class="block space-y-2">
       <p class="text-3xl font-bold text-yellow-400">{{ res.ticker }}</p>
@@ -49,13 +62,35 @@ const search = async (param) => {
         {{ res.type === "CS" ? "Common Stock" : res.type }}
       </p>
       <RouterLink :to="{name:'StockView'}" 
-      class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-slate-900 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-300">
+      class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-slate-900 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-3เ00">
       View
     </RouterLink>
     </div>
   </div>
 </div>
+<div v-if="searchResult === false" class="text-center">Not Found.</div> -->
+<div v-if="searchResult.length > 0" class="border border-solid border-zinc-400 p-6 rounded-lg mt-4">
+<div>Results: {{ searchResult.length }}</div>
+<div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-full overflow-y-auto ">
+  <div v-for="(res, index) in searchResult" :key="index" class="result xl:w-1/3 lg:w-1/3 sm:w-3/4 md:text-lg sm:text-xs">
+    <div class="block space-y-2">
+      <p class="md:text-3xl sm:text-xl font-bold text-yellow-400">{{ res.ticker }}</p>
+      <p><span class="highlight">Name:</span> {{ res.name }}</p>
+      <p>
+        <span class="highlight">Type:</span>
+        {{ res.type === "CS" ? "Common Stock" : res.type }}
+      </p>
+      <RouterLink :to="{name:'StockView'}" 
+      class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-slate-900 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-300">
+        View
+      </RouterLink>
+    </div>
+  </div>
+</div>
+</div>
+
 <div v-if="searchResult === false" class="text-center">Not Found.</div>
+
 
 </div>
 </template>
@@ -74,5 +109,24 @@ const search = async (param) => {
   border-radius: 10px;
   align-items: center;
   background-color: #161616;
+}
+
+.result-container{
+  max-height: 500px;
+}
+
+@media (max-width: 639px) {
+  .side {
+    width: 100px;
+    /* margin-right: 50px; */
+  }
+
+  .all{
+    margin-left: 55px;
+  }
+
+  .search-box{
+    width: 275px;
+  }
 }
 </style>
