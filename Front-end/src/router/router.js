@@ -23,14 +23,14 @@ const router = createRouter({
             component: Port,
             // children: [
             //     {
-            //         path: 'stockview',
+            //         path: 'stockview/:ticker', // Nested route without leading slash
             //         name: 'StockView',
-            //         component: StockView
+            //         component: StockView,
             //     }
             // ]
         },
         {
-            path: '/stockview',
+            path: '/stockView/:details',
             name: 'StockView',
             component: StockView
         },
