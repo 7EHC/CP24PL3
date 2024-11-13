@@ -178,7 +178,7 @@ onMounted(async () => {
 </script>
  
 <template>
-<div>
+<div class="-my-4">
     <p class="text-xl font-bold text-zinc-400">{{ result.name }}</p>
     <p class="text-4xl font-bold text-zinc-800">{{ result.ticker }}</p>
     <!-- <p class="text-xl font-bold">{{ growthValue }}</p> -->
