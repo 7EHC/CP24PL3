@@ -192,7 +192,7 @@ onMounted(async () => {
     <div class="graph">
         <canvas id="stockChart" class="h-1/2 w-1/3"></canvas>
         <!-- Canvas element for the chart -->
-        <div class="button flex flex-row flex-wrap gap-10 w-full justify-center mt-5">
+        <div class="button flex flex-row flex-wrap gap-10 w-full justify-center mt-2">
           <button class="graph-but" @click="createNewChart(1, result.ticker)">1D</button>
           <button class="graph-but" @click="createNewChart(7, result.ticker)">1W</button>
           <button class="graph-but" @click="createNewChart(30, result.ticker)">1M</button>
