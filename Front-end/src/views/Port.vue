@@ -1,17 +1,26 @@
 <script setup>
 import { ref } from 'vue';
 import stockApi from '../composable/FetchStock';
-import { RouterLink,useRouter } from "vue-router";
+import { RouterLink,useRoute, useRouter } from "vue-router";
 import CreatePortSideBar from '../components/CreatePortSideBar.vue';
 
 const searchResult = ref([])
 const searchModel = ref()
+const router = useRouter();
 
 const search = async (param) => {
     searchResult.value = await stockApi.searchTicker(param);
     if(searchResult.value.length === 0){searchResult.value = false}
     console.log(searchResult.value);
 }
+
+const goToStockView = (details) => {
+  router.push({ 
+    name: 'StockView', 
+    params: { details: JSON.stringify(details) }
+  })
+}
+
 </script>
  
 <template>
@@ -32,6 +41,7 @@ xl:ml-0
 md:ml-20
 sm:ml-20
 ">
+<p class="text-zinc-800 m-1 text-xl">Search stocks here</p>
 <label class="search-box input input-bordered flex items-center gap-2 bg-white border border-zinc-400 border-solid rounded-2xl text-zinc-800 w-80 h-12 p-2">
   <input 
   type="text" 
@@ -80,10 +90,10 @@ sm:ml-20
         <span class="highlight">Type:</span>
         {{ res.type === "CS" ? "Common Stock" : res.type }}
       </p>
-      <RouterLink :to="{name:'StockView'}" 
+      <button @click="goToStockView(res)"
       class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-slate-900 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-300">
         View
-      </RouterLink>
+      </button>
     </div>
   </div>
 </div>
