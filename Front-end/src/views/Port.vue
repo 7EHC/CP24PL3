@@ -7,6 +7,7 @@ import CreatePortSideBar from '../components/CreatePortSideBar.vue';
 const searchResult = ref([])
 const searchModel = ref()
 const router = useRouter();
+const details = ref({})
 
 const search = async (param) => {
     searchResult.value = await stockApi.searchTicker(param);
@@ -21,6 +22,11 @@ const goToStockView = (details) => {
   })
 }
 
+const handleUpdateDetails = (updatedDetails) => {
+      details.value = updatedDetails; // Update the details data
+      console.log("Updated Details:", details.value);
+    };
+
 </script>
  
 <template>
@@ -33,7 +39,10 @@ const goToStockView = (details) => {
 xl:w-60 
 md:w-40
 sm:w-40
-"/>
+"
+:details="details" 
+@updateDetails="handleUpdateDetails" 
+/>
 
 <div class="all
 2xl:ml-0
@@ -41,7 +50,30 @@ xl:ml-0
 md:ml-20
 sm:ml-20
 ">
-<p class="text-zinc-800 m-1 text-xl">Search stocks here</p>
+
+<div v-if="Object.keys(details).length === 0 && details.constructor === Object"
+class="p-4 border border-solid border-gray-400 justify-center flex rounded-2xl w-full"
+>
+<p>Please Select Portfolio</p>
+</div>
+
+<div v-if="Object.keys(details).length > 0 && details.constructor === Object"
+class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
+>
+
+<p class="text-zinc-800 ">
+  Port's Name: {{ details.portfolio_name }}
+</p>
+<p class="text-zinc-800">
+  Assets: {{ details.assets }}
+</p>
+<p class="text-zinc-800">
+  Value: {{ details.assets.length >0?details.assets:'0 USD' }}
+</p>
+
+</div>
+
+<p class="text-zinc-800 m-1 mt-6 text-xl">Search stocks here</p>
 <label class="search-box input input-bordered flex items-center gap-2 bg-white border border-zinc-400 border-solid rounded-2xl text-zinc-800 w-80 h-12 p-2">
   <input 
   type="text" 

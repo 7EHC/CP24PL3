@@ -7,6 +7,14 @@ const showModal = ref(false);
 const portName = ref()
 const portObj = ref({})
 
+// Props
+defineProps({
+  details: Object, 
+});
+
+// Emit
+const emit = defineEmits(['updateDetails'])
+
 // Toggle modal visibility
 const createPortfolio = () => {
   showModal.value = true;
@@ -38,6 +46,23 @@ const createPortPOST = async (portfolioObj) => {
     }
 }
 
+// Fetch portfolio details
+const fetchDetails = async (id) => {
+
+  try {
+    const response = await fetch(`http://localhost:5000/stock/getPortDetails/${id}`);
+    if (response.ok) {
+      const portDetails = await response.json();
+      emit('updateDetails', portDetails); // Emit fetched details to the parent
+    } else {
+      console.error(`Error fetching details: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error fetching details:', error);
+  }
+};
+
+
 const createPortBut = async () => {
     const portObj = {  // Initialize portObj here as an object
         portfolio_name: portName.value,
@@ -48,9 +73,14 @@ const createPortBut = async () => {
     closeModal()
 }
 
+// Handle click on portfolio item
+const handlePortfolioClick = (id) => {
+  fetchDetails(id); // Call fetchDetails with the selected portfolio ID
+};
+
 onMounted(async () => {
   portsList.value = await stockApi.getPort();
-  console.log(portsList.value);
+  // console.log(portsList.value);
 });
 
 
@@ -67,7 +97,16 @@ onMounted(async () => {
 
       <!-- List of Portfolios -->
       <ul class="space-y-2 max-h-96 overflow-y-auto">
-        <li v-for="portfolio in portsList" :key="portfolio.id" class="list bg-zinc-700 p-3 rounded hover:bg-zinc-600 duration-300">
+        <!-- <li v-for="portfolio in portsList" :key="portfolio.id" class="list bg-zinc-700 p-3 rounded hover:bg-zinc-600 duration-300">
+          {{ portfolio.portfolio_name }}
+        </li> -->
+
+        <li
+          v-for="portfolio in portsList"
+          :key="portfolio.id"
+          class="list bg-zinc-700 p-3 rounded hover:bg-zinc-600 duration-300 cursor-pointer"
+          @click="handlePortfolioClick(portfolio._id)"
+        >
           {{ portfolio.portfolio_name }}
         </li>
       </ul>

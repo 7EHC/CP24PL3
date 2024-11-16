@@ -39,7 +39,8 @@ const toggleDropdown = () => {
         </div>
       </div>
     </transition> -->
-    <transition name="fade" @before-enter="beforeEnter" @enter="enter" @leave="leave">
+    <!-- <transition name="fade" @before-enter="beforeEnter" @enter="enter" @leave="leave"> -->
+    <transition name="fade">
   <div v-if="isOpen" class="absolute top-16 right-0 w-full bg-zinc-900 text-white transition-all duration-300 z-50">
     <div class="flex flex-col items-start p-4 space-y-4">
       <RouterLink :to="{name:'Home'}" class="hover:text-yellow-500 duration-200">HOME</RouterLink>
