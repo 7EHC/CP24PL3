@@ -1,5 +1,6 @@
 import express, { query } from "express";
 import db from "../config/database.js";
+import { ObjectId } from "mongodb";
 // import multer from "multer"; 
 // import { MongoClient, Binary } from 'mongodb';
 // import fs from 'fs';
@@ -74,6 +75,24 @@ const portfolio = db.collection('portfolio')
     try {
       const portfolios = await portfolio.find().toArray(); // Fetch all portfolios from MongoDB
       res.status(200).json(portfolios); // Send portfolio data as JSON
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+  router.get("/getPortDetails/:portId", async (req, res) => {
+    try {
+      const { portId } = req.params; // Extract the parameter from the URL
+  
+      // Fetch the specific portfolio based on the provided parameter
+      const portfolioDetails = await portfolio.findOne({ _id: new ObjectId(portId) });
+  
+      if (!portfolioDetails) {
+        return res.status(404).json({ error: "Portfolio not found" });
+      }
+  
+      res.status(200).json(portfolioDetails); // Send the portfolio details as JSON
     } catch (error) {
       console.error("Error:", error);
       res.status(500).json({ error: "Internal Server Error" });

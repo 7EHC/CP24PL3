@@ -4,7 +4,7 @@ import { RouterLink,useRouter } from "vue-router";
  
 <template>
 <div class="all w-screen h-16 bg-zinc-900 flex items-center justify-between px-7">
-    <div class=" bg-sit-image bg-cover bg-no-repeat w-64 h-11"></div>
+    <RouterLink :to="{name: 'Home'}"><div class=" bg-sit-image bg-cover bg-no-repeat w-64 h-11"></div></RouterLink>
 
    <!-- Menu Section -->
     <div class=" space-x-16 text-white font-medium text-base">
