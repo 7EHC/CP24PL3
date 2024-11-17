@@ -99,4 +99,59 @@ const portfolio = db.collection('portfolio')
     }
   });
 
+  router.post("/buyStock", async (req, res) => {
+    const { portfolio_name, symbol, quantity, current_mkt_price } = req.body;
+  
+    if (!portfolio_name || !symbol || !quantity || !current_mkt_price) {
+      return res.status(400).json({ message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา" });
+    }
+  
+    try {
+      const Findportfolio = await portfolio.findOne({ portfolio_name });
+  
+      if (!Findportfolio) {
+        return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
+      }
+  
+      const assetExists = Findportfolio.assets.some(asset => asset.name === symbol);
+  
+      if (assetExists) {
+        // ถ้ามีหุ้นแล้ว, อัปเดตจำนวนหุ้น
+        const updatedPortfolio = await portfolio.updateOne(
+          { portfolio_name },
+          { $inc: { "assets.$[elem].quantity": quantity } },
+          { arrayFilters: [{ "elem.name": symbol }] }
+        );
+  
+        return res.status(200).json({
+          message: "ซื้อหุ้นสำเร็จ",
+          updatedPortfolio: updatedPortfolio,
+          updatedAsset: Findportfolio.assets.find(asset => asset.name === symbol)
+        });
+      } else {
+        // ถ้าหุ้นไม่มีใน portfolio, เพิ่มหุ้นใหม่
+        const newAsset = {
+          name: symbol,
+          quantity: quantity,
+          current_mkt_price: current_mkt_price
+        };
+  
+        const updatedPortfolio = await portfolio.updateOne(
+          { portfolio_name },
+          { $push: { assets: newAsset } }
+        );
+  
+        return res.status(200).json({
+          message: "เพิ่มหุ้นสำเร็จ",
+          updatedPortfolio: updatedPortfolio,
+          newAsset: newAsset
+        });
+      }
+  
+    } catch (error) {
+      console.error("Error occurred while buying stock:", error);
+      res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+    }
+  });
+
 export default router;
