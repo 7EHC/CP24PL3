@@ -40,7 +40,7 @@ const isMarketOpen = () => {
   const hours = currDateTime.getHours();
   const minutes = currDateTime.getMinutes();
   lastUpdatedDate.value = `${currDateTime.getDate()} ${months} ${year} ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
-  if (days[0] !== "S" && ((hours > 20 ||(hours === 20 && minutes >= 30) || hours < 4))) {
+  if (days[0] !== "S" && ((hours > 21 ||(hours === 21 && minutes >= 30) || hours < 4))) {
     marketOpen.value = true;
   } else {
     if(days === "Sun") {
@@ -98,7 +98,7 @@ const getPreviousDate = (dateString, daysAgo) => {
 const RealtimeApiCall = (tic) => {
   if (marketOpen.value) {
     if (!intervalId) {
-      intervalId = setInterval(() => {getStockRealtime(tic); isMarketOpen()}, 60000);
+      intervalId = setInterval(() => {getStockRealtime(tic); isMarketOpen(); createNewChart(1, tic)}, 60000);
     }
   } else {
     if (intervalId) {
