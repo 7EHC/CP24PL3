@@ -17,6 +17,7 @@ const numOfDay = ref(0);
 const dayToShowGraph = ref(0)
 const portsList = ref();
 const showModal = ref(false);
+const lastUpdatedDate = ref()
 
 const openModal = async () => {
   showModal.value = true;
@@ -34,9 +35,12 @@ const setActiveButton = (buttonValue, ticker) => {
 const isMarketOpen = () => {
   const currDateTime = new Date();
   const days = currDateTime.toLocaleString("en-US", { weekday: "short" });
+  const months = currDateTime.toLocaleString("en-US", { month: "short"})
+  const year = currDateTime.getFullYear()
   const hours = currDateTime.getHours();
   const minutes = currDateTime.getMinutes();
-  if (days[0] !== "S" && ((hours >= 20 && minutes >= 30) || hours < 4)) {
+  lastUpdatedDate.value = `${currDateTime.getDate()} ${months} ${year} ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
+  if (days[0] !== "S" && ((hours > 20 ||(hours === 20 && minutes >= 30) || hours < 4))) {
     marketOpen.value = true;
   } else {
     if(days === "Sun") {
@@ -94,7 +98,7 @@ const getPreviousDate = (dateString, daysAgo) => {
 const RealtimeApiCall = (tic) => {
   if (marketOpen.value) {
     if (!intervalId) {
-      intervalId = setInterval(() => getStockRealtime(tic), 60000);
+      intervalId = setInterval(() => {getStockRealtime(tic); isMarketOpen()}, 60000);
     }
   } else {
     if (intervalId) {
@@ -346,10 +350,8 @@ onMounted(async () => {
     >
       BUY
     </button>
-    <!-- <button>
 
-    </button> -->
-
+    <p class="text-xs font-semibold text-zinc-400 fixed mt-5 right-14 sm:right-28 md:right-36 lg:right-40 xl:right-64 2xl:right-72" v-if="marketOpen">Last updated: {{ lastUpdatedDate }}</p>
     <p class="text-xl font-bold text-zinc-400">{{ result.name }}</p>
     <p class="text-4xl font-bold text-zinc-800">{{ result.ticker }}</p>
     <!-- <p class="text-xl font-bold">{{ growthValue }}</p> -->
