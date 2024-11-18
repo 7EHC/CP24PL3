@@ -14,6 +14,7 @@ const growthValue = ref();
 const activeButton = ref(7);
 const marketOpen = ref(false);
 const numOfDay = ref(0);
+const dayToShowGraph = ref(0)
 const portsList = ref();
 const showModal = ref(false);
 
@@ -38,6 +39,13 @@ const isMarketOpen = () => {
   if (days[0] !== "S" && ((hours >= 20 && minutes >= 30) || hours < 4)) {
     marketOpen.value = true;
   } else {
+    if(days === "Sun") {
+      dayToShowGraph.value = 2
+    } else if (days === "Mon") {
+      dayToShowGraph.value = 3
+    } else {
+      dayToShowGraph.value = 1
+    }
     marketOpen.value = false;
   }
 };
@@ -153,9 +161,9 @@ const createNewChart = async (days, tic) => {
   // Determine the fromDate based on the selected days using a switch statement
   switch (days) {
     case 1: // 1 Day
-      fromDate = getPreviousDate(toDate, 1);
-      timeFrame = "hour";
       isMarketOpen();
+      fromDate = getPreviousDate(toDate, dayToShowGraph.value);
+      timeFrame = "hour";
       RealtimeApiCall(tic);
       break;
     case 7: // 1 Week
