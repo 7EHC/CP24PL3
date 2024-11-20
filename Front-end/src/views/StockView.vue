@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed  } from "vue";
 import { useRoute, RouterLink } from "vue-router";
 import Chart from "chart.js/auto"; // Import Chart.js
 import stockApi from "../composable/FetchStock";
@@ -18,12 +18,87 @@ const dayToShowGraph = ref(0)
 const portsList = ref();
 const showModal = ref(false);
 const lastUpdatedDate = ref()
+// const start = ref()
+// const end = ref()
+const currentMaketPrice = ref()
+const selectedPortfolio = ref()
+const amount = ref()
+let marketPriceInterval
+
+const isFormValid = computed(() => {
+  return amount.value > 0 && selectedPortfolio.value; // Valid if both fields are filled
+});
+
+const buyStockintoPort = async()=>{
+  const obj = {
+    portfolio_name: selectedPortfolio.value,
+    symbol: result.ticker,
+    quantity: amount.value/currentMaketPrice.value[0].close,
+    current_mkt_price: currentMaketPrice.value[0].close
+  }
+  // console.log(obj)
+  // await stockApi.buyStock(obj)
+  try {
+    const response = await stockApi.buyStock(obj);
+    console.log("API Response:", response);
+
+    // Adjust the success condition based on the response structure
+    if (response.message === "เพิ่มหุ้นสำเร็จ") {
+      console.log("Stock purchased successfully:", response);
+      showModal.value = false; // Close the modal
+    } else {
+      console.error("Failed to purchase stock:", response.message || "Unknown error");
+      alert(response.message || "Failed to purchase stock. Please try again.");
+    }
+  } catch (error) {
+    console.error("Error purchasing stock:", error);
+    alert("An error occurred while processing your request. Please try again.");
+  }
+}
 
 const openModal = async () => {
+  const getMarketPrice = async (tic) => {
+    try {
+      const res = await fetch(
+        `https://api.twelvedata.com/time_series?apikey=a812690526f24184b0347c0ce8899b8b&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return data.values; // Return the results
+      }
+    } catch (error) {
+      console.error(`ERROR: Cannot read data: ${error}`);
+    }
+  };
+
+  const updateMarketPrice = async () => {
+    currentMaketPrice.value = await getMarketPrice(result.ticker)
+    // console.log(currentMaketPrice.value)
+  };
+
+  // Initial update
+  await updateMarketPrice();
+
+  // Clear any existing interval before setting a new one
+  if (marketPriceInterval) {
+    clearInterval(marketPriceInterval);
+  }
+
+  // Set a new interval to update every 1 minute
+  marketPriceInterval = setInterval(updateMarketPrice, 60000);
+
+  // Show the modal
   showModal.value = true;
-};
+}
 
 const closeModal = () => {
+  // Clear the interval when closing the modal
+  if (marketPriceInterval) {
+    clearInterval(marketPriceInterval);
+    marketPriceInterval = null; // Reset the interval ID
+  }
+
+  // Hide the modal
   showModal.value = false;
 };
 
@@ -72,11 +147,47 @@ const getStockAgg = async (tic, timeFrame, from, to) => {
   }
 };
 
+// const formatDate = (date) => {
+//   const year = date.getFullYear();
+//   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+//   const day = String(date.getDate()).padStart(2, '0');
+//   const hours = String(date.getHours()).padStart(2, '0');
+//   const minutes = String(date.getMinutes()).padStart(2, '0');
+//   const seconds = String(date.getSeconds()).padStart(2, '0');
+
+//   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+// }
+
+// const getMarketTimes = () => {
+//   const currentDate = new Date();
+
+//   // Set market open time to today's date at 20:30 (8:30 PM)
+//   const startTime = new Date(currentDate); // Get the current date and time
+//   startTime.setDate(currentDate.getDate() - 1); // Set to next day
+//   startTime.setHours(20, 30, 0, 0); // Set to 8:30 PM today
+//   // console.log(startTime before formatting = ${startTime});
+//   const startFormatted = formatDate(startTime); // Format start time to "YYYY-MM-DD HH:mm:ss"
+//   // console.log(startFormatted after formatting = ${startFormatted});
+
+//   // Set market close time to tomorrow's date at 04:00 (4:00 AM)
+//   const endTime = new Date(currentDate); // Get the current date and time
+//   endTime.setDate(currentDate.getDate() + 1); // Set to next day
+//   endTime.setHours(4, 0, 0, 0); // Set to 4:00 AM tomorrow
+//   const endFormatted = formatDate(endTime); // Format end time to "YYYY-MM-DD HH:mm:ss"
+//   // console.log(endFormatted after formatting = ${endFormatted});
+
+//   // Assign the formatted values to the start and end
+//   start.value = startFormatted;
+//   end.value = endFormatted;
+// }
+
 const getStockRealtime = async (tic) => {
+  // getMarketTimes()
   try {
     if (marketOpen.value === true) {
       const res = await fetch(
         `https://api.twelvedata.com/time_series?apikey=a812690526f24184b0347c0ce8899b8b&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
+        // `https://api.twelvedata.com/time_series?apikey=984dc8de4646430c9c330fd43c045204&interval=1min&start_date=${start.value}&end_date=${end.value}&symbol=${tic}&timezone=Asia/Bangkok&format=JSON`
       );
       if (res.ok) {
         const data = await res.json();
@@ -106,6 +217,30 @@ const RealtimeApiCall = (tic) => {
       intervalId = null;
     }
   }
+  // if (marketOpen.value) {
+  //   if (!intervalId) {
+  //     // Initialize interval when the market is open
+  //     intervalId = setInterval(async () => {
+  //       try {
+  //         // Fetch real-time stock price and update currentMarketPrice
+  //         const price = await getStockRealtime(tic);
+  //         currentMaketPrice.value = price; // Update current price
+          
+  //         // Additional calls
+  //         isMarketOpen();
+  //         createNewChart(1, tic);
+  //       } catch (error) {
+  //         console.error("Error fetching stock price:", error);
+  //       }
+  //     }, 60000); // Run every 60 seconds
+  //   }
+  // } else {
+  //   // Clear interval when the market is closed
+  //   if (intervalId) {
+  //     clearInterval(intervalId);
+  //     intervalId = null;
+  //   }
+  // }
 };
 
 const createChart = (dates, closePrices) => {
@@ -297,6 +432,7 @@ const createNewChart = async (days, tic) => {
 };
 
 onMounted(async () => {
+  // currentMaketPrice.value = await getStockRealtime(result.ticker)
   // console.log("This is answer: "+params.details)
   // console.log(result)
   portsList.value = await stockApi.getPort();
@@ -434,73 +570,78 @@ onMounted(async () => {
       </div>
     </div>
     <teleport to="body">
-      <div
-        v-if="showModal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-      >
-        <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
-          <h3 class="text-xl font-bold mb-4">Buy Stock</h3>
+  <div
+    v-if="showModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+  >
+    <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
+      <h3 class="text-xl font-bold mb-4">Buy Stock</h3>
 
-          <!-- Stock Details -->
-          <div class="mb-4">
-            <p class="text-gray-700 text-3xl font-bold">
-              {{ result.ticker || "Loading..." }}
-            </p>
-            <!-- <p><strong>Market Price:</strong> {{ stockDetails.marketPrice || 'Loading...' }}</p> -->
-          </div>
-
-          <!-- Buy Amount -->
-          <div class="mb-4">
-            <label
-              for="buyAmount"
-              class="block text-sm font-medium text-gray-700"
-            >
-              Amount (USD)
-            </label>
-            <input
-              type="number"
-              id="buyAmount"
-              class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Enter amount"
-            />
-            <label
-              for="buyAmount"
-              class="block text-sm font-medium text-gray-700 mt-2"
-            >
-              Which port to enter?
-            </label>
-            <select
-              id="portfolioDropdown"
-              class="block w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-            >
-              <option value="" disabled>Select a portfolio</option>
-              <option
-                v-for="port in portsList"
-                :key="port._id"
-                :value="port.portfolio_name"
-              >
-                {{ port.portfolio_name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Buttons -->
-          <div class="flex justify-end gap-4">
-            <button
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 duration-300"
-            >
-              Buy
-            </button>
-            <button
-              @click="closeModal"
-              class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 duration-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+      <!-- Stock Details -->
+      <div class="mb-4">
+        <p class="text-gray-700 text-3xl font-bold">
+          {{ result.ticker || "Loading..." }}
+        </p>
+        <p v-if="currentMaketPrice !== undefined">Latest price: {{ currentMaketPrice[0].close }}</p>
       </div>
-    </teleport>
+
+      <!-- Buy Amount -->
+      <div class="mb-4">
+        <label
+          for="buyAmount"
+          class="block text-sm font-medium text-gray-700"
+        >
+          Amount (USD)
+        </label>
+        <input
+          type="number"
+          id="buyAmount"
+          class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Enter amount"
+          v-model="amount"
+        />
+        <label
+          for="portfolioDropdown"
+          class="block text-sm font-medium text-gray-700 mt-2"
+        >
+          Which port to enter?
+        </label>
+        <select
+          v-model="selectedPortfolio"
+          id="portfolioDropdown"
+          class="block w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+        >
+          <option value="" disabled>Select a portfolio</option>
+          <option
+            v-for="port in portsList"
+            :key="port._id"
+            :value="port.portfolio_name"
+          >
+            {{ port.portfolio_name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-end gap-4">
+        <p v-if="marketOpen === false">Market is closed.</p>
+        <button
+          class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="!isFormValid"
+          @click="buyStockintoPort"
+        >
+          Buy
+        </button>
+        <button
+          @click="closeModal"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 duration-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</teleport>
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import stockApi from '../composable/FetchStock';
 import { RouterLink,useRoute, useRouter } from "vue-router";
 import CreatePortSideBar from '../components/CreatePortSideBar.vue';
@@ -8,6 +8,15 @@ const searchResult = ref([])
 const searchModel = ref()
 const router = useRouter();
 const details = ref({})
+
+const totalValue = computed(() => {
+  const sum = details.value.assets.reduce((sum, asset) => {
+    return sum + asset.quantity * asset.current_mkt_price;
+  }, 0);
+
+  // Return the sum formatted to 2 decimal places
+  return sum.toFixed(2);
+});
 
 const search = async (param) => {
     searchResult.value = await stockApi.searchTicker(param);
@@ -62,14 +71,19 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
 >
 
 <p class="text-zinc-800 ">
-  Port's Name: {{ details.portfolio_name }}
+  <span class="text-zinc-500 text-lg">Port's Name:</span> {{ details.portfolio_name }}
+</p>
+<p class="text-zinc-800 flex">
+  <span class="text-zinc-500 text-lg">Assets:</span> <div class="flex flex-col"><span v-for="asset in details.assets"> &nbsp;{{ asset.name }}&nbsp;{{ (asset.quantity * asset.current_mkt_price).toFixed(2) }} USD</span></div>
 </p>
 <p class="text-zinc-800">
-  Assets: {{ details.assets }}
-</p>
-<p class="text-zinc-800">
-  Value: {{ details.assets.length >0?details.assets:'0 USD' }}
-</p>
+    <!-- Value: 
+    <span v-for="asset in details.assets" :key="asset.id">
+      &nbsp;{{ asset.quantity * asset.current_mkt_price }}&nbsp;USD
+    </span>
+    <br /> -->
+    <span class="text-zinc-500 text-lg">Total Value:</span> {{ totalValue }} USD
+  </p>
 
 </div>
 
