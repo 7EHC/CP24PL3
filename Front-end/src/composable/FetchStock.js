@@ -27,9 +27,9 @@ class StockApi{
         }
       }
 
-      async getPortDetails() {
+      async getPortDetails(id) {
         try {
-          const res = await fetch(`http://localhost:5000/stock/getPort`);
+          const res = await fetch(`http://localhost:5000/stock/getPortDetails/${id}`);
           if (res.ok) {
             const ports = await res.json();
             return ports;
@@ -44,6 +44,26 @@ class StockApi{
       async buyStock(assetObj) {
         try {
           const res = await fetch(`http://localhost:5000/stock/buyStock`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(assetObj)  // Ensure portfolioObj is passed here
+        })
+              if (res.ok) {
+                const data = await res.json();
+                return data;
+            } else {
+                console.log(`ERROR: Server responded with status ${res.status}`);
+            }
+        } catch (error) {
+            console.log(`ERROR cannot send data: ${error}`);
+        }
+      }
+
+      async sellStock(assetObj) {
+        try {
+          const res = await fetch(`http://localhost:5000/stock/sellStock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
