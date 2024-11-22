@@ -27,12 +27,16 @@ const modalValue = ref(null)
 const portDetails = ref(null)
 let marketPriceInterval
 
+const sellAll = ()=>{
+  amount.value = portDetails.value 
+}
+
 const getPortDetails = async(id)=>{
   try {
     const res = await stockApi.getPortDetails(id);
     const asset = res.assets.find(asset => asset.name === result.ticker);
     
-    portDetails.value = asset ? asset.quantity.toFixed(5) : null; // Set to quantity if found, otherwise null
+    portDetails.value = asset ? asset.quantity : null; // Set to quantity if found, otherwise null
     console.log(portDetails.value);
   } catch (error) {
     console.error("Error fetching portfolio details:", error);
@@ -68,7 +72,7 @@ const stockTransaction = async (value) => {
 
     // Adjust the success condition based on the response structure
     if (
-      (value === "buy" && response.message === "ซื้อหุ้นสำเร็จ".trim()) ||
+      (value === "buy" && response.message === "เพิ่มหุ้นสำเร็จ".trim()) ||
       (value === "sell" && response.message === "ขายหุ้นสำเร็จ")
     ) {
       console.log(`Stock ${value}ed successfully:`, response);
@@ -718,8 +722,9 @@ onMounted(async () => {
           for="buyAmount"
           class="block text-sm font-medium text-gray-700"
         >
-          Quantity of stock to sell <span class="text-red-600">* required</span>
+          Volumes of stock to sell <span class="text-red-600">* required</span>
         </label>
+        <p @click="sellAll">Sell All</p>
         <input
           type="number"
           id="buyAmount"

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import stockApi from '../composable/FetchStock';
 import { RouterLink,useRoute, useRouter } from "vue-router";
 import CreatePortSideBar from '../components/CreatePortSideBar.vue';
@@ -8,6 +8,7 @@ const searchResult = ref([])
 const searchModel = ref()
 const router = useRouter();
 const details = ref({})
+const latestClosePrice = ref()
 
 const totalValue = computed(() => {
   const sum = details.value.assets.reduce((sum, asset) => {
@@ -33,7 +34,7 @@ const goToStockView = (details) => {
 
 const handleUpdateDetails = (updatedDetails) => {
       details.value = updatedDetails; // Update the details data
-      console.log("Updated Details:", details.value);
+      // console.log("Updated Details:", details.value);
     };
 
 </script>
@@ -73,14 +74,6 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
 <p class="text-zinc-800 ">
   <span class="text-zinc-500 text-lg">Port's Name:</span> {{ details.portfolio_name }}
 </p>
-<p class="text-zinc-800 flex">
-  <span class="text-zinc-500 text-lg">Assets:</span> 
-  <div class="flex flex-col">
-    <span v-for="asset in details.assets" @click="search(asset.name)" class="cursor-default hover:text-yellow-500 transition duration-300">
-     &nbsp;{{ asset.name }}&nbsp;{{ (asset.quantity * asset.current_mkt_price).toFixed(2) }} USD ({{ (asset.quantity).toFixed(8) }} shares)
-    </span>
-  </div>
-</p>
 <p class="text-zinc-800">
     <!-- Value: 
     <span v-for="asset in details.assets" :key="asset.id">
@@ -89,7 +82,16 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
     <br /> -->
     <span class="text-zinc-500 text-lg">Total Value:</span> {{ totalValue }} USD
   </p>
-
+<p class="text-zinc-800 flex">
+  <span class="text-zinc-500 text-lg">Assets:</span> 
+  <div class="flex flex-col">
+    <span v-for="asset in details.growth" @click="search(asset.name)" class="border border-solid border-zinc-800 p-2 m-2 cursor-default hover:text-yellow-500 transition duration-300">
+     &nbsp;{{ asset.name }}&nbsp;{{ (asset.quantity * asset.latestPrice).toFixed(2) }} USD 
+     ({{ ((asset.latestPrice - asset.current_mkt_price)/asset.current_mkt_price)*100 }} %)
+      ({{ (asset.quantity).toFixed(8) }} shares)
+    </span>
+  </div>
+</p>
 </div>
 
 <p class="text-zinc-800 m-1 mt-6 text-xl">Search stocks here</p>
