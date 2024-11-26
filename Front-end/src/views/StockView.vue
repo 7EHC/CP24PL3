@@ -30,6 +30,9 @@ let marketPriceInterval
 const sellAll = ()=>{
   amount.value = portDetails.value 
 }
+const setAmount = (value)=>{
+  amount.value = value
+}
 
 const getPortDetails = async(id)=>{
   try {
@@ -47,6 +50,20 @@ const isFormValid = computed(() => {
   return amount.value > 0 && selectedPortfolio.value; // Valid if both fields are filled
 });
 
+const getMarketPrice = async (tic) => {
+    try {
+      const res = await fetch(
+        `https://api.twelvedata.com/time_series?apikey=a812690526f24184b0347c0ce8899b8b&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return data.values; // Return the results
+      }
+    } catch (error) {
+      console.error(`ERROR: Cannot read data: ${error}`);
+    }
+  };
+
 const stockTransaction = async (value) => {
   const obj = {
     _id: selectedPortfolio.value,
@@ -62,8 +79,15 @@ const stockTransaction = async (value) => {
     if (value === "buy") {
       response = await stockApi.buyStock(obj);
     } else if (value === "sell") {
-      obj.quantity = amount.value
-      response = await stockApi.sellStock(obj);
+      // console.log(portDetails.value)
+      // Validate amount for sell operation
+      if (!amount.value || (amount.value < 1 && amount.value !== portDetails.value)) {
+        alert("You have to sell at least 1 share or match the available shares in your portfolio.");
+        return; // Exit the function if validation fails
+      } else {
+        obj.quantity = amount.value;
+        response = await stockApi.sellStock(obj);
+      }
     } else {
       throw new Error("Invalid operation. Value must be 'buy' or 'sell'.");
     }
@@ -72,7 +96,7 @@ const stockTransaction = async (value) => {
 
     // Adjust the success condition based on the response structure
     if (
-      (value === "buy" && response.message === "เพิ่มหุ้นสำเร็จ".trim()) ||
+      (value === "buy" && response.message === "เพิ่มหุ้นสำเร็จ".trim()) || (value === "buy" && response.message === "ซื้อหุ้นสำเร็จ".trim()) ||
       (value === "sell" && response.message === "ขายหุ้นสำเร็จ")
     ) {
       console.log(`Stock ${value}ed successfully:`, response);
@@ -80,37 +104,24 @@ const stockTransaction = async (value) => {
       alert(
         `Successfully ${value}ed ${obj.symbol} at ${obj.current_mkt_price} USD.`
       );
+      clearFieldForSellandBuy()
     } else {
       alert(response.message || `Failed to ${value} stock. Please try again.`);
     }
   } catch (error) {
     console.error(`Error during stock ${value}:`, error);
     alert(
-      `An error occurred while trying to ${value} stock. Please try again.`
+      `An error occurred while trying to ${value} stock. Please try again. If buy, please make sure you have a share for this stock`
     );
   }
 };
-
-const openModal = async (value) => {
-  modalValue.value = value
-  const getMarketPrice = async (tic) => {
-    try {
-      const res = await fetch(
-        `https://api.twelvedata.com/time_series?apikey=a812690526f24184b0347c0ce8899b8b&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
-      );
-      if (res.ok) {
-        const data = await res.json();
-        return data.values; // Return the results
-      }
-    } catch (error) {
-      console.error(`ERROR: Cannot read data: ${error}`);
-    }
-  };
-
-  const updateMarketPrice = async () => {
+const updateMarketPrice = async () => {
     currentMaketPrice.value = await getMarketPrice(result.ticker)
     // console.log(currentMaketPrice.value)
   };
+
+const openModal = async (value) => {
+  modalValue.value = value
 
   // Initial update
   await updateMarketPrice();
@@ -127,6 +138,11 @@ const openModal = async (value) => {
   showModal.value = true;
 }
 
+const clearFieldForSellandBuy = ()=>{
+  selectedPortfolio.value = ''
+  amount.value = 0
+}
+
 const closeModal = () => {
   // Clear the interval when closing the modal
   if (marketPriceInterval) {
@@ -136,6 +152,7 @@ const closeModal = () => {
 
   // Hide the modal
   showModal.value = false;
+  clearFieldForSellandBuy()
 };
 
 const setActiveButton = (buttonValue, ticker) => {
@@ -245,7 +262,7 @@ const getPreviousDate = (dateString, daysAgo) => {
 const RealtimeApiCall = (tic) => {
   if (marketOpen.value) {
     if (!intervalId) {
-      intervalId = setInterval(() => {getStockRealtime(tic); isMarketOpen(); createNewChart(1, tic)}, 60000);
+      intervalId = setInterval(() => {getStockRealtime(tic); isMarketOpen(); createNewChart(1, tic); updateMarketPrice()}, 60000);
     }
   } else {
     if (intervalId) {
@@ -468,7 +485,8 @@ const createNewChart = async (days, tic) => {
 };
 
 onMounted(async () => {
-  // currentMaketPrice.value = await getStockRealtime(result.ticker)
+  currentMaketPrice.value = await getMarketPrice(result.ticker)
+  // console.log(currentMaketPrice.value)
   // console.log("This is answer: "+params.details)
   // console.log(result)
   portsList.value = await stockApi.getPort();
@@ -532,9 +550,12 @@ onMounted(async () => {
     <p class="text-xs font-semibold text-zinc-400 fixed mt-5 right-14 sm:right-28 md:right-36 lg:right-40 xl:right-64 2xl:right-72" v-if="marketOpen">Last updated: {{ lastUpdatedDate }}</p>
     <p class="text-xl font-bold text-zinc-400">{{ result.name }}</p>
     <p class="text-4xl font-bold text-zinc-800">{{ result.ticker }}</p>
+    <!-- <p v-if="currentMaketPrice !== undefined" class="text-xl font-bold text-zinc-800">{{ Number(currentMaketPrice[0].close).toFixed(2) }}</p> -->
     <!-- <p class="text-xl font-bold">{{ growthValue }}</p> -->
-    <p
-      class="text-xl font-bold"
+     <p v-if="currentMaketPrice !== undefined" class="text-xl font-bold text-zinc-800">
+      {{ Number(currentMaketPrice[0].close).toFixed(2) }}
+    <span
+      class="text-lg font-bold"
       :style="{
         color:
           growthValue > 0 ? '#23d000' : growthValue < 0 ? '#e44b4b' : 'black',
@@ -547,7 +568,15 @@ onMounted(async () => {
           ? `${growthValue} %`
           : growthValue
       }}
+    </span>
     </p>
+    <div class="justify-center flex flex-row gap-6 text-zinc-800" v-if="currentMaketPrice !== undefined">
+      <p>Volume: {{ Number(currentMaketPrice[0].volume).toFixed(2) }}</p>
+      <p>Open: {{ Number(currentMaketPrice[0].open).toFixed(2) }}</p>
+      <p>High: {{ Number(currentMaketPrice[0].high).toFixed(2) }}</p>
+      <p>Low: {{ Number(currentMaketPrice[0].low).toFixed(2) }}</p>
+      <p>Close: {{ Number(currentMaketPrice[0].close).toFixed(2) }}</p>
+    </div>
     <div class="graph">
       <canvas id="stockChart" class="h-1/2 w-1/3"></canvas>
       <div
@@ -625,7 +654,7 @@ onMounted(async () => {
         <p class="text-gray-700 text-3xl font-bold">
           {{ result.ticker || "Loading..." }}
         </p>
-        <p v-if="currentMaketPrice !== undefined">Latest price: {{ currentMaketPrice[0].close }}</p>
+        <p v-if="currentMaketPrice !== undefined">Latest price: {{ Number(currentMaketPrice[0].close).toFixed(2) }}</p>
       </div>
 
       <!-- Buy Amount -->
@@ -636,6 +665,24 @@ onMounted(async () => {
         >
           Amount (USD) <span class="text-red-600">* required</span>
         </label>
+        <div class="flex flex-row gap-4">
+          <button @click="setAmount(50)" 
+                  class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition">
+            50
+          </button>
+          <button @click="setAmount(100)" 
+                  class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition">
+            100
+          </button>
+          <button @click="setAmount(250)" 
+                  class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition">
+            250
+          </button>
+          <button @click="setAmount(500)" 
+                  class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition">
+            500
+          </button>
+        </div>
         <input
           type="number"
           id="buyAmount"
@@ -692,7 +739,7 @@ onMounted(async () => {
         <p class="text-gray-700 text-3xl font-bold">
           {{ result.ticker || "Loading..." }}
         </p>
-        <p v-if="currentMaketPrice !== undefined">Latest price: {{ currentMaketPrice[0].close }}</p>
+        <p v-if="currentMaketPrice !== undefined">Latest price: {{ Number(currentMaketPrice[0].close).toFixed(2) }}</p>
       </div>
 
       <!-- Buy Amount -->
@@ -715,16 +762,16 @@ onMounted(async () => {
             :key="port._id"
             :value="port._id"
           >
-            {{ port.portfolio_name }} <span class="text-zinc-500" v-if="portDetails !== null"> (you hold {{portDetails}} shares) </span>
+            {{ port.portfolio_name }} <span class="text-zinc-500" v-if="portDetails !== null"> ({{portDetails}} shares) </span>
           </option>
         </select>
         <label
           for="buyAmount"
           class="block text-sm font-medium text-gray-700"
         >
-          Volumes of stock to sell <span class="text-red-600">* required</span>
+          Shares of stock to sell <span class="text-red-600">* required at least 1</span>
         </label>
-        <p @click="sellAll">Sell All</p>
+        <p @click="sellAll" class="border border-solid border-zinc-400 p-1 w-fit rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition">Sell All</p>
         <input
           type="number"
           id="buyAmount"
@@ -732,7 +779,7 @@ onMounted(async () => {
           placeholder="Enter amount"
           v-model="amount"
         />
-        <p>≈ {{ amount*currentMaketPrice[0].close }} USD</p>
+        <p>≈ {{ Number(amount*currentMaketPrice[0].close).toFixed(2) }} USD</p>
       </div>
 
       <!-- Buttons -->
