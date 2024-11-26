@@ -9,6 +9,7 @@ const searchModel = ref()
 const router = useRouter();
 const details = ref({})
 const latestClosePrice = ref()
+//
 
 const totalValue = computed(() => {
   const sum = details.value.assets.reduce((sum, asset) => {
