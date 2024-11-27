@@ -48,20 +48,85 @@ const createPortPOST = async (portfolioObj) => {
 
 // Fetch portfolio details
 const fetchDetails = async (id) => {
-
   try {
+    // Fetch portfolio details
     const response = await fetch(`http://localhost:5000/stock/getPortDetails/${id}`);
     if (response.ok) {
       const portDetails = await response.json();
-      emit('updateDetails', portDetails); // Emit fetched details to the parent
+      console.log("Portfolio Details (Before Update):", portDetails);
+
+      // Extract assets for stock symbols, quantities, and current market prices
+      const stockAssets = portDetails.assets.map(asset => ({
+        name: asset.name,
+        quantity: asset.quantity,
+        current_mkt_price: parseFloat(asset.current_mkt_price) || null, // Ensure current market price is numeric
+      }));
+
+      // Function to fetch the latest market price for a stock
+      const getMarketPrice = async (tic) => {
+        try {
+          const res = await fetch(
+            `https://api.twelvedata.com/time_series?apikey=a812690526f24184b0347c0ce8899b8b&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            // Assuming the latest price is the first value in `data.values`
+            return parseFloat(data.values[0]?.close) || null;
+          } else {
+            console.error(`Failed to fetch data for ${tic}`);
+            return null; // Handle API failures gracefully
+          }
+        } catch (error) {
+          console.error(`ERROR: Cannot read data for ${tic}: ${error}`);
+          return null; // Handle errors gracefully
+        }
+      };
+
+      // Fetch market prices and merge with quantities and current market prices
+      const fetchGrowthData = async () => {
+        const growthData = await Promise.all(
+          stockAssets.map(async (asset) => {
+            const latestPrice = await getMarketPrice(asset.name);
+            return {
+              name: asset.name,
+              latestPrice,
+              quantity: asset.quantity, // Include quantity from assets
+              current_mkt_price: asset.current_mkt_price, // Include current market price from assets
+            };
+          })
+        );
+
+        // Add the growth data to portDetails
+        portDetails.growth = growthData;
+
+        console.log("Updated Portfolio Details with Growth:", portDetails);
+
+        // Emit the updated details with growth
+        emit('updateDetails', portDetails);
+      };
+
+      await fetchGrowthData(); // Fetch and add the growth field
     } else {
       console.error(`Error fetching details: ${response.status}`);
     }
   } catch (error) {
-    console.error('Error fetching details:', error);
+    console.error("Error fetching details:", error);
   }
 };
 
+const getMarketPrice = async (tic) => {
+    try {
+      const res = await fetch(
+        `https://api.twelvedata.com/time_series?apikey=984dc8de4646430c9c330fd43c045204&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return data.values; // Return the results
+      }
+    } catch (error) {
+      console.error(`ERROR: Cannot read data: ${error}`);
+    }
+  }
 
 const createPortBut = async () => {
     const portObj = {  // Initialize portObj here as an object
