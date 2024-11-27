@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import stockApi from '../composable/FetchStock';
 
+const API_ROOT = import.meta.env.VITE_ROOT_API;
 const portsList = ref([]);
 const showModal = ref(false);
 const portName = ref()
@@ -27,7 +28,7 @@ const closeModal = () => {
 
 const createPortPOST = async (portfolioObj) => {
     try {
-        const res = await fetch(`http://localhost:5000/stock/createPort`, {
+        const res = await fetch(`${API_ROOT}/createPort`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -50,7 +51,7 @@ const createPortPOST = async (portfolioObj) => {
 const fetchDetails = async (id) => {
   try {
     // Fetch portfolio details
-    const response = await fetch(`http://localhost:5000/stock/getPortDetails/${id}`);
+    const response = await fetch(`${API_ROOT}/getPortDetails/${id}`);
     if (response.ok) {
       const portDetails = await response.json();
       console.log("Portfolio Details (Before Update):", portDetails);
