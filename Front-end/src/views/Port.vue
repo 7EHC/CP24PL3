@@ -102,7 +102,7 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
   class="grow" 
   placeholder="What are you looking for ?" 
   v-model="searchModel"
-  @change="search(searchModel)"
+  @keyup.enter="search(searchModel)"
   />
   <svg
     xmlns="http://www.w3.org/2000/svg"
