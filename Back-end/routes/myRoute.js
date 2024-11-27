@@ -100,106 +100,169 @@ router.get("/getPortDetails/:portId", async (req, res) => {
 });
 
 router.post("/buyStock", async (req, res) => {
-  const { portfolio_name, symbol, quantity, current_mkt_price } = req.body;
-  if (!portfolio_name || !symbol || !quantity || !current_mkt_price) {
-    return res.status(400).json({ message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา" });
+  const { _id, symbol, quantity, current_mkt_price } = req.body;
+
+if (!_id || !symbol || !quantity || !current_mkt_price) {
+  return res.status(400).json({
+    message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา",
+  });
+}
+
+try {
+  
+  const Findportfolio = await portfolio.findOne({ _id: new ObjectId(_id) });
+
+  if (!Findportfolio) {
+    return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
   }
 
-  try {
-    const Findportfolio = await portfolio.findOne({ portfolio_name });
+  const assetExists = Findportfolio.assets.some(
+    (asset) => asset.name === symbol
+  );
 
-    if (!Findportfolio) {
-      return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
-    }
+  if (assetExists) {
+    const updatedPortfolio = await portfolio.updateOne(
+      { _id: new ObjectId(_id) },
+      { $inc: { "assets.$[elem].quantity": quantity } },
+      { arrayFilters: [{ "elem.name": symbol }] }
+    );
 
-    const assetExists = Findportfolio.assets.some(asset => asset.name === symbol);
+    return res.status(200).json({
+      message: "ซื้อหุ้นสำเร็จ",
+      updatedPortfolio: updatedPortfolio,
+      updatedAsset: Findportfolio.assets.find((asset) => asset.name === symbol),
+    });
+  } else {
+    const newAsset = {
+      name: symbol,
+      quantity: quantity,
+      current_mkt_price: current_mkt_price,
+      purchased_at: new Date(),
+    };
 
-    if (assetExists) {
-      const updatedPortfolio = await portfolio.updateOne(
-        { portfolio_name },
-        { $inc: { "assets.$[elem].quantity": quantity } },
-        { arrayFilters: [{ "elem.name": symbol }] }
-      );
-      return res.status(200).json({
-        message: "ซื้อหุ้นสำเร็จ",
-        updatedPortfolio: updatedPortfolio,
-        updatedAsset: Findportfolio.assets.find(asset => asset.name === symbol)
-      });
-    } else {
-      const newAsset = {
-        name: symbol,
-        quantity: quantity,
-        current_mkt_price: current_mkt_price,
-        purchased_at: new Date()
-      };
+    const updatedPortfolio = await portfolio.updateOne(
+      { _id: new ObjectId(_id) },
+      { $push: { assets: newAsset } }
+    );
 
-      const updatedPortfolio = await portfolio.updateOne(
-        { portfolio_name },
-        { $push: { assets: newAsset } }
-      );
-
-      return res.status(200).json({
-        message: "เพิ่มหุ้นสำเร็จ",
-        updatedPortfolio: updatedPortfolio,
-        newAsset: newAsset
-      });
-    }
-
-  } catch (error) {
-    console.error("Error occurred while buying stock:", error);
-    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+    return res.status(200).json({
+      message: "เพิ่มหุ้นสำเร็จ",
+      updatedPortfolio: updatedPortfolio,
+      newAsset: newAsset,
+    });
   }
+} catch (error) {
+  console.error("Error occurred while buying stock:", error);
+  res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+}
 
 });
 
 router.post("/sellStock", async (req, res) => {
-  const { portfolio_name, symbol, quantity, current_mkt_price } = req.body;
-  if (!portfolio_name || !symbol || !quantity || !current_mkt_price) {
-    return res.status(400).json({ message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา" });
-  }
-  try {
-    const Findportfolio = await portfolio.findOne({ portfolio_name });
-    if (!Findportfolio) {
-      return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
-    }
+  // const { portfolio_name, symbol, quantity, current_mkt_price } = req.body;
+  // if (!portfolio_name || !symbol || !quantity || !current_mkt_price) {
+  //   return res.status(400).json({ message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา" });
+  // }
+  // try {
+  //   const Findportfolio = await portfolio.findOne({ portfolio_name });
+  //   if (!Findportfolio) {
+  //     return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
+  //   }
     
-    const assetExists = Findportfolio.assets.some(asset => asset.name = symbol)
-    if (assetExists) {
-      const updatedPortfolio = await portfolio.updateOne(
-        { portfolio_name },
-        { 
-          $inc: { "assets.$[elem].quantity": -quantity }  
-        },
-        { arrayFilters: [{ "elem.name": symbol }] }  
-      );
+  //   const assetExists = Findportfolio.assets.some(asset => asset.name = symbol)
+  //   if (assetExists) {
+  //     const updatedPortfolio = await portfolio.updateOne(
+  //       { portfolio_name },
+  //       { 
+  //         $inc: { "assets.$[elem].quantity": -quantity }  
+  //       },
+  //       { arrayFilters: [{ "elem.name": symbol }] }  
+  //     );
     
 
-      const assetAfterSale = await portfolio.findOne(
-        { portfolio_name, "assets.name": symbol },
-        { "assets.$": 1 }  
-      );
+  //     const assetAfterSale = await portfolio.findOne(
+  //       { portfolio_name, "assets.name": symbol },
+  //       { "assets.$": 1 }  
+  //     );
     
-      if (assetAfterSale && assetAfterSale.assets[0].quantity <= 0) {
-        await portfolio.updateOne(
-          { portfolio_name },
-          { $pull: { assets: { name: symbol } } } 
-        );
-        return res.status(200).json({
-          message: "ขายหุ้นสำเร็จ",
-        });
-      }
-      return res.status(200).json({
-        message: "ขายหุ้นสำเร็จ",
-        updatedPortfolio: updatedPortfolio,
-      });
-    } else {
-      return res.status(404).json({ message: "ไม่พบหุ้นในพอร์ตที่ระบุ" });
-    }
+  //     if (assetAfterSale && assetAfterSale.assets[0].quantity <= 0) {
+  //       await portfolio.updateOne(
+  //         { portfolio_name },
+  //         { $pull: { assets: { name: symbol } } } 
+  //       );
+  //       return res.status(200).json({
+  //         message: "ขายหุ้นสำเร็จ",
+  //       });
+  //     }
+  //     return res.status(200).json({
+  //       message: "ขายหุ้นสำเร็จ",
+  //       updatedPortfolio: updatedPortfolio,
+  //     });
+  //   } else {
+  //     return res.status(404).json({ message: "ไม่พบหุ้นในพอร์ตที่ระบุ" });
+  //   }
 
-  } catch(error){
-    console.error("Error occurred while buying stock:", error);
-    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+  // } catch(error){
+  //   console.error("Error occurred while buying stock:", error);
+  //   res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+  // }
+  const { _id, symbol, quantity, current_mkt_price } = req.body;
+
+// Validate input parameters
+if (!_id || !symbol || !quantity || !current_mkt_price) {
+  return res.status(400).json({
+    message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา",
+  });
+}
+
+try {
+  // Find the portfolio by _id
+  const Findportfolio = await portfolio.findOne({ _id: new ObjectId(_id) });
+
+  if (!Findportfolio) {
+    return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
   }
+
+  // Check if the stock exists in the portfolio's assets
+  const asset = Findportfolio.assets.find((asset) => asset.name === symbol);
+  if (!asset) {
+    return res.status(404).json({ message: "ไม่พบหุ้นในพอร์ตที่ระบุ" });
+  }
+
+  // Check if the quantity to sell is valid
+  if (quantity > asset.quantity) {
+    return res.status(400).json({
+      message: `จำนวนหุ้นที่ต้องการขาย (${quantity}) มากกว่าจำนวนหุ้นในพอร์ต (${asset.quantity})`,
+    });
+  }
+
+  // Perform the sale by decrementing the quantity
+  const updatedPortfolio = await portfolio.updateOne(
+    { _id: new ObjectId(_id), "assets.name": symbol },
+    { $inc: { "assets.$.quantity": -quantity } }
+  );
+
+  // Check if the asset quantity is zero or less after the sale
+  const assetAfterSale = await portfolio.findOne(
+    { _id: new ObjectId(_id), "assets.name": symbol },
+    { "assets.$": 1 }
+  );
+
+  if (assetAfterSale.assets[0].quantity <= 0) {
+    await portfolio.updateOne(
+      { _id: new ObjectId(_id) },
+      { $pull: { assets: { name: symbol } } }
+    );
+  }
+
+  return res.status(200).json({
+    message: "ขายหุ้นสำเร็จ",
+    updatedPortfolio,
+  });
+} catch (error) {
+  console.error("Error occurred while selling stock:", error);
+  res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+}
 });
 
 export default router;
