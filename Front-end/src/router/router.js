@@ -6,7 +6,7 @@ import Calculator from "../views/Calculator.vue"
 import StockView from "../views/StockView.vue";
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
+    history: createWebHistory("/pl3"),
     routes: [
         {
             path: '/',
