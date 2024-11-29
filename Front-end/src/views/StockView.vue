@@ -179,15 +179,15 @@ const isMarketOpen = () => {
   const currDateTS = currDate.getTime();
 
   const openTime = new Date(currDate);
-  openTime.setHours(21, 30, 0, 0); // 21:00 น.
+  openTime.setHours(21, 30, 0, 0);
 
   const openTime2 = new Date(currDate);
   openTime2.setDate(openTime2.getDate() - 1);
-  openTime2.setHours(21, 30, 0, 0); // 21:00 น.
+  openTime2.setHours(21, 30, 0, 0);
 
   const closeTime = new Date(currDate);
-  closeTime.setDate(closeTime.getDate() + 1); // วันถัดไป
-  closeTime.setHours(4, 0, 0, 0); // 04:00 น.
+  closeTime.setDate(closeTime.getDate() + 1);
+  closeTime.setHours(4, 0, 0, 0);
 
   const closeTime2 = new Date(currDate);
   closeTime2.setHours(4, 0, 0, 0);
