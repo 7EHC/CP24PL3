@@ -21,10 +21,23 @@ const totalValue = computed(() => {
 });
 
 const search = async (param) => {
+  if(param.length !== 0) {
     searchResult.value = await stockApi.searchTicker(param);
-    if(searchResult.value.length === 0){searchResult.value = false}
+  } else {
+    searchResult.value = false
+  }
+    if(searchResult.value.length === 0){
+      searchResult.value = false
+    }
     console.log(searchResult.value);
 }
+
+// const searchFilter = computed(() => {
+//   console.log("test");
+  
+//   return searchResult.value.filter(res => res.ticker.toLowerCase().includes(searchModel.value.toLowerCase()))
+  
+// })
 
 const goToStockView = (details) => {
   router.push({ 
@@ -102,8 +115,9 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
   class="grow" 
   placeholder="What are you looking for ?" 
   v-model="searchModel"
-  @keyup.enter="search(searchModel)"
+  @keyup.enter = "search(searchModel)"
   />
+  <!-- @input = "search(searchModel)" -->
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 16 16"
@@ -150,6 +164,22 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
       </button>
     </div>
   </div>
+
+  <!-- <div v-for="(res, index) in searchFilter" :key="index" class="result xl:w-1/3 lg:w-1/3 sm:w-3/4 md:text-lg sm:text-xs bg-zinc-800">
+    <div class="block space-y-2">
+      <p class="md:text-3xl sm:text-xl font-bold text-yellow-400">{{ res.ticker }}</p>
+      <p><span class="highlight">Name:</span> {{ res.name }}</p>
+      <p>
+        <span class="highlight">Type:</span>
+        {{ res.type === "CS" ? "Common Stock" : res.type }}
+      </p>
+      <button @click="goToStockView(res)"
+      class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-zinc-800 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-300">
+        View
+      </button>
+    </div>
+  </div> -->
+
 </div>
 </div>
 
