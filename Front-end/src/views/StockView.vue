@@ -168,6 +168,7 @@ const setActiveButton = (buttonValue, ticker) => {
 
 const isMarketOpen = () => {
   const currDate = new Date();
+  // currDate.setDate(currDate.getDate() + 1)
   const months = currDate.toLocaleString("en-US", { month: "short" });
   const year = currDate.getFullYear();
   const hours = currDate.getHours();
@@ -176,8 +177,11 @@ const isMarketOpen = () => {
   lastUpdatedDate.value = `${currDate.getDate()} ${months} ${year} ${hours
     .toString()
     .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
-  const currDateTS = currDate.getTime();
 
+  const currDateTS = currDate.getTime();
+  // const currDateTS = new Date(currDate.setHours(5, 30, 0, 0)).getTime()
+  // console.log(currDate);
+  
   const openTime = new Date(currDate);
   openTime.setHours(21, 30, 0, 0);
 
@@ -192,11 +196,17 @@ const isMarketOpen = () => {
   const closeTime2 = new Date(currDate);
   closeTime2.setHours(4, 0, 0, 0);
 
+  // console.log("ปัจจุบัน " + currDate + currDateTS);
+  // console.log("3 ครึ่งวันถัดไป " + openTime + openTime.getTime());
+  // console.log("ตี 4 วันถัดไป " + closeTime + closeTime.getTime());
+  // console.log("3 ครึ่งวันก่อนหน้า " + openTime2 + openTime2.getTime());
+  // console.log("ตี 4 วันก่อนหน้า " + closeTime2 + closeTime2.getTime());
+
   if (
     (currDateTS >= openTime.getTime() && currDateTS <= closeTime.getTime()) ||
     (currDateTS >= openTime2.getTime() &&
-      currDateTS <= closeTime2.getTime() &&
-      currDate.getDay() != 0)
+      currDateTS <= closeTime2.getTime()) &&
+    currDate.getDay() != 0
   ) {
     if (
       currDateTS >= openTime2.getTime() &&
@@ -205,32 +215,28 @@ const isMarketOpen = () => {
     ) {
       dayToShowGraph.value = 3;
       marketOpen.value = false;
+    } else if (
+      currDateTS >= openTime.getTime() &&
+      currDateTS <= closeTime.getTime() &&
+      currDate.getDay() == 6
+    ) {
+      dayToShowGraph.value = 2;
+      marketOpen.value = false;
     } else {
       marketOpen.value = true;
     }
   } else {
-    if (currDate.getDay() == 0) {
+    if (currDate.getDay() == 0 || currDate.getDay() == 6) {
       dayToShowGraph.value = 2;
+    } else if(currDate.getDay() == 1) {
+      dayToShowGraph.value = 3
     } else {
       dayToShowGraph.value = 1;
     }
     marketOpen.value = false;
   }
-  // if (
-  //   days[0] !== "S" &&
-  //   (hours > 21 || (hours === 21 && minutes >= 30) || hours < 4)
-  // ) {
-  //   marketOpen.value = true;
-  // } else {
-  //   if (days === "Sun") {
-  //     dayToShowGraph.value = 2;
-  //   } else if (days === "Mon") {
-  //     dayToShowGraph.value = 3;
-  //   } else {
-  //     dayToShowGraph.value = 1;
-  //   }
-  //   marketOpen.value = false;
-  // }
+  // console.log(marketOpen.value);
+  // console.log(dayToShowGraph.value);
 };
 
 const isActiveButton = (buttonValue) => activeButton.value === buttonValue; // Check if a button is active
