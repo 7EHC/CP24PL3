@@ -23,8 +23,6 @@ const totalValue = computed(() => {
 const search = async (param) => {
   if(param.length !== 0) {
     searchResult.value = await stockApi.searchTicker(param);
-  } else {
-    searchResult.value = false
   }
     if(searchResult.value.length === 0){
       searchResult.value = false
