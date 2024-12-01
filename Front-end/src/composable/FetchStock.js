@@ -3,7 +3,7 @@ const API_ROOT = import.meta.env.VITE_ROOT_API;
 class StockApi{
     async searchTicker(tick) {
         try {
-          const res = await fetch(`${API_ROOT}/searchFromTic/${tick}`);
+          const res = await fetch(`${API_ROOT}/searchTickers/${tick}`);
           if (res.ok) {
             const ticker = await res.json();
             return ticker;
@@ -17,7 +17,7 @@ class StockApi{
 
       async getPort() {
         try {
-          const res = await fetch(`${API_ROOT}/getPort`);
+          const res = await fetch(`${API_ROOT}/portfolios`);
           if (res.ok) {
             const ports = await res.json();
             return ports;
@@ -31,7 +31,7 @@ class StockApi{
 
       async getPortDetails(id) {
         try {
-          const res = await fetch(`${API_ROOT}/getPortDetails/${id}`);
+          const res = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`);
           if (res.ok) {
             const ports = await res.json();
             return ports;
