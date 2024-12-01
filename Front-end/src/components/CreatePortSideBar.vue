@@ -28,7 +28,7 @@ const closeModal = () => {
 
 const createPortPOST = async (portfolioObj) => {
     try {
-        const res = await fetch(`${API_ROOT}/createPort`, {
+        const res = await fetch(`${API_ROOT}/portfolios/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -51,7 +51,7 @@ const createPortPOST = async (portfolioObj) => {
 const fetchDetails = async (id) => {
   try {
     // Fetch portfolio details
-    const response = await fetch(`${API_ROOT}/getPortDetails/${id}`);
+    const response = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`);
     if (response.ok) {
       const portDetails = await response.json();
       console.log("Portfolio Details (Before Update):", portDetails);
