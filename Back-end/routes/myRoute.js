@@ -20,7 +20,7 @@ router.get("/allticker", async (req, res) => {
   }
 })
 
-router.get("/searchFromTic/:identifier", async (req, res) => {
+router.get("/searchTickers/:identifier", async (req, res) => {
   try {
 
     const identifier = req.params.identifier;
@@ -42,7 +42,7 @@ router.get("/searchFromTic/:identifier", async (req, res) => {
   }
 })
 
-router.post("/createPort", async (req, res) => {
+router.post("/portfolios/create", async (req, res) => {
   const { portfolio_name, assets } = req.body;
 
   if (!portfolio_name || !assets) {
@@ -71,7 +71,7 @@ router.post("/createPort", async (req, res) => {
   }
 });
 
-router.get("/getPort", async (req, res) => {
+router.get("/portfolios", async (req, res) => {
   try {
     const portfolios = await portfolio.find().toArray(); // Fetch all portfolios from MongoDB
     res.status(200).json(portfolios); // Send portfolio data as JSON
@@ -81,7 +81,7 @@ router.get("/getPort", async (req, res) => {
   }
 });
 
-router.get("/getPortDetails/:portId", async (req, res) => {
+router.get("/portfolios/portDetails/:portId", async (req, res) => {
   try {
     const { portId } = req.params; // Extract the parameter from the URL
 
