@@ -1,24 +1,22 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import stockApi from '../composable/FetchStock';
 import { RouterLink,useRoute, useRouter } from "vue-router";
 import CreatePortSideBar from '../components/CreatePortSideBar.vue';
-import { Chart } from 'chart.js/auto'; // Import Chart.js
 
 const searchResult = ref([])
 const searchModel = ref()
 const router = useRouter();
 const details = ref({})
 const latestClosePrice = ref()
-const pieChart = ref(null); // Reference for the Chart.js instance
-const chartInstance = ref(null); // Store the Chart.js instance
+//
 
 const totalValue = computed(() => {
-  if (!details.value.assets || details.value.assets.length === 0) return 0;
   const sum = details.value.assets.reduce((sum, asset) => {
-    if (!asset.quantity || !asset.current_mkt_price) return sum; // Skip invalid assets
     return sum + asset.quantity * asset.current_mkt_price;
   }, 0);
+
+  // Return the sum formatted to 2 decimal places
   return sum.toFixed(2);
 });
 
@@ -35,93 +33,11 @@ const goToStockView = (details) => {
   })
 }
 
-const createOrUpdateChart = () => {
-  nextTick(() => {  // Ensure DOM updates are complete
-    const canvas = document.getElementById("pieChart");
-    if (!canvas) {
-      console.error("Canvas element not found");
-      return;
-    }
-
-    const ctx = canvas.getContext("2d");
-
-    // Ensure assets have data
-    if (!details.value.assets || details.value.assets.length === 0) {
-      console.error("No assets available for chart");
-      // Destroy chart if no valid data
-      if (chartInstance.value) {
-        chartInstance.value.destroy();
-        chartInstance.value = null;  // Clear the chart instance
-      }
-      return;
-    }
-
-    const labels = details.value.assets.map(asset => asset.name);
-    
-    // Calculate the total value of all assets
-    const totalValue = details.value.assets.reduce((sum, asset) => 
-      sum + (asset.quantity * parseFloat(asset.current_mkt_price)), 0);
-
-    // Calculate the value for each asset as a percentage of total value
-    const data = details.value.assets.map(asset =>
-      (asset.quantity * parseFloat(asset.current_mkt_price)) / totalValue * 100  // Percentage of total value
-    );
-
-    // Define yellow color palette for the pie slices
-    const yellowColors = [
-      '#ffd539',
-      '#9f8220', 
-      '#daac00', 
-      '#dec77c',
-      '#896900'
-    ];
-
-    // Destroy previous chart instance if exists
-    if (chartInstance.value) {
-      chartInstance.value.destroy();
-    }
-
-    chartInstance.value = new Chart(ctx, {
-      type: "doughnut",
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: yellowColors.slice(0, data.length),  // Ensure we only use as many colors as there are slices
-          hoverBackgroundColor: yellowColors.slice(0, data.length),  // Hover effect with the same color palette
-        }],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "top" },
-          tooltip: {
-            callbacks: {
-              label: function (tooltipItem) {
-                const assetName = labels[tooltipItem.dataIndex];
-                const percentage = data[tooltipItem.dataIndex].toFixed(2); // Percentage of total value
-                return `${assetName}: ${percentage}%`;
-              },
-            },
-          },
-        },
-      },
-    });
-  });
-};
-
-// Watch for changes in `details` and call createOrUpdateChart
-watch(details, (newDetails) => {
-  if (newDetails?.assets?.length) {
-    createOrUpdateChart();
-  } else {
-    console.log("No assets found in details");
-  }
-}, { deep: true, immediate: true });
-
 const handleUpdateDetails = (updatedDetails) => {
-      details.value = updatedDetails; // Update the details
-}
+      details.value = updatedDetails; // Update the details data
+      // console.log("Updated Details:", details.value);
+    };
+
 </script>
  
 <template>
@@ -145,18 +61,17 @@ xl:ml-0
 md:ml-20
 sm:ml-20
 ">
-<!-- If not select portfolio dialog -->
+
 <div v-if="Object.keys(details).length === 0 && details.constructor === Object"
 class="p-4 border border-solid border-gray-400 justify-center flex rounded-2xl w-full"
 >
 <p>Please Select Portfolio</p>
 </div>
 
-<!-- Assets in port dialog -->
 <div v-if="Object.keys(details).length > 0 && details.constructor === Object"
-class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
+class="p-3 border border-solid border-gray-400 rounded-2xl w-full"
 >
-<div class="w-1/2 flex flex-col gap-8">
+
 <p class="text-zinc-800 ">
   <span class="text-zinc-500 text-lg">Port's Name:</span> {{ details.portfolio_name }}
 </p>
@@ -170,20 +85,14 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
   </p>
 <p class="text-zinc-800 flex">
   <span class="text-zinc-500 text-lg">Assets:</span> 
-  <div class="flex flex-col border border-solid border-zinc-800 ml-3 rounded-lg bg-zinc-100">
-    <span v-for="asset in details.growth" @click="search(asset.name)" class="border-b border-black p-4 m-2 cursor-default hover:text-yellow-500 transition duration-300">
+  <div class="flex flex-col">
+    <span v-for="asset in details.growth" @click="search(asset.name)" class="border border-solid border-zinc-800 p-2 m-2 cursor-default hover:text-yellow-500 transition duration-300">
      &nbsp;{{ asset.name }}&nbsp;{{ (asset.quantity * asset.latestPrice).toFixed(2) }} USD 
-     ({{ Number(((asset.latestPrice - asset.current_mkt_price)/asset.current_mkt_price)*100).toFixed(2) }} %)
+     ({{ ((asset.latestPrice - asset.current_mkt_price)/asset.current_mkt_price)*100 }} %)
       ({{ (asset.quantity).toFixed(8) }} shares)
     </span>
   </div>
 </p>
-</div>
-
-<div class="w-1/2">
-  <canvas v-if="details.assets.length > 0" id="pieChart" class="chart-canvas"></canvas>
-</div>
-
 </div>
 
 <p class="text-zinc-800 m-1 mt-6 text-xl">Search stocks here</p>
@@ -254,12 +163,6 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
 .all{
   font-family: "Kanit", sans-serif;
   font-style: normal;
-}
-
-.chart-canvas {
-  width: 100%;     /* Make the canvas take up the full width of its parent container */
-  height: 500px;    /* Maintain aspect ratio, or you can set a specific height like 300px */
-  /* border: #161616 solid 1px */
 }
 
 .result {
