@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import stockApi from '../composable/FetchStock';
+import stockApi from '../composable/FetchStock.js';
 import { RouterLink,useRoute, useRouter } from "vue-router";
 import CreatePortSideBar from '../components/CreatePortSideBar.vue';
 
