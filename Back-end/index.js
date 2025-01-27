@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json()); // Enable JSON body parsing middleware
 
 // Load myRoute routes
-app.use('/stock', myRouter);
+app.use('/api', myRouter);
 app.use(express.urlencoded({ extended: true }));
 
 app.listen(PORT,()=>{

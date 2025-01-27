@@ -1,7 +1,9 @@
+const API_ROOT = import.meta.env.VITE_ROOT_API;
+
 class StockApi{
     async searchTicker(tick) {
         try {
-          const res = await fetch(`http://localhost:5000/stock/searchFromTic/${tick}`);
+          const res = await fetch(`${API_ROOT}/searchTickers/${tick}`);
           if (res.ok) {
             const ticker = await res.json();
             return ticker;
@@ -15,7 +17,7 @@ class StockApi{
 
       async getPort() {
         try {
-          const res = await fetch(`http://localhost:5000/stock/getPort`);
+          const res = await fetch(`${API_ROOT}/portfolios`);
           if (res.ok) {
             const ports = await res.json();
             return ports;
@@ -29,7 +31,7 @@ class StockApi{
 
       async getPortDetails(id) {
         try {
-          const res = await fetch(`http://localhost:5000/stock/getPortDetails/${id}`);
+          const res = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`);
           if (res.ok) {
             const ports = await res.json();
             return ports;
@@ -43,7 +45,7 @@ class StockApi{
 
       async buyStock(assetObj) {
         try {
-          const res = await fetch(`http://localhost:5000/stock/buyStock`, {
+          const res = await fetch(`${API_ROOT}/buyStock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -63,7 +65,7 @@ class StockApi{
 
       async sellStock(assetObj) {
         try {
-          const res = await fetch(`http://localhost:5000/stock/sellStock`, {
+          const res = await fetch(`${API_ROOT}/sellStock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

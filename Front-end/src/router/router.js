@@ -7,7 +7,7 @@ import StockView from "../views/StockView.vue";
 import Login from "../views/Login.vue";
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
+    history: createWebHistory("/pl3"),
     routes: [
         {
             path: '/',
