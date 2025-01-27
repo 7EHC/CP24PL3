@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
-import stockApi from '../composable/FetchStock';
+import stockApi from '../composable/FetchStock.js';
 import { RouterLink,useRoute, useRouter } from "vue-router";
 import CreatePortSideBar from '../components/CreatePortSideBar.vue';
 import { Chart } from 'chart.js/auto'; // Import Chart.js
