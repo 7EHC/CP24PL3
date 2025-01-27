@@ -47,9 +47,9 @@ const toggleDropdown = () => {
       <RouterLink :to="{name:'NEWS'}" class="hover:text-yellow-500 duration-200">NEWS</RouterLink>
       <RouterLink :to="{name:'Calculator'}" class="hover:text-yellow-500 duration-200">DCA CALCULATOR</RouterLink>
       <RouterLink :to="{name:'Port'}" class="hover:text-yellow-500 duration-200">PORTFOLIO</RouterLink>
-      <button class="border border-yellow-500 text-white px-4 py-1 rounded-full hover:bg-yellow-500 hover:text-black transition-colors duration-200 w-full text-left">
+      <RouterLink :to="{name:'Login'}" class="border border-yellow-500 text-white px-4 py-1 rounded-full hover:bg-yellow-500 hover:text-black transition-colors duration-200 w-full text-left">
         LOGIN
-      </button>
+      </RouterLink>
     </div>
   </div>
 </transition>

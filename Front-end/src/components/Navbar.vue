@@ -13,9 +13,9 @@ import { RouterLink,useRouter } from "vue-router";
       <RouterLink :to="{name:'Calculator'}" class="hover:text-yellow-500 duration-200">DCA CALCULATOR</RouterLink>
       <RouterLink :to="{name:'Port'}" class="hover:text-yellow-500 duration-200">PORTFOLIO</RouterLink>
 
-        <button class="ml-10 border border-yellow-500 text-white px-4 py-1 rounded-full hover:bg-yellow-500 hover:text-black transition-colors duration-200">
+        <RouterLink :to="{name:'Login'}" class="ml-10 border border-yellow-500 text-white px-4 py-1 rounded-full hover:bg-yellow-500 hover:text-black transition-colors duration-200">
             LOGIN 
-        </button>
+        </RouterLink>
     </div>
 </div>
 </template>
