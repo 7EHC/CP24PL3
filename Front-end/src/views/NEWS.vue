@@ -12,8 +12,8 @@ const options = {
 };
 const isSearch = ref(false);
 const searchText = ref("");
-const itemsPerPage = 20;
-const currentPage = ref(1);
+const itemsToShow = ref(10);
+const showScrollTopButton = ref(false);
 
 const fetchNews = async () => {
   try {
@@ -47,17 +47,34 @@ const searchNews = () => {
     });
     news.value = filterNews;
   } else {
-    isSearch.value = false;
+    isSearch.value = false
     return
   }
   //   console.log(news.value);
 };
 
+const loadMore = () => {
+    itemsToShow.value += 10
+}
+
 const newsToShow = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return news.value.slice(start, end);
+  return news.value.slice(0, itemsToShow.value);
 });
+
+const handleScroll = () => {
+  if (window.scrollY > 300) {
+    showScrollTopButton.value = true;
+  } else {
+    showScrollTopButton.value = false;
+  }
+};
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
 
 // const filterNews = async(tic) => {
 //     try {
@@ -79,11 +96,15 @@ const newsToShow = computed(() => {
 //     news.value = await filterNews(text)
 // }
 
+const refresh = () => {
+    window.location.reload()
+}
+
 onMounted(async () => {
+  window.addEventListener('scroll', handleScroll);
   news.value = await fetchNews();
   newsTemp.value = news.value;
-  isSearch.value = false;
-  console.log(news.value);
+//   console.log(news.value);
 });
 </script>
 
@@ -93,7 +114,7 @@ onMounted(async () => {
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
   />
   <div class="flex items-center">
-    <p class="text-3xl text-zinc-800 my-3 font-bold">NEWS</p>
+    <p class="text-3xl text-zinc-800 my-3 font-bold hover:cursor-pointer" @click="refresh">NEWS</p>
     <input
       type="text"
       placeholder="Search"
@@ -149,6 +170,21 @@ onMounted(async () => {
       </a>
     </div>
   </div>
+  <div class="flex justify-center mt-10 mb-10" v-if="news.length > itemsToShow">
+      <button @click="loadMore" class="bg-yellow-400 text-white font-semibold text-sm p-2 rounded-xl hover:bg-yellow-300 transition">
+        Load More News
+      </button>
+    </div>
+
+    <div class="fixed bottom-5 right-5">
+      <button
+        v-show="showScrollTopButton"
+        @click="scrollToTop"
+        class="bg-yellow-400 text-white p-3 rounded-full shadow-lg hover:bg-yellow-300 transition"
+      >
+        ↑
+      </button>
+    </div>
 </template>
 
 <style scoped></style>
