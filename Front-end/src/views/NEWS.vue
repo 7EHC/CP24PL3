@@ -32,14 +32,12 @@ const fetchNews = async () => {
 };
 
 const searchNews = () => {
-  if (searchText.value.length > 0) {
+  if (searchText.value.trim() !== "") {
     isSearch.value = true;
 
     const filterNews = newsTemp.value.filter((item) => {
       return (
-        item.insights[0].ticker
-          .toLowerCase()
-          .includes(searchText.value.toLowerCase()) ||
+        item.insights[0].ticker.toLowerCase().includes(searchText.value.toLowerCase()) ||
         item.title.toLowerCase().includes(searchText.value.toLowerCase()) ||
         item.description.toLowerCase().includes(searchText.value.toLowerCase())
         // item.keywords.some((keyword) =>
@@ -50,7 +48,7 @@ const searchNews = () => {
     news.value = filterNews;
   } else {
     isSearch.value = false;
-    news.value = newsTemp.value;
+    return
   }
   //   console.log(news.value);
 };
