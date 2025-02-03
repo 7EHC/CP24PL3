@@ -37,7 +37,9 @@ const searchNews = () => {
 
     const filterNews = newsTemp.value.filter((item) => {
       return (
-        item.insights[0].ticker.toLowerCase().includes(searchText.value.toLowerCase()) ||
+        item.insights[0].ticker
+          .toLowerCase()
+          .includes(searchText.value.toLowerCase()) ||
         item.title.toLowerCase().includes(searchText.value.toLowerCase()) ||
         item.description.toLowerCase().includes(searchText.value.toLowerCase())
         // item.keywords.some((keyword) =>
@@ -47,15 +49,15 @@ const searchNews = () => {
     });
     news.value = filterNews;
   } else {
-    isSearch.value = false
-    return
+    // isSearch.value = false
+    return;
   }
   //   console.log(news.value);
 };
 
 const loadMore = () => {
-    itemsToShow.value += 10
-}
+  itemsToShow.value += 10;
+};
 
 const newsToShow = computed(() => {
   return news.value.slice(0, itemsToShow.value);
@@ -72,9 +74,9 @@ const handleScroll = () => {
 const scrollToTop = () => {
   window.scrollTo({
     top: 0,
-    behavior: 'smooth'
+    behavior: "smooth",
   });
-}
+};
 
 // const filterNews = async(tic) => {
 //     try {
@@ -97,14 +99,14 @@ const scrollToTop = () => {
 // }
 
 const refresh = () => {
-    window.location.reload()
-}
+  window.location.reload();
+};
 
 onMounted(async () => {
-  window.addEventListener('scroll', handleScroll);
+  window.addEventListener("scroll", handleScroll);
   news.value = await fetchNews();
   newsTemp.value = news.value;
-//   console.log(news.value);
+  //   console.log(news.value);
 });
 </script>
 
@@ -114,7 +116,12 @@ onMounted(async () => {
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
   />
   <div class="flex items-center">
-    <p class="text-3xl text-zinc-800 my-3 font-bold hover:cursor-pointer" @click="refresh">NEWS</p>
+    <p
+      class="text-3xl text-zinc-800 my-3 font-bold hover:cursor-pointer"
+      @click="refresh"
+    >
+      NEWS
+    </p>
     <input
       type="text"
       placeholder="Search"
@@ -126,16 +133,34 @@ onMounted(async () => {
     <button type="submit" class="p-2" @click="searchNews(searchText)">
       <i class="fa fa-search"></i>
     </button>
-  </div>
-  <hr />
+</div>
+<hr />
+<p class="pt-2 text-left" v-if="isSearch">Search Results Found: {{ news.length }}</p>
 
   <div v-if="news.length === 0" class="justify-center text-2xl my-10">
     <p v-if="!isSearch">Loading ...</p>
-    <p v-else>No results found</p>
+    <div class="flex justify-center items-center" v-else>
+      <div class="text-center">
+        <img
+          width="500"
+          height="375"
+          alt="Community art used to communicate no results were found."
+          src="https://cdn.dribbble.com/assets/art-banners/record-7d4c55f21e5436b281a397a17863b6dc6147c9a99d3cbfbdc053ad1b1445b8db.png"
+        />
+        <h3 class="font-bold">No results found</h3>
+        <p class="font-light text-base">
+          It seems we can’t find any results based on your search.
+        </p>
+      </div>
+    </div>
   </div>
 
   <div v-if="news.length !== 0" class="flex flex-wrap gap-20 justify-center">
-    <div v-for="(res, index) in newsToShow" :key="index" class="w-full md:w-1/4 flex">
+    <div
+      v-for="(res, index) in newsToShow"
+      :key="index"
+      class="w-full md:w-1/4 flex"
+    >
       <a
         :href="res.article_url"
         target="_blank"
@@ -171,20 +196,23 @@ onMounted(async () => {
     </div>
   </div>
   <div class="flex justify-center mt-10 mb-10" v-if="news.length > itemsToShow">
-      <button @click="loadMore" class="bg-yellow-400 text-white font-semibold text-sm p-2 rounded-xl hover:bg-yellow-300 transition">
-        Load More News
-      </button>
-    </div>
+    <button
+      @click="loadMore"
+      class="bg-yellow-400 text-white font-semibold text-sm p-2 rounded-xl hover:bg-yellow-300 transition"
+    >
+      Load More News
+    </button>
+  </div>
 
-    <div class="fixed bottom-5 right-5">
-      <button
-        v-show="showScrollTopButton"
-        @click="scrollToTop"
-        class="bg-yellow-400 text-white p-3 rounded-full shadow-lg hover:bg-yellow-300 transition"
-      >
-        ↑
-      </button>
-    </div>
+  <div class="fixed bottom-5 right-5">
+    <button
+      v-show="showScrollTopButton"
+      @click="scrollToTop"
+      class="bg-yellow-400 text-white p-3 rounded-full shadow-lg hover:bg-yellow-300 transition"
+    >
+      ↑
+    </button>
+  </div>
 </template>
 
 <style scoped></style>
