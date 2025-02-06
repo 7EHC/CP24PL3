@@ -21,8 +21,8 @@ import { RouterView } from 'vue-router';
     z-40" />
 <!-- ------------------------------------------------------------------------------------------------- -->
         <div class="all  mt-24 
-        2xl:ml-64 2xl:mr-64
-        xl:ml-64 xl:mr-64 
+        2xl:ml-32 2xl:mr-32
+        xl:ml-32 xl:mr-32 
         md:ml-28 md:mr-28
         sm:ml-28 sm:mr-28 
         ">

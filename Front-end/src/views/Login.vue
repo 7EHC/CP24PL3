@@ -35,7 +35,7 @@
 
           <!-- Right Section -->
           <div class="w-3/5 bg-yellow-400 flex flex-col justify-center px-8">
-            <p class="text-black text-3xl font-bold mb-8">Login</p>
+            <p class="text-black text-3xl font-bold mb-8 text-center">Login</p>
 
             <!-- Username Input -->
             <label class="text-black text-sm font-semibold mb-2" for="username"
