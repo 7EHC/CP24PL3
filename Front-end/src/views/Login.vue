@@ -12,7 +12,7 @@
     rel="stylesheet"
   />
 
-  <div class="all -ml-64 w-full h-screen fixed flex justify-center">
+  <div class="all -ml-24 w-full h-screen fixed flex justify-center">
     <div class="sub h-4/6 w-4/6 -ml-10 mt-14 rounded-xl">
       <div class="flex items-center justify-center h-full">
         <!--add bg-colr here to see the margin area-->
