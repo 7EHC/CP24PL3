@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onUnmounted } from "vue";
 
 const news = ref([]);
 // const newsTemp = ref([]);
@@ -16,13 +16,38 @@ const searchText = ref("");
 const itemsToShow = ref(15);
 const showScrollTopButton = ref(false);
 const isLoading = ref(false);
+const sixMonthAgo = ref("");
+
+const currentSlide = ref(0);
+let interval = null;
+
+const newsSlides = computed(() => {
+  const shuffled = [...news.value].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 4);
+});
+
+const nextSlide = () => {
+  currentSlide.value = (currentSlide.value + 1) % newsSlides.value.length;
+};
+
+const prevSlide = () => {
+  currentSlide.value =
+    (currentSlide.value - 1 + newsSlides.value.length) %
+    newsSlides.value.length;
+};
+
+const getSixMonthAgo = () => {
+  const today = new Date();
+  today.setMonth(today.getMonth() - 6);
+  sixMonthAgo.value = today.toISOString();
+};
 
 const fetchNews = async () => {
   isLoading.value = true;
   searchText.value = "";
   try {
     const res = await fetch(
-      `https://api.polygon.io/v2/reference/news?limit=30&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
+      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&limit=20&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
     );
     if (res.ok) {
       const ticker = await res.json();
@@ -36,42 +61,6 @@ const fetchNews = async () => {
     isLoading.value = false;
   }
 };
-
-// const searchNews = () => {
-//   if (searchText.value.trim() !== "") {
-//     isSearch.value = true;
-
-//     const filterNews = newsTemp.value.filter((item) => {
-//       return (
-//         item.insights[0].ticker
-//           .toLowerCase()
-//           .includes(searchText.value.toLowerCase()) ||
-//         item.title.toLowerCase().includes(searchText.value.toLowerCase()) ||
-//         item.description.toLowerCase().includes(searchText.value.toLowerCase())
-//         // item.keywords.some((keyword) =>
-//         //   keyword.toLowerCase().includes(searchText.value.toLowerCase())
-//         // )
-//       );
-//     });
-//     news.value = filterNews;
-//   } else {
-//     // isSearch.value = false
-//     return;
-//   }
-//   //   console.log(news.value);
-// };
-
-// const searchNews = async (tic) => {
-//   if (searchText.value.trim() !== "") {
-//     isSearch.value = true;
-//     tic = searchText.value.toUpperCase();
-//     news.value = await filterNews(tic);
-//     isLoading.value = false
-//   } else {
-//     isSearch.value = false;
-//     return
-//   }
-// };
 
 const loadMore = () => {
   itemsToShow.value += 10;
@@ -99,7 +88,7 @@ const scrollToTop = () => {
 const filterNews = async (tic) => {
   try {
     const res = await fetch(
-      `https://api.polygon.io/v2/reference/news?ticker=${tic}&limit=1000&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
+      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&ticker=${tic}&limit=20&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
     );
     if (res.ok) {
       const ticker = await res.json();
@@ -130,14 +119,19 @@ const searchNews = async () => {
 const refresh = async () => {
   news.value = await fetchNews();
   itemsToShow.value = 15;
-  isSearch.value = false
+  isSearch.value = false;
 };
 
 onMounted(async () => {
   window.addEventListener("scroll", handleScroll);
   news.value = await fetchNews();
-  // newsTemp.value = news.value;
-  //   console.log(news.value);
+
+  getSixMonthAgo();
+  interval = setInterval(nextSlide, 8000);
+});
+
+onUnmounted(() => {
+  clearInterval(interval);
 });
 </script>
 
@@ -149,130 +143,201 @@ onMounted(async () => {
   <div>
     <div class="flex justify-center items-center">
       <p
-        class="text-2xl text-yellow-400 my-3 font-bold hover:cursor-pointer mt-auto">
+        class="text-3xl text-yellow-400 my-3 font-bold hover:cursor-pointer mt-auto mb-8"
+        @click="refresh"
+      >
         NEWS
       </p>
     </div>
-    <div>
-
-    </div>
-  </div>
-  <div class="flex items-center">
-    <p
-      class="text-xl text-yellow-400 my-3 font-bold hover:cursor-pointer"
-      @click="refresh()"
-    >
-      {{ isSearch ? "SEARCH RESULTS": "LATEST NEWS"}}
-    </p>
-    <input
-      type="text"
-      placeholder="Search"
-      name="search"
-      class="border-0 border-b-2 border-gray-300 bg-transparent placeholder-gray-300 focus:outline-none ml-auto w-52"
-      v-model="searchText"
-      @keyup.enter="searchNews(searchText)"
-    />
-    <button type="submit" class="p-2" @click="searchNews(searchText)">
-      <i class="fa fa-search"></i>
-    </button>
-  </div>
-  <hr />
-  <!-- <p class="pt-2 text-left" v-if="isSearch"> -->
-  <!-- Search Results Found: {{ news.length }} -->
-  <!-- </p> -->
-
-  <div v-if="isLoading" class="fixed inset-0 flex items-center justify-center">
-    <div
-      class="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"
-    ></div>
-  </div>
-  <div
-    class="flex justify-center items-center text-2xl my-10"
-    v-if="news.length === 0 && !isLoading"
-  >
-    <div class="text-center">
-      <img
-        width="500"
-        height="375"
-        alt="Community art used to communicate no results were found."
-        src="https://cdn.dribbble.com/assets/art-banners/record-7d4c55f21e5436b281a397a17863b6dc6147c9a99d3cbfbdc053ad1b1445b8db.png"
-      />
-      <h3 class="font-bold">No results found</h3>
-      <p class="font-light text-base">
-        It seems we can’t find any results based on your search.
-      </p>
-    </div>
-  </div>
-
-  <div
-    v-if="news.length !== 0 && !isLoading"
-    class="container mx-auto px-4 py-8"
-  >
-    <!-- Featured News Section -->
-    <section class="mb-10">
+    <div class="mb-10" v-if="!isSearch">
       <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-2"
-        v-if="news.length !== 0 && !isLoading"
+        class="relative w-full max-w-2xl mx-auto overflow-hidden rounded-lg shadow-lg mb-4"
       >
         <div
-          v-for="(res, index) in newsToShow"
-          :key="index"
-          class="flex flex-col shadow-lg rounded-lg overflow-hidden hover:bg-gray-100 transition duration-300 ease-in-out hover:scale-105"
+          class="flex transition-transform duration-500 ease-in-out"
+          :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
         >
-          <a :href="res.article_url" target="_blank" rel="noopener noreferrer">
-            <img
-              :src="res.image_url"
-              alt="News Banner"
-              class="w-full h-48 object-fill"
-            />
-            <div class="p-4">
-              <div class="flex items-center">
+          <div
+            v-for="(item, index) in newsSlides"
+            :key="index"
+            class="w-full flex-shrink-0"
+          >
+            <div class="relative">
+              <a
+                :href="item.article_url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <img
-                  :src="res.publisher.logo_url"
-                  alt="News Logo"
-                  class="w-24 h-16 object-contain mb-3"
+                  :src="item.image_url"
+                  alt=""
+                  class="w-full h-96 object-cover rounded-lg"
                 />
-                <p class="text-black text-sm ml-auto">
-                  Symbol: {{ res.insights[0].ticker }}
-                </p>
-              </div>
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                {{ res.title }}
-              </h3>
-              <p class="text-gray-600 mb-2 text-sm">{{ res.description }}</p>
-              <p class="text-xs text-gray-400">
-                {{
-                  new Date(res.published_utc).toLocaleDateString(
-                    "en-GB",
-                    options
-                  )
-                }}
-              </p>
+                <div
+                  class="absolute bottom-0 bg-gradient-to-t from-black to-transparent text-white p-4 w-full rounded-b-lg"
+                >
+                  <p class="text-xs font-semibold text-white">
+                    {{
+                      new Date(item.published_utc).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    }}
+                  </p>
+                  <h2 class="text-xl font-bold">{{ item.title }}</h2>
+                </div>
+              </a>
             </div>
-          </a>
+          </div>
+        </div>
+        <button
+          @click="prevSlide"
+          class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
+        >
+          ❮
+        </button>
+        <button
+          @click="nextSlide"
+          class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
+        >
+          ❯
+        </button>
+      </div>
+      <div class="absolute left-1/2 transform -translate-x-1/2 flex space-x-3">
+        <div v-for="(item, index) in newsSlides" :key="index">
+          <input
+            v-bind:id="'radio-' + index"
+            type="radio"
+            :checked="index === currentSlide"
+            @change="currentSlide = index"
+            class="w-2.5 h-2.5 bg-gray-300 rounded-full cursor-pointer transition-all appearance-none checked:bg-yellow-400"
+          />
         </div>
       </div>
-      <div
-        class="flex justify-center mt-10 mb-10"
-        v-if="news.length > itemsToShow && !isLoading"
+    </div>
+
+    <div class="flex items-center">
+      <p
+        class="text-xl text-yellow-400 my-3 font-bold hover:cursor-pointer"
+        @click="refresh()"
       >
-        <button
-          @click="loadMore"
-          class="bg-yellow-400 text-white font-semibold text-sm p-2 rounded-xl hover:bg-yellow-300 transition"
-        >
-          Load More News
-        </button>
+        {{ isSearch ? "SEARCH RESULTS" : "LATEST NEWS" }}
+      </p>
+      <input
+        type="text"
+        placeholder="Search"
+        name="search"
+        class="border-0 border-b-2 border-gray-300 bg-transparent placeholder-gray-300 focus:outline-none ml-auto w-52"
+        v-model="searchText"
+        @keyup.enter="searchNews(searchText)"
+      />
+      <button type="submit" class="p-2" @click="searchNews(searchText)">
+        <i class="fa fa-search"></i>
+      </button>
+    </div>
+    <hr />
+    <!-- <p class="pt-2 text-left" v-if="isSearch"> -->
+    <!-- Search Results Found: {{ news.length }} -->
+    <!-- </p> -->
+
+    <div
+      v-if="isLoading"
+      class="fixed inset-0 flex items-center justify-center"
+    >
+      <div
+        class="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"
+      ></div>
+    </div>
+    <div
+      class="flex justify-center items-center text-2xl my-10"
+      v-if="news.length === 0 && !isLoading"
+    >
+      <div class="text-center">
+        <img
+          width="500"
+          height="375"
+          alt="Community art used to communicate no results were found."
+          src="https://cdn.dribbble.com/assets/art-banners/record-7d4c55f21e5436b281a397a17863b6dc6147c9a99d3cbfbdc053ad1b1445b8db.png"
+        />
+        <h3 class="font-bold">No results found</h3>
+        <p class="font-light text-base">
+          It seems we can’t find any results based on your search.
+        </p>
       </div>
-      <div class="fixed bottom-12 right-14">
-        <button
-          v-show="showScrollTopButton"
-          @click="scrollToTop"
-          class="bg-yellow-400 text-white p-3 rounded-full shadow-lg hover:bg-yellow-300 transition"
+    </div>
+
+    <div
+      v-if="news.length !== 0 && !isLoading"
+      class="container mx-auto px-4 py-8"
+    >
+      <!-- Featured News Section -->
+      <section class="mb-10">
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-2"
+          v-if="news.length !== 0 && !isLoading"
         >
-          ↑
-        </button>
-      </div>
-    </section>
+          <div
+            v-for="(res, index) in newsToShow"
+            :key="index"
+            class="flex flex-col shadow-lg rounded-lg overflow-hidden hover:bg-gray-100 transition ease-in-out hover:scale-105"
+          >
+            <a
+              :href="res.article_url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                :src="res.image_url"
+                alt="News Banner"
+                class="w-full h-52 object-cover"
+              />
+              <div class="p-4">
+                <div class="flex items-center h-12">
+                  <img
+                    :src="res.publisher.logo_url"
+                    alt="News Logo"
+                    class="w-24 h-16 object-contain mb-3"
+                  />
+                  <p class="text-black text-sm ml-auto">
+                    Symbol: {{ res.insights[0].ticker }}
+                  </p>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2">
+                  {{ res.title }}
+                </h3>
+                <p class="text-gray-600 mb-2 text-sm">{{ res.description }}</p>
+              </div>
+            </a>
+            <p class="text-xs text-gray-400 mb-3 mt-auto pl-4">
+              {{
+                new Date(res.published_utc).toLocaleDateString("en-GB", options)
+              }}
+            </p>
+          </div>
+        </div>
+        <div
+          class="flex justify-center mt-10 mb-10"
+          v-if="news.length > itemsToShow && !isLoading"
+        >
+          <button
+            @click="loadMore"
+            class="bg-yellow-400 text-white font-semibold text-sm p-2 rounded-xl hover:bg-yellow-300 transition"
+          >
+            Load More News
+          </button>
+        </div>
+        <div class="fixed bottom-12 right-14">
+          <button
+            v-show="showScrollTopButton"
+            @click="scrollToTop"
+            class="bg-yellow-400 text-white p-3 rounded-full shadow-lg hover:bg-yellow-300 transition"
+          >
+            ↑
+          </button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
