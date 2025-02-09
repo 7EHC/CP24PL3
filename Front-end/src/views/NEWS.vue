@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, onUnmounted } from "vue";
 
 const news = ref([]);
-const newsTemp = ref([]);
+// const newsTemp = ref([]);
 const options = {
   day: "numeric",
   month: "long",
@@ -16,26 +16,38 @@ const searchText = ref("");
 const itemsToShow = ref(15);
 const showScrollTopButton = ref(false);
 const isLoading = ref(false);
-const currentIndex = ref(0);
-const totalSlides = newsTemp.value.length;
+const sixMonthAgo = ref("");
+
+const currentSlide = ref(0);
+let interval = null;
+
+const newsSlides = computed(() => {
+  const shuffled = [...news.value].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 4);
+});
 
 const nextSlide = () => {
-  currentIndex.value = (currentIndex.value + 1);
+  currentSlide.value = (currentSlide.value + 1) % newsSlides.value.length;
 };
 
 const prevSlide = () => {
-  currentIndex.value = (currentIndex.value - 1 + totalSlides);
+  currentSlide.value =
+    (currentSlide.value - 1 + newsSlides.value.length) %
+    newsSlides.value.length;
 };
 
-// Auto slide
-// let interval;
+const getSixMonthAgo = () => {
+  const today = new Date();
+  today.setMonth(today.getMonth() - 6);
+  sixMonthAgo.value = today.toISOString();
+};
 
 const fetchNews = async () => {
   isLoading.value = true;
   searchText.value = "";
   try {
     const res = await fetch(
-      `https://api.polygon.io/v2/reference/news?limit=30&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
+      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&limit=20&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
     );
     if (res.ok) {
       const ticker = await res.json();
@@ -49,42 +61,6 @@ const fetchNews = async () => {
     isLoading.value = false;
   }
 };
-
-// const searchNews = () => {
-//   if (searchText.value.trim() !== "") {
-//     isSearch.value = true;
-
-//     const filterNews = newsTemp.value.filter((item) => {
-//       return (
-//         item.insights[0].ticker
-//           .toLowerCase()
-//           .includes(searchText.value.toLowerCase()) ||
-//         item.title.toLowerCase().includes(searchText.value.toLowerCase()) ||
-//         item.description.toLowerCase().includes(searchText.value.toLowerCase())
-//         // item.keywords.some((keyword) =>
-//         //   keyword.toLowerCase().includes(searchText.value.toLowerCase())
-//         // )
-//       );
-//     });
-//     news.value = filterNews;
-//   } else {
-//     // isSearch.value = false
-//     return;
-//   }
-//   //   console.log(news.value);
-// };
-
-// const searchNews = async (tic) => {
-//   if (searchText.value.trim() !== "") {
-//     isSearch.value = true;
-//     tic = searchText.value.toUpperCase();
-//     news.value = await filterNews(tic);
-//     isLoading.value = false
-//   } else {
-//     isSearch.value = false;
-//     return
-//   }
-// };
 
 const loadMore = () => {
   itemsToShow.value += 10;
@@ -112,7 +88,7 @@ const scrollToTop = () => {
 const filterNews = async (tic) => {
   try {
     const res = await fetch(
-      `https://api.polygon.io/v2/reference/news?ticker=${tic}&limit=50&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
+      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&ticker=${tic}&limit=20&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
     );
     if (res.ok) {
       const ticker = await res.json();
@@ -149,12 +125,13 @@ const refresh = async () => {
 onMounted(async () => {
   window.addEventListener("scroll", handleScroll);
   news.value = await fetchNews();
-  newsTemp.value = news.value;
-  // interval = setInterval(nextSlide, 3000);
+
+  getSixMonthAgo();
+  interval = setInterval(nextSlide, 8000);
 });
 
 onUnmounted(() => {
-  // clearInterval(interval);
+  clearInterval(interval);
 });
 </script>
 
@@ -167,59 +144,79 @@ onUnmounted(() => {
     <div class="flex justify-center items-center">
       <p
         class="text-3xl text-yellow-400 my-3 font-bold hover:cursor-pointer mt-auto mb-8"
-      @click="refresh">
+        @click="refresh"
+      >
         NEWS
       </p>
     </div>
-    
-    <div class="relative w-full max-w-4xl mx-auto" v-if="!isSearch">
-    <div class="overflow-hidden relative min-h-96">
+    <div class="mb-10" v-if="!isSearch">
       <div
-        class="absolute inset-0 flex transition-transform duration-700 ease-in-out"
-        :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+        class="relative w-full max-w-2xl mx-auto overflow-hidden rounded-lg shadow-lg mb-4"
       >
-      <div
-      v-for="(res, index) in newsTemp"
-      :key="index"
-      class="min-w-full flex-shrink-0 relative"
-      >
-      <a
-              :href="res.article_url"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-          <img :src="res.image_url" class="w-full h-64 object-cover rounded-lg shadow-lg" />
-          <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-4 text-white">
-            <p class="text-xs font-semibold text-white mb-3">
-              {{
-                new Date(res.published_utc).toLocaleDateString("en-GB", {day: "numeric", month: "long", year:"numeric"})
-              }}
-            </p>
-            <h2 class="text-lg font-bold">{{ res.title }}</h2>
+        <div
+          class="flex transition-transform duration-500 ease-in-out"
+          :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
+        >
+          <div
+            v-for="(item, index) in newsSlides"
+            :key="index"
+            class="w-full flex-shrink-0"
+          >
+            <div class="relative">
+              <a
+                :href="item.article_url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  :src="item.image_url"
+                  alt=""
+                  class="w-full h-96 object-cover rounded-lg"
+                />
+                <div
+                  class="absolute bottom-0 bg-gradient-to-t from-black to-transparent text-white p-4 w-full rounded-b-lg"
+                >
+                  <p class="text-xs font-semibold text-white">
+                    {{
+                      new Date(item.published_utc).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    }}
+                  </p>
+                  <h2 class="text-xl font-bold">{{ item.title }}</h2>
+                </div>
+              </a>
+            </div>
           </div>
-          </a>
+        </div>
+        <button
+          @click="prevSlide"
+          class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
+        >
+          ❮
+        </button>
+        <button
+          @click="nextSlide"
+          class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
+        >
+          ❯
+        </button>
+      </div>
+      <div class="absolute left-1/2 transform -translate-x-1/2 flex space-x-3">
+        <div v-for="(item, index) in newsSlides" :key="index">
+          <input
+            v-bind:id="'radio-' + index"
+            type="radio"
+            :checked="index === currentSlide"
+            @change="currentSlide = index"
+            class="w-2.5 h-2.5 bg-gray-300 rounded-full cursor-pointer transition-all appearance-none checked:bg-yellow-400"
+          />
         </div>
       </div>
     </div>
-    <button
-      @click="prevSlide"
-      class="absolute left-[-90px] top-1/2 transform -translate-y-1/2 p-2 bg-opacity-50 rounded-full text-white hover:bg-opacity-80"
-    >
-    <img src="https://cdn-icons-png.flaticon.com/512/16777/16777661.png" class="w-16 h-16">
-    </button>
-    <button
-    @click="nextSlide"
-    class="absolute right-[-90px] top-1/2 transform -translate-y-1/2 p-2 bg-opacity-50 rounded-full text-yellow-400 hover:bg-opacity-80"
-    >
-    <img src="https://cdn-icons-png.flaticon.com/512/7893/7893857.png" @click="nextSlide" class="w-16 h-16 hover:scale-105 transition duration-300">
-    </button>
-    <div class="slide flex items-center justify-center mt-5">
-      <input type="radio" name="slider" id="slide1" checked>
-     <input type="radio" name="slider" id="slide2">
-     <input type="radio" name="slider" id="slide3">
-     <input type="radio" name="slider" id="slide4">
-    </div>
-  </div>
+
     <div class="flex items-center">
       <p
         class="text-xl text-yellow-400 my-3 font-bold hover:cursor-pointer"
@@ -344,137 +341,4 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped> 
-#slider {
-   margin: 0 auto;
-   width: 800px;
-   max-width: 100%;
-   text-align: center;
-}
-#slider input[type=radio] {
-   display: none;
-}
-#slider label {
-   cursor:pointer;
-   text-decoration: none;
-}
-#slides {
-   padding: 10px;
-   border: 3px solid #ccc;
-   background: #fff;
-   position: relative;
-   z-index: 1;
-}
-#overflow {
-   width: 100%;
-   overflow: hidden;
-}
-#slide1:checked ~ #slides .inner {
-   margin-left: 0;
-}
-#slide2:checked ~ #slides .inner {
-   margin-left: -100%;
-}
-#slide3:checked ~ #slides .inner {
-   margin-left: -200%;
-}
-#slide4:checked ~ #slides .inner {
-   margin-left: -300%;
-}
-#slides .inner {
-   transition: margin-left 800ms cubic-bezier(0.770, 0.000, 0.175, 1.000);
-   width: 400%;
-   line-height: 0;
-   height: 300px;
-}
-#slides .slide {
-   width: 25%;
-   float:left;
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   height: 100%;
-   color: #fff;
-}
-#slides .slide_1 {
-   background: #00171F;
-}
-#slides .slide_2 {
-   background: #003459;
-}
-#slides .slide_3 {
-   background: #007EA7;
-}
-#slides .slide_4 {
-   background: #00A8E8;
-}
-#controls {
-   margin: -180px 0 0 0;
-   width: 100%;
-   height: 50px;
-   z-index: 3;
-   position: relative;
-}
-#controls label {
-   transition: opacity 0.2s ease-out;
-   display: none;
-   width: 50px;
-   height: 50px;
-   opacity: .4;
-}
-#controls label:hover {
-   opacity: 1;
-}
-#slide1:checked ~ #controls label:nth-child(2),
-#slide2:checked ~ #controls label:nth-child(3),
-#slide3:checked ~ #controls label:nth-child(4),
-#slide4:checked ~ #controls label:nth-child(1) {
-   background: url(https://image.flaticon.com/icons/svg/130/130884.svg) no-repeat;
-   float:right;
-   margin: 0 -50px 0 0;
-   display: block;
-}
-#slide1:checked ~ #controls label:nth-last-child(2),
-#slide2:checked ~ #controls label:nth-last-child(3),
-#slide3:checked ~ #controls label:nth-last-child(4),
-#slide4:checked ~ #controls label:nth-last-child(1) {
-   background: url(https://image.flaticon.com/icons/svg/130/130882.svg) no-repeat;
-   float:left;
-   margin: 0 0 0 -50px;
-   display: block;
-}
-#bullets {
-   margin: 150px 0 0;
-   text-align: center;
-}
-#bullets label {
-   display: inline-block;
-   width: 10px;
-   height: 10px;
-   border-radius:100%;
-   background: #ccc;
-   margin: 0 10px;
-}
-#slide1:checked ~ #bullets label:nth-child(1),
-#slide2:checked ~ #bullets label:nth-child(2),
-#slide3:checked ~ #bullets label:nth-child(3),
-#slide4:checked ~ #bullets label:nth-child(4) {
-   background: #444;
-}
-@media screen and (max-width: 900px) {
-   #slide1:checked ~ #controls label:nth-child(2),
-   #slide2:checked ~ #controls label:nth-child(3),
-   #slide3:checked ~ #controls label:nth-child(4),
-   #slide4:checked ~ #controls label:nth-child(1),
-   #slide1:checked ~ #controls label:nth-last-child(2),
-   #slide2:checked ~ #controls label:nth-last-child(3),
-   #slide3:checked ~ #controls label:nth-last-child(4),
-   #slide4:checked ~ #controls label:nth-last-child(1) {
-      margin: 0;
-   }
-   #slides {
-      max-width: calc(100% - 140px);
-      margin: 0 auto;
-   }
-}
-</style>
+<style scoped></style>
