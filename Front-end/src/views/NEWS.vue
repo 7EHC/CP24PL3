@@ -17,23 +17,26 @@ const itemsToShow = ref(15);
 const showScrollTopButton = ref(false);
 const isLoading = ref(false);
 const sixMonthAgo = ref("");
+const firstFourNews = ref();
+const lastFourNews = ref();
 
 const currentSlide = ref(0);
 let interval = null;
 
-const newsSlides = computed(() => {
+const shuffleNews = () => {
   const shuffled = [...news.value].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 4);
-});
+  firstFourNews.value = shuffled.slice(0, 4);
+  lastFourNews.value = shuffled.slice(5, 9);
+};
 
 const nextSlide = () => {
-  currentSlide.value = (currentSlide.value + 1) % newsSlides.value.length;
+  currentSlide.value = (currentSlide.value + 1) % firstFourNews.value.length;
 };
 
 const prevSlide = () => {
   currentSlide.value =
-    (currentSlide.value - 1 + newsSlides.value.length) %
-    newsSlides.value.length;
+    (currentSlide.value - 1 + firstFourNews.value.length) %
+    firstFourNews.value.length;
 };
 
 const getSixMonthAgo = () => {
@@ -127,6 +130,7 @@ onMounted(async () => {
   news.value = await fetchNews();
 
   getSixMonthAgo();
+  shuffleNews();
   interval = setInterval(nextSlide, 8000);
 });
 
@@ -149,70 +153,121 @@ onUnmounted(() => {
         NEWS
       </p>
     </div>
-    <div class="mb-10" v-if="!isSearch">
-      <div
-        class="relative w-full max-w-2xl mx-auto overflow-hidden rounded-lg shadow-lg mb-4"
-      >
-        <div
-          class="flex transition-transform duration-500 ease-in-out"
-          :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
-        >
+    <div class="lg:flex gap-5 mb-6" v-if="!isSearch">
+      <div class="w-11/12 md:w-full">
+        <div class="relative w-full overflow-hidden rounded-lg shadow-lg mb-4">
           <div
-            v-for="(item, index) in newsSlides"
-            :key="index"
-            class="w-full flex-shrink-0"
+            class="flex transition-transform duration-500 ease-in-out"
+            :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
           >
-            <div class="relative">
-              <a
-                :href="item.article_url"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  :src="item.image_url"
-                  alt=""
-                  class="w-full h-96 object-cover rounded-lg"
-                />
-                <div
-                  class="absolute bottom-0 bg-gradient-to-t from-black to-transparent text-white p-4 w-full rounded-b-lg"
+            <div
+              v-for="(item, index) in firstFourNews"
+              :key="index"
+              class="w-full flex-shrink-0"
+            >
+              <div class="relative">
+                <a
+                  :href="item.article_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <p class="text-xs font-semibold text-white">
-                    {{
-                      new Date(item.published_utc).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    }}
-                  </p>
-                  <h2 class="text-xl font-bold">{{ item.title }}</h2>
-                </div>
-              </a>
+                  <img
+                    :src="item.image_url"
+                    alt=""
+                    class="w-full h-96 object-cover rounded-lg"
+                  />
+                  <div
+                    class="absolute bottom-0 bg-gradient-to-t from-black to-transparent text-white p-4 w-full rounded-b-lg"
+                  >
+                    <p class="text-xs font-semibold text-white">
+                      {{
+                        new Date(item.published_utc).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          }
+                        )
+                      }}
+                    </p>
+                    <h2
+                      class="text-2xl text-white font-bold hover:text-yellow-300 transition duration-300"
+                    >
+                      {{ item.title }}
+                    </h2>
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
+          <button
+            @click="prevSlide"
+            class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
+          >
+            ❮
+          </button>
+          <button
+            @click="nextSlide"
+            class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
+          >
+            ❯
+          </button>
         </div>
-        <button
-          @click="prevSlide"
-          class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
-        >
-          ❮
-        </button>
-        <button
-          @click="nextSlide"
-          class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-yellow-400 text-white p-2 rounded-full shadow-md hover:bg-yellow-300 transition"
-        >
-          ❯
-        </button>
+        <div class="absolute flex space-x-3 lg:w-1/2 w-3/4 justify-center">
+          <div v-for="(item, index) in firstFourNews" :key="index">
+            <input
+              v-bind:id="'radio-' + index"
+              type="radio"
+              :checked="index === currentSlide"
+              @change="currentSlide = index"
+              class="w-2.5 h-2.5 bg-gray-300 rounded-full cursor-pointer transition-all appearance-none checked:bg-yellow-400"
+            />
+          </div>
+        </div>
       </div>
-      <div class="absolute left-1/2 transform -translate-x-1/2 flex space-x-3">
-        <div v-for="(item, index) in newsSlides" :key="index">
-          <input
-            v-bind:id="'radio-' + index"
-            type="radio"
-            :checked="index === currentSlide"
-            @change="currentSlide = index"
-            class="w-2.5 h-2.5 bg-gray-300 rounded-full cursor-pointer transition-all appearance-none checked:bg-yellow-400"
-          />
+      <div class="w-1/2 grid grid-rows-4 pb-1">
+        <div
+          v-for="(item, index) in lastFourNews"
+          :key="index"
+          class="flex border-b-2 border-gray-300"
+        >
+          <div class="w-full">
+            <a
+              :href="item.article_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex mt-2"
+            >
+              <img
+                :src="item.image_url"
+                alt=""
+                class="flex w-28 h-20 object-cover rounded-lg"
+              />
+              <div class="w-full ml-3 flex flex-col justify-between">
+                <p
+                  class="text-xs font-medium text-yellow-400 hover:text-black transition pr-1"
+                >
+                  {{ item.insights[0].ticker }}
+                </p>
+                <h2
+                  class="text-sm font-medium text-black hover:text-yellow-300 transition line-clamp-2 overflow-hidden text-ellipsis"
+                >
+                  {{ item.title }}
+                </h2>
+                <div class="items-end mt-auto">
+                  <p class="text-xs text-black">
+                    {{
+                      new Date(item.published_utc).toLocaleDateString(
+                        "en-GB",
+                        options
+                      )
+                    }}
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -280,7 +335,7 @@ onUnmounted(() => {
           <div
             v-for="(res, index) in newsToShow"
             :key="index"
-            class="flex flex-col shadow-lg rounded-lg overflow-hidden hover:bg-gray-100 transition ease-in-out hover:scale-105"
+            class="flex flex-col shadow-lg rounded-lg overflow-hidden hover:bg-gray-100 transition"
           >
             <a
               :href="res.article_url"
