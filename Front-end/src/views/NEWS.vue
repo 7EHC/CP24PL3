@@ -27,7 +27,9 @@ const shuffleNews = () => {
   const shuffled = [...news.value].sort(() => 0.5 - Math.random());
   firstFourNews.value = shuffled.slice(0, 4);
   lastFourNews.value = shuffled.slice(5, 9);
-  lastFourNews.value = lastFourNews.value.sort((a, b) => new Date(b.published_utc) -new Date(a.published_utc))
+  lastFourNews.value = lastFourNews.value.sort(
+    (a, b) => new Date(b.published_utc) - new Date(a.published_utc)
+  );
 };
 
 const nextSlide = () => {
@@ -124,7 +126,7 @@ const refresh = async () => {
   news.value = await fetchNews();
   itemsToShow.value = 15;
   isSearch.value = false;
-  shuffleNews()
+  shuffleNews();
 };
 
 onMounted(async () => {
