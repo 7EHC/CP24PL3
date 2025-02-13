@@ -152,10 +152,11 @@ sm:w-40
 />
 
 <div class="all
-2xl:ml-0
-xl:ml-0
+2xl:ml-56
+xl:ml-56
 md:ml-20
 sm:ml-20
+
 ">
 <!-- If not select portfolio dialog -->
 <div v-if="Object.keys(details).length === 0 && details.constructor === Object"

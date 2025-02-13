@@ -1,6 +1,10 @@
 import express, { query } from "express";
 import db from "../config/database.js";
 import { ObjectId } from "mongodb";
+import cron from 'node-cron';
+import fetch from "node-fetch";
+
+
 // import multer from "multer"; 
 // import { MongoClient, Binary } from 'mongodb';
 // import fs from 'fs';
@@ -9,6 +13,67 @@ import { ObjectId } from "mongodb";
 const router = express.Router()
 const ticker = db.collection('stock_ticker');
 const portfolio = db.collection('portfolio')
+const transaction = db.collection('transaction')
+
+const keyPool = [
+  '609e212acea948feb7450938a016c088',
+    '6b589bf0b3464cddbb59539a6c3d8238',
+    'bae5aebed6024ffc9bd8118d9f3ef89a',
+    'ac2e2c88ebac496d90b92b225aefd4b4',
+    'a812690526f24184b0347c0ce8899b8b',
+    '96226cc340d647458a8ee8415757f722'
+];
+let keyIndex = 0;
+
+function getNextApiKey() {
+  const key = keyPool[keyIndex];
+  keyIndex = (keyIndex + 1) % keyPool.length;
+  return key;
+}
+
+cron.schedule("*/1 * * * *", async () => {
+  console.log("🔄 Checking pending transactions...");
+
+  const now = new Date();
+  const pendingTrans = await transaction.find({ status: "pending" }).toArray();
+
+  for (const trans of pendingTrans) {
+    const { _id, portId, symbol, bidPrice, action, expiredAt, quantity } = trans;
+    const expTime = new Date(expiredAt);
+
+    try {
+      if (now >= expTime) {
+        await transaction.updateOne({ _id }, { $set: { status: "failed" } });
+        console.log(`❌ Transaction ${_id} expired.`);
+        continue;
+      }
+
+      const apiKey = getNextApiKey();
+      const res = await fetch(
+        `https://api.twelvedata.com/time_series?apikey=${apiKey}&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${symbol}`
+      );
+      const data = await res.json();
+      // console.log(data.values[0].close)
+      if (!data.values || data.values.length === 0) continue;
+      const marketPrice = parseFloat(data.values[0].close); // ดึงราคาปิดตัวแรกสุด
+
+      if ((action === "buy" && Number(marketPrice).toFixed(2) <= bidPrice) || (action === "sell" && Number(marketPrice).toFixed(2) >= bidPrice)) {
+        await transaction.updateOne({ _id }, { $set: { status: "match", actualPrice: Number(marketPrice).toFixed(2) } });
+
+        const apiUrl = action === "buy" ? "http://localhost:5000/stock/buyStock" : "http://localhost:5000/stock/sellStock";
+        await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ _id: portId, symbol, quantity, current_mkt_price: Number(marketPrice).toFixed(2) }),
+        });
+
+        console.log(`✅ Transaction ${_id} matched at $${Number(marketPrice).toFixed(2)}.`);
+      }
+    } catch (error) {
+      console.error(`⚠️ Error checking transaction ${_id}:`, error);
+    }
+  }
+});
 
 router.get("/allticker", async (req, res) => {
   try {
@@ -83,16 +148,29 @@ router.get("/portfolios", async (req, res) => {
 
 router.get("/portfolios/portDetails/:portId", async (req, res) => {
   try {
-    const { portId } = req.params; // Extract the parameter from the URL
+    const { portId } = req.params; // ดึงค่า portId จาก URL
+    const fields = req.query; // ดึงค่าฟิลด์ที่ต้องการจาก query params
 
-    // Fetch the specific portfolio based on the provided parameter
+    // ดึงข้อมูลพอร์ตโฟลิโอ
     const portfolioDetails = await portfolio.findOne({ _id: new ObjectId(portId) });
 
     if (!portfolioDetails) {
       return res.status(404).json({ error: "Portfolio not found" });
     }
 
-    res.status(200).json(portfolioDetails); // Send the portfolio details as JSON
+    // ถ้าผู้ใช้ระบุฟิลด์ที่ต้องการ return เฉพาะฟิลด์นั้น
+    if (Object.keys(fields).length > 0) {
+      const filteredData = {};
+      for (const field in fields) {
+        if (portfolioDetails.hasOwnProperty(field)) {
+          filteredData[field] = portfolioDetails[field];
+        }
+      }
+      return res.status(200).json(filteredData);
+    }
+
+    // ถ้าไม่มี query params ส่งมาทั้ง object
+    res.status(200).json(portfolioDetails);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -264,5 +342,116 @@ try {
   res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
 }
 });
+
+router.get("/getAllTransaction", async (req, res) => {
+  try {
+    const allTransactions = await transaction.find({}).sort({ date: -1 }).toArray(); 
+    res.status(200).json(allTransactions);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.post("/createTransaction", async (req, res) => {
+  // const { userId, portId, symbol, action, status, totalAmount, bidPrice, actualPrice, quantity } = req.body;
+
+  // // Validate required fields
+  // if (!userId || !portId || !symbol || !action || !status || !bidPrice || !totalAmount || !actualPrice || !quantity) {
+  //   return res.status(400).json({ message: "Missing required fields." });
+  // }
+
+  // try {
+  //   const newTransaction = {
+  //     userId,
+  //     portId,
+  //     symbol,
+  //     action: action.toLowerCase(), // Ensure action is in lowercase (e.g., "buy" or "sell")
+  //     status: status.toLowerCase(), // Ensure status is in lowercase
+  //     bidPrice,
+  //     totalAmount,
+  //     actualPrice,
+  //     quantity,
+  //     date: new Date().toISOString() // Auto add real-time timestamp (ISO format)
+  //   };
+
+  //   const result = await transaction.insertOne(newTransaction);
+
+  //   res.status(201).json({
+  //     message: "Transaction created successfully.",
+  //     transaction: {
+  //       ...newTransaction
+  //     }
+  //   });
+  // } catch (error) {
+  //   res.status(500).json({ message: "Error creating transaction.", error: error.message });
+  // }
+  const { userId, portId, symbol, action, status, totalAmount, bidPrice, actualPrice, quantity } = req.body;
+
+  if (!userId || !portId || !symbol || !action || !status || !bidPrice || !totalAmount || !actualPrice || !quantity) {
+    return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  const now = new Date();
+  const expiredAt = new Date(now);
+  expiredAt.setUTCHours(21 + 7, 0, 0, 0); // หมดอายุที่ตี 4 ของวันถัดไป (UTC+7)
+
+
+  try {
+    const newTransaction = {
+      userId,
+      portId,
+      symbol,
+      action: action.toLowerCase(),
+      status: status.toLowerCase(),
+      bidPrice,
+      totalAmount,
+      actualPrice,
+      quantity,
+      date: new Date().toISOString(),
+      expiredAt: expiredAt.toISOString(), // เพิ่มเวลาหมดอายุ
+    };
+
+    const result = await transaction.insertOne(newTransaction);
+
+    // ✅ ถ้า status = "match" ให้เรียก buyStock หรือ sellStock ทันที
+    if (status.toLowerCase() === "match") {
+      if (action.toLowerCase() === "buy") {
+        await buyStockHandler(portId, symbol, quantity, actualPrice);
+      } else if (action.toLowerCase() === "sell") {
+        await sellStockHandler(portId, symbol, quantity, actualPrice);
+      }
+    }
+
+    res.status(201).json({ message: "Transaction created successfully.", transaction: newTransaction });
+
+  } catch (error) {
+    res.status(500).json({ message: "Error creating transaction.", error: error.message });
+  }
+});
+
+const buyStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
+  try {
+    await fetch("http://localhost:5000/api/buyStock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ _id, symbol, quantity, current_mkt_price })
+    });
+  } catch (error) {
+    console.error("Error calling buyStock:", error);
+  }
+};
+
+const sellStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
+  try {
+    await fetch("http://localhost:5000/api/sellStock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ _id, symbol, quantity, current_mkt_price })
+    });
+  } catch (error) {
+    console.error("Error calling sellStock:", error);
+  }
+};
 
 export default router;

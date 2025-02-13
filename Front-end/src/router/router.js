@@ -5,6 +5,7 @@ import NEWS from "../views/NEWS.vue"
 import Calculator from "../views/Calculator.vue"
 import StockView from "../views/StockView.vue";
 import Login from "../views/Login.vue";
+import History from "../views/History.vue"
 
 const router = createRouter({
     history: createWebHistory("/pl3"),
@@ -44,6 +45,11 @@ const router = createRouter({
             path: '/calculator',
             name: 'Calculator',
             component: Calculator
+        },
+        {
+            path: '/history',
+            name: 'History',
+            component: History
         },
         {
             path: '/login',
