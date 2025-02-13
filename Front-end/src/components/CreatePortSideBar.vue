@@ -188,9 +188,9 @@ onMounted(async () => {
         <form>
           <div class="mb-4">
             <label for="portfolioName" class="block text-sm font-medium text-gray-700">Portfolio Name</label>
-            <input v-model="portName" type="text" id="portfolioName" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter portfolio name" />
+            <input v-model="portName" type="text" id="portfolioName" class="mt-1 w-full px-4 py-2 border bg-white border-gray-300 rounded-md" placeholder="Enter portfolio name" />
           </div>
-          <button @click="createPortBut" type="submit" class="w-full bg-yellow-400 text-zinc-900 p-2 rounded-lg hover:bg-yellow-300 duration-300">Create</button>
+          <button @click="createPortBut" type="submit" class="w-full bg-yellow-400 text-zinc-900 p-2 rounded-lg hover:bg-yellow-300 font-bold duration-300">Create</button>
         </form>
         
         <button @click="closeModal" class="mt-4 text-gray-500 hover:text-gray-700">
