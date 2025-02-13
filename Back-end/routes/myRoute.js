@@ -386,44 +386,50 @@ router.post("/createTransaction", async (req, res) => {
   // } catch (error) {
   //   res.status(500).json({ message: "Error creating transaction.", error: error.message });
   // }
-  const { userId, portId, symbol, action, status, totalAmount, bidPrice, actualPrice, quantity } = req.body;
+  const requiredFields = ["userId", "portId", "symbol", "action", "status", "totalAmount", "bidPrice", "actualPrice", "quantity"];
+  const missingFields = requiredFields.filter(field => !req.body[field]);
 
-  if (!userId || !portId || !symbol || !action || !status || !bidPrice || !totalAmount || !actualPrice || !quantity) {
-    return res.status(400).json({ message: "Missing required fields." });
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      message: "Missing required fields.",
+      missingFields, // ✅ บอกว่า field ไหนขาด
+    });
   }
 
   const now = new Date();
   const expiredAt = new Date(now);
   expiredAt.setUTCHours(21 + 7, 0, 0, 0); // หมดอายุที่ตี 4 ของวันถัดไป (UTC+7)
 
-
   try {
     const newTransaction = {
-      userId,
-      portId,
-      symbol,
-      action: action.toLowerCase(),
-      status: status.toLowerCase(),
-      bidPrice,
-      totalAmount,
-      actualPrice,
-      quantity,
+      userId: req.body.userId,
+      portId: req.body.portId,
+      symbol: req.body.symbol,
+      action: req.body.action.toLowerCase(),
+      status: req.body.status.toLowerCase(),
+      bidPrice: req.body.bidPrice,
+      totalAmount: req.body.totalAmount,
+      actualPrice: req.body.actualPrice,
+      quantity: req.body.quantity,
       date: new Date().toISOString(),
-      expiredAt: expiredAt.toISOString(), // เพิ่มเวลาหมดอายุ
+      expiredAt: expiredAt.toISOString(), // ✅ เพิ่มเวลาหมดอายุ
     };
 
     const result = await transaction.insertOne(newTransaction);
 
     // ✅ ถ้า status = "match" ให้เรียก buyStock หรือ sellStock ทันที
-    if (status.toLowerCase() === "match") {
-      if (action.toLowerCase() === "buy") {
-        await buyStockHandler(portId, symbol, quantity, actualPrice);
-      } else if (action.toLowerCase() === "sell") {
-        await sellStockHandler(portId, symbol, quantity, actualPrice);
+    if (newTransaction.status === "match") {
+      if (newTransaction.action === "buy") {
+        await buyStockHandler(newTransaction.portId, newTransaction.symbol, newTransaction.quantity, newTransaction.actualPrice);
+      } else if (newTransaction.action === "sell") {
+        await sellStockHandler(newTransaction.portId, newTransaction.symbol, newTransaction.quantity, newTransaction.actualPrice);
       }
     }
 
-    res.status(201).json({ message: "Transaction created successfully.", transaction: newTransaction });
+    res.status(201).json({
+      message: "Transaction created successfully.",
+      transaction: newTransaction,
+    });
 
   } catch (error) {
     res.status(500).json({ message: "Error creating transaction.", error: error.message });
