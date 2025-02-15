@@ -119,6 +119,7 @@ fetchTransactions()
         <p><strong>Portfolio Name:</strong> {{ portfolioNames[trans.portId] || "Loading..." }}</p>
         <p><strong>Status:</strong> {{ trans.status }}</p>
         <p><strong>Shares:</strong> {{ trans.quantity }}</p>
+        <p><strong>Bid price:</strong> {{ trans.bidPrice }}</p>
       </div>
     </transition>
   </div>

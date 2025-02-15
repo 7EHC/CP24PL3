@@ -38,7 +38,7 @@ cron.schedule("*/1 * * * *", async () => {
   // ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
   if (hour < 20 && hour >= 4) return;
 
-  console.log("🔄 Checking pending transactions...");
+  console.log(`🔄 Checking pending transactions... at ${now}`);
 
   const pendingTrans = await transaction.find({ status: "pending" }).toArray();
 
@@ -65,7 +65,7 @@ cron.schedule("*/1 * * * *", async () => {
       if ((action === "buy" && marketPrice.toFixed(2) <= bidPrice) || (action === "sell" && marketPrice.toFixed(2) >= bidPrice)) {
         await transaction.updateOne({ _id }, { $set: { status: "match", actualPrice: marketPrice.toFixed(2) } });
 
-        const apiUrl = action === "buy" ? "http://localhost:5000/stock/buyStock" : "http://localhost:5000/stock/sellStock";
+        const apiUrl = action === "buy" ? "http://localhost:5000/api/buyStock" : "http://localhost:5000/api/sellStock";
         await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
