@@ -32,9 +32,14 @@ function getNextApiKey() {
 }
 
 cron.schedule("*/1 * * * *", async () => {
+  const now = new Date();
+  const hour = now.getHours();
+
+  // ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
+  if (hour < 20 && hour >= 4) return;
+
   console.log("🔄 Checking pending transactions...");
 
-  const now = new Date();
   const pendingTrans = await transaction.find({ status: "pending" }).toArray();
 
   for (const trans of pendingTrans) {
@@ -53,21 +58,21 @@ cron.schedule("*/1 * * * *", async () => {
         `https://api.twelvedata.com/time_series?apikey=${apiKey}&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${symbol}`
       );
       const data = await res.json();
-      // console.log(data.values[0].close)
+      
       if (!data.values || data.values.length === 0) continue;
-      const marketPrice = parseFloat(data.values[0].close); // ดึงราคาปิดตัวแรกสุด
+      const marketPrice = parseFloat(data.values[0].close);
 
-      if ((action === "buy" && Number(marketPrice).toFixed(2) <= bidPrice) || (action === "sell" && Number(marketPrice).toFixed(2) >= bidPrice)) {
-        await transaction.updateOne({ _id }, { $set: { status: "match", actualPrice: Number(marketPrice).toFixed(2) } });
+      if ((action === "buy" && marketPrice.toFixed(2) <= bidPrice) || (action === "sell" && marketPrice.toFixed(2) >= bidPrice)) {
+        await transaction.updateOne({ _id }, { $set: { status: "match", actualPrice: marketPrice.toFixed(2) } });
 
         const apiUrl = action === "buy" ? "http://localhost:5000/stock/buyStock" : "http://localhost:5000/stock/sellStock";
         await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ _id: portId, symbol, quantity, current_mkt_price: Number(marketPrice).toFixed(2) }),
+          body: JSON.stringify({ _id: portId, symbol, quantity, current_mkt_price: marketPrice.toFixed(2) }),
         });
 
-        console.log(`✅ Transaction ${_id} matched at $${Number(marketPrice).toFixed(2)}.`);
+        console.log(`✅ Transaction ${_id} matched at $${marketPrice.toFixed(2)}.`);
       }
     } catch (error) {
       console.error(`⚠️ Error checking transaction ${_id}:`, error);
@@ -286,61 +291,66 @@ router.post("/sellStock", async (req, res) => {
   // }
   const { _id, symbol, quantity, current_mkt_price } = req.body;
 
-// Validate input parameters
-if (!_id || !symbol || !quantity || !current_mkt_price) {
-  return res.status(400).json({
-    message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา",
-  });
-}
-
-try {
-  // Find the portfolio by _id
-  const Findportfolio = await portfolio.findOne({ _id: new ObjectId(_id) });
-
-  if (!Findportfolio) {
-    return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
-  }
-
-  // Check if the stock exists in the portfolio's assets
-  const asset = Findportfolio.assets.find((asset) => asset.name === symbol);
-  if (!asset) {
-    return res.status(404).json({ message: "ไม่พบหุ้นในพอร์ตที่ระบุ" });
-  }
-
-  // Check if the quantity to sell is valid
-  if (quantity > asset.quantity) {
+  // Validate input parameters
+  if (!_id || !symbol || !quantity || !current_mkt_price) {
     return res.status(400).json({
-      message: `จำนวนหุ้นที่ต้องการขาย (${quantity}) มากกว่าจำนวนหุ้นในพอร์ต (${asset.quantity})`,
+      message: "กรุณากรอกข้อมูลพอร์ต, ชื่อหุ้น, จำนวนหุ้น และราคา",
     });
   }
 
-  // Perform the sale by decrementing the quantity
-  const updatedPortfolio = await portfolio.updateOne(
-    { _id: new ObjectId(_id), "assets.name": symbol },
-    { $inc: { "assets.$.quantity": -quantity } }
-  );
+  try {
+    // Find the portfolio by _id
+    const Findportfolio = await portfolio.findOne({ _id: new ObjectId(_id) });
 
-  // Check if the asset quantity is zero or less after the sale
-  const assetAfterSale = await portfolio.findOne(
-    { _id: new ObjectId(_id), "assets.name": symbol },
-    { "assets.$": 1 }
-  );
+    if (!Findportfolio) {
+      return res.status(404).json({ message: "ไม่พบพอร์ตที่ระบุ" });
+    }
 
-  if (assetAfterSale.assets[0].quantity <= 0) {
+    // Check if the stock exists in the portfolio's assets
+    const asset = Findportfolio.assets.find((asset) => asset.name === symbol);
+    if (!asset) {
+      return res.status(404).json({ message: "ไม่พบหุ้นในพอร์ตที่ระบุ" });
+    }
+
+    // Check if the quantity to sell is valid
+    if (quantity > asset.quantity) {
+      return res.status(400).json({
+        message: `จำนวนหุ้นที่ต้องการขาย (${quantity}) มากกว่าจำนวนหุ้นในพอร์ต (${asset.quantity})`,
+      });
+    }
+
+    // Perform the sale by decrementing the quantity
     await portfolio.updateOne(
-      { _id: new ObjectId(_id) },
-      { $pull: { assets: { name: symbol } } }
+      { _id: new ObjectId(_id), "assets.name": symbol },
+      { $inc: { "assets.$.quantity": -quantity } }
     );
-  }
 
-  return res.status(200).json({
-    message: "ขายหุ้นสำเร็จ",
-    updatedPortfolio,
-  });
-} catch (error) {
-  console.error("Error occurred while selling stock:", error);
-  res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
-}
+    // Re-fetch portfolio to check the updated quantity
+    const updatedPortfolio = await portfolio.findOne(
+      { _id: new ObjectId(_id) },
+      { assets: 1 }
+    );
+
+    // Find the updated asset again
+    const updatedAsset = updatedPortfolio.assets.find(
+      (asset) => asset.name === symbol
+    );
+
+    // If the asset quantity is 0, remove it from the portfolio
+    if (updatedAsset && updatedAsset.quantity === 0) {
+      await portfolio.updateOne(
+        { _id: new ObjectId(_id) },
+        { $pull: { assets: { name: symbol } } }
+      );
+    }
+
+    return res.status(200).json({
+      message: "ขายหุ้นสำเร็จ",
+    });
+  } catch (error) {
+    console.error("Error occurred while selling stock:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
+  }
 });
 
 router.get("/getAllTransaction", async (req, res) => {
@@ -354,38 +364,6 @@ router.get("/getAllTransaction", async (req, res) => {
 });
 
 router.post("/createTransaction", async (req, res) => {
-  // const { userId, portId, symbol, action, status, totalAmount, bidPrice, actualPrice, quantity } = req.body;
-
-  // // Validate required fields
-  // if (!userId || !portId || !symbol || !action || !status || !bidPrice || !totalAmount || !actualPrice || !quantity) {
-  //   return res.status(400).json({ message: "Missing required fields." });
-  // }
-
-  // try {
-  //   const newTransaction = {
-  //     userId,
-  //     portId,
-  //     symbol,
-  //     action: action.toLowerCase(), // Ensure action is in lowercase (e.g., "buy" or "sell")
-  //     status: status.toLowerCase(), // Ensure status is in lowercase
-  //     bidPrice,
-  //     totalAmount,
-  //     actualPrice,
-  //     quantity,
-  //     date: new Date().toISOString() // Auto add real-time timestamp (ISO format)
-  //   };
-
-  //   const result = await transaction.insertOne(newTransaction);
-
-  //   res.status(201).json({
-  //     message: "Transaction created successfully.",
-  //     transaction: {
-  //       ...newTransaction
-  //     }
-  //   });
-  // } catch (error) {
-  //   res.status(500).json({ message: "Error creating transaction.", error: error.message });
-  // }
   const requiredFields = ["userId", "portId", "symbol", "action", "status", "totalAmount", "bidPrice", "actualPrice", "quantity"];
   const missingFields = requiredFields.filter(field => !req.body[field]);
 

@@ -121,8 +121,8 @@ const stockTransaction = async (value) => {
           obj = {
             ...obj,
             status: "pending",
-            bidPrice: bidPrice.value,
-            totalAmount: shares.value * bidPrice.value,
+            bidPrice: bidPrice.value > Number(currentMaketPrice.value[0].close).toFixed(2) ? Number(currentMaketPrice.value[0].close).toFixed(2) : bidPrice.value,
+            totalAmount: bidPrice.value > Number(currentMaketPrice.value[0].close).toFixed(2) ? Number(currentMaketPrice.value[0].close).toFixed(2) * shares.value : shares.value * bidPrice.value,
             actualPrice: "matching",
             quantity: shares.value,
           };
@@ -175,8 +175,8 @@ const stockTransaction = async (value) => {
           obj = {
             ...obj,
             status: "pending",
-            bidPrice: bidPrice.value,
-            totalAmount: amount.value * bidPrice.value,
+            bidPrice: bidPrice.value < Number(currentMaketPrice.value[0].close).toFixed(2) ? Number(currentMaketPrice.value[0].close).toFixed(2) : bidPrice.value,
+            totalAmount: bidPrice.value < Number(currentMaketPrice.value[0].close).toFixed(2) ? amount.value * Number(currentMaketPrice.value[0].close).toFixed(2) : amount.value * bidPrice.value,
             actualPrice: "matching",
             quantity: amount.value,
           }
@@ -927,7 +927,7 @@ onMounted(async () => {
             <span class="text-zinc-600">USD</span>
           </div>
 
-          <p class=" p-4 float-right m-0">Estimate cost <span class="font-semibold text-zinc-600">{{ Number(shares * Number(currentMaketPrice[0].close).toFixed(2)).toFixed(2)}} USD</span></p>
+          <p class=" p-4 float-right m-0">Estimate cost <span class="font-semibold text-zinc-600">{{ isLimit === false ? (shares * Number(currentMaketPrice[0].close)).toFixed(2) : (bidPrice*shares).toFixed(2)}} USD</span></p>
         </div>
 
         </div>
