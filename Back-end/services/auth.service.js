@@ -1,11 +1,11 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as userModel from "../models/user.model.js";
-
+import appError from "../middleware/appError.js"
 export const registerUserService = async (username, password) => {
   const oldUser = await userModel.findUserByUsername(username);
   if (oldUser) {
-    throw new Error("User already exists. Please login");
+    throw new appError("User already exists. Please login", 409); // ✅ ใช้ AppError
   }
 
   const encryptedPassword = await bcrypt.hash(password, 10);
@@ -30,12 +30,12 @@ export const registerUserService = async (username, password) => {
 export const loginUserService = async (username, password) => {
   const user = await userModel.findUserByUsername(username);
   if (!user) {
-    throw new Error("Invalid Credentials");
+    throw new appError("Invalid Credentials", 400); // ✅ ใช้ AppError
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    throw new Error("Invalid Credentials");
+    throw new appError("wrong password", 400); // ✅ ใช้ AppError
   }
 
   const token = jwt.sign(

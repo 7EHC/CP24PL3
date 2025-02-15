@@ -1,13 +1,13 @@
-import { Router } from "express";
-import { createPortfolio, getAllPortfolios, getPortfolioById, buyStock, sellStock } from "../controllers/portfolio.controller.js";
+import express from "express";
+import * as portfolioController from "../controllers/portfolio.controller.js";
 import auth from "../middleware/auth.js";
 
-const router = Router();
+const router = express.Router();
 
-router.post("/create", auth, createPortfolio);
-router.get("/", auth, getAllPortfolios);
-router.get("/portDetails/:portId", auth, getPortfolioById);
-router.post("/buy", auth, buyStock);
-router.post("/sell", auth, sellStock);
+router.get("/portfolios", auth, portfolioController.getAllPortfolios);
+router.get("/portDetails/:portId", auth, portfolioController.getPortfolioById); // ✅ ต้องใช้ path นี้
+router.post("/portfolios/create", auth, portfolioController.createPortfolio);
+router.post("/portfolios/buy", auth, portfolioController.buyStock);
+router.post("/portfolios/sell", auth, portfolioController.sellStock);
 
 export default router;

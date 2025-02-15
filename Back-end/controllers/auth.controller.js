@@ -9,7 +9,7 @@ export const register = async (req, res, next) => {
     const user = await authService.registerUserService(username, password);
     res.status(201).json(user);
   } catch (error) {
-    next(error); // ✅ ให้ Middleware จัดการ Error
+    next(error);
   }
 };
 

@@ -19,7 +19,7 @@ app.use(morgan("dev"));
 
 // ใช้ routes
 app.use("/api", stockRoutes);
-app.use("/api/portfolios", portfolioRoutes);
+app.use("/api", portfolioRoutes);
 app.use("/api", authRoutes);
 
 // Middleware ดักจับ Error (ต้องอยู่ท้ายสุด)
