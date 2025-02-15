@@ -30,7 +30,7 @@ export const registerUserService = async (username, password) => {
 export const loginUserService = async (username, password) => {
   const user = await userModel.findUserByUsername(username);
   if (!user) {
-    throw new appError("Invalid Credentials", 400); // ✅ ใช้ AppError
+    throw new appError("username notfound", 404); // ✅ ใช้ AppError
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);

@@ -22,7 +22,7 @@ app.use("/api", stockRoutes);
 app.use("/api", portfolioRoutes);
 app.use("/api", authRoutes);
 
-// Middleware ดักจับ Error (ต้องอยู่ท้ายสุด)
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {

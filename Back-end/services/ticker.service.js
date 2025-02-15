@@ -22,14 +22,15 @@ export const searchTickersService = async (identifier) => {
     const tickers = await tickerModel.searchTickers(identifier);
 
     if (!tickers || tickers.length === 0) {
-      throw new appError(`No stocks found matching '${identifier}'`, 404); // ✅ ส่ง 404 ถ้าไม่เจอหุ้น
+      throw new appError(`No stocks found matching '${identifier}'`, 404);
     }
 
     return tickers;
   } catch (error) {
     if (error.name === "MongoServerError" || error.name === "MongoNetworkError") {
-      throw new appError("Database error while searching tickers", 500); // ✅ ส่ง 500 ถ้า MongoDB พังจริง
+      throw new appError("Database error while searching tickers", 500);
     }
-    throw error; // ✅ ถ้าเป็น 404 หรือ 400 จะส่งต่อไป middleware
+    throw error;
   }
 };
+
