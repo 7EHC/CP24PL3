@@ -6,6 +6,8 @@ import { RouterLink } from "vue-router";
 const allTrans = ref([]);
 const openIndex = ref(null);
 const portfolioNames = ref({}); // เก็บชื่อของพอร์ตแต่ละอัน
+const isLoading = ref(false)
+const isHaveTrans = ref(false)
 
 const getName = async (id) => {
   if (!id || portfolioNames.value[id]) return;
@@ -34,14 +36,35 @@ const toggleAccordion = (index) => {
 };
 
 onMounted(async () => {
-  allTrans.value = await stockApi.getAllTransaction();
+  // allTrans.value = await stockApi.getAllTransaction();
+  const fetchTransactions = async () => {
+    isLoading.value = true;
+    try {
+        allTrans.value = await stockApi.getAllTransaction();
+        isHaveTrans.value = allTrans.value.length === 0; // ถ้าไม่มี transaction ให้เป็น true
+    } catch (error) {
+        console.error("Error fetching transactions:", error);
+    } finally {
+        isLoading.value = false;
+    }
+}
+fetchTransactions()
 });
 </script>
 
 <template>
   <p class="text-3xl text-zinc-800 my-3 font-bold">History</p>
 
-  <div class="w-full flex flex-col mt-10 items-center" v-if="allTrans.length <= 0 ">
+  <div
+      v-if="isLoading"
+      class="fixed inset-0 flex items-center justify-center"
+    >
+      <div
+        class="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"
+      ></div>
+    </div>
+
+  <div class="w-full flex flex-col mt-10 items-center" v-if="isHaveTrans">
     <p class="text-xl">No transaction history</p>
     <RouterLink :to="{name:'Port'}" class="bg-yellow-400 text-zinc-900 text-lg p-2 px-5 font-bold rounded-2xl hover:bg-yellow-300 duration-300 mt-6">
       Let's start investing
