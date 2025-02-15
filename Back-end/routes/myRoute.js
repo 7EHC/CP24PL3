@@ -34,8 +34,12 @@ function getNextApiKey() {
 cron.schedule("*/1 * * * *", async () => {
   const now = new Date();
   const hour = now.getHours();
+  const day = now.getDay(); // 0 = Sunday, 6 = Saturday
 
-  // ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
+  // ❌ หยุดทำงานถ้าเป็นวันเสาร์หรืออาทิตย์
+  if (day === 0 || day === 6) return;
+
+  // ❌ ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
   if (hour < 20 && hour >= 4) return;
 
   console.log(`🔄 Checking pending transactions... at ${now}`);
