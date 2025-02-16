@@ -57,29 +57,47 @@ const getPortDetails = async (id) => {
   }
 };
 
+// const isFormValid = computed(() => {
+//   if (modalValue.value === 'buy' && selectedOption.value === 'usd' && amount.value > 0) {
+//     return amount.value > 0 && selectedPortfolio.value; // Valid if both fields are filled
+//   } else if (modalValue.value === 'buy' && selectedOption.value === 'shares') {
+//     if (isLimit.value === true && shares.value > 0) {
+//       return shares.value > 0 && bidPrice.value > 0 && selectedPortfolio.value;
+//     } else {
+//       return shares.value > 0 && selectedPortfolio.value;
+//     }
+//   } else if (modalValue.value === 'sell' && selectedOption.value === 'usd') {
+//     return amount.value > 0 && selectedPortfolio.value;
+//   } else if (modalValue.value === 'sell' && selectedOption.value === 'shares') {
+//     if (amount.value <= portDetails.value) { // Ensure amount is within available balance
+//       if (isLimit.value === true && bidPrice.value > 0) {
+//         return amount.value > 0 && bidPrice.value > 0 && selectedPortfolio.value;
+//       } else {
+//         return amount.value > 0 && selectedPortfolio.value;
+//       }
+//     } else {
+//       return false; // Invalid if amount exceeds available balance
+//     }
+//   }
+// })
 const isFormValid = computed(() => {
-  if (modalValue.value === 'buy' && selectedOption.value === 'usd' && amount.value > 0) {
-    return amount.value > 0 && selectedPortfolio.value; // Valid if both fields are filled
-  } else if (modalValue.value === 'buy' && selectedOption.value === 'shares') {
-    if (isLimit.value === true && shares.value > 0) {
-      return shares.value > 0 && bidPrice.value > 0 && selectedPortfolio.value;
-    } else {
-      return shares.value > 0 && selectedPortfolio.value;
-    }
-  } else if (modalValue.value === 'sell' && selectedOption.value === 'usd') {
-    return amount.value > 0 && selectedPortfolio.value;
-  } else if (modalValue.value === 'sell' && selectedOption.value === 'shares') {
-    if (amount.value <= portDetails.value) { // Ensure amount is within available balance
-      if (isLimit.value === true && bidPrice.value > 0) {
-        return amount.value > 0 && bidPrice.value > 0 && selectedPortfolio.value;
-      } else {
-        return amount.value > 0 && selectedPortfolio.value;
-      }
-    } else {
-      return false; // Invalid if amount exceeds available balance
-    }
+  if (!selectedPortfolio.value) return false;
+  
+  if (modalValue.value === 'buy') {
+    return selectedOption.value === 'usd' 
+      ? amount.value > 0 
+      : shares.value > 0 && (!isLimit.value || bidPrice.value > 0);
   }
-})
+  
+  if (modalValue.value === 'sell') {
+    if (amount.value > portDetails.value) return false;
+    return selectedOption.value === 'usd' 
+      ? amount.value > 0 
+      : amount.value > 0 && (!isLimit.value || bidPrice.value > 0);
+  }
+  
+  return false;
+});
 
 const getMarketPrice = async (tic) => {
   try {
