@@ -49,27 +49,27 @@ watch(
     <div class="space-x-12 text-white font-medium text-base">
       <RouterLink
         :to="{ name: 'Home' }"
-        class="hover:text-yellow-500 duration-200"
+        :class="['hover:text-yellow-500 duration-200 relative after:content-[\'\'] after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-yellow-500 after:transition-all after:duration-300', route.path === '/home' ? 'text-yellow-500 after:scale-x-100' : 'after:scale-x-0']"
         >HOME</RouterLink
       >
       <RouterLink
         :to="{ name: 'NEWS' }"
-        class="hover:text-yellow-500 duration-200"
+        :class="['hover:text-yellow-500 duration-200 relative after:content-[\'\'] after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-yellow-500 after:transition-all after:duration-300', route.path === '/news' ? 'text-yellow-500 after:scale-x-100' : 'after:scale-x-0']"
         >NEWS</RouterLink
       >
       <RouterLink
         :to="{ name: 'Calculator' }"
-        class="hover:text-yellow-500 duration-200"
+        :class="['hover:text-yellow-500 duration-200 relative after:content-[\'\'] after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-yellow-500 after:transition-all after:duration-300', route.path === '/calculator' ? 'text-yellow-500 after:scale-x-100' : 'after:scale-x-0']"
         >DCA CALCULATOR</RouterLink
       >
       <RouterLink
         :to="{ name: 'Port' }"
-        class="hover:text-yellow-500 duration-200"
+        :class="['hover:text-yellow-500 duration-200 relative after:content-[\'\'] after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-yellow-500 after:transition-all after:duration-300', route.path === '/port' ? 'text-yellow-500 after:scale-x-100' : 'after:scale-x-0']"
         >PORTFOLIO</RouterLink
       >
       <RouterLink
         :to="{ name: 'History' }"
-        class="hover:text-yellow-500 duration-200"
+        :class="['hover:text-yellow-500 duration-200 relative after:content-[\'\'] after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-yellow-500 after:transition-all after:duration-300', route.path === '/history' ? 'text-yellow-500 after:scale-x-100' : 'after:scale-x-0']"
         v-if="token"
         >HISTORY</RouterLink
       >
