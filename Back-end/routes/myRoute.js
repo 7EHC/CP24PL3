@@ -501,7 +501,7 @@ router.post("/register", async (req, res) => {
     // 2) เช็คว่ามี user ซ้ำไหม
     const oldUser = await userSchema.findOne({ username });
     if (oldUser) {
-      return res.status(409).send("User already exists. Please login");
+      return res.status(409).send("User already exists, please login.");
     }
 
     // 3) เข้ารหัส password

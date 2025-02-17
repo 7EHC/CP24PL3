@@ -7,12 +7,15 @@ const API_ROOT = import.meta.env.VITE_ROOT_API;
 const router = useRouter();
 const username = ref("");
 const password = ref("");
-const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
 const confirmPassword = ref("");
+const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
 const errors = ref({ username: "", password: "", confirmPassword: "" });
 const success = ref(false)
 
 const validate = () => {
+  username.value = username.value.trim()
+  password.value = password.value.trim()
+  confirmPassword.value = confirmPassword.value.trim()
   errors.value = { username: "", password: "", confirmPassword: "" };
   let valid = true;
 
@@ -53,7 +56,7 @@ const register = async () => {
       if (res.ok) {
         success.value = true
       } else if (res.status === 409) {
-        errors.value.username = "Username is already exist.";
+        errors.value.username = await res.text();
         return errors.value.username;
       }
     } catch (err) {
@@ -112,7 +115,6 @@ const register = async () => {
                 type="text"
                 id="username"
                 placeholder="Username"
-                maxlength="10"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
