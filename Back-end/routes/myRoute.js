@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
+const API_ROOT = process.env.VITE_ROOT_API;
+
 const router = express.Router();
 const ticker = db.collection("stock_ticker");
 const portfolio = db.collection("portfolio");
@@ -76,8 +78,8 @@ cron.schedule("*/1 * * * *", async () => {
 
         const apiUrl =
           action === "buy"
-            ? "http://localhost:5000/api/buyStock"
-            : "http://localhost:5000/api/sellStock";
+            ? `${API_ROOT}/buyStock`
+            : `${API_ROOT}/sellStock`;
         await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
