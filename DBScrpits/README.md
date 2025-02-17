@@ -1,1 +1,0 @@
-DBScript folder

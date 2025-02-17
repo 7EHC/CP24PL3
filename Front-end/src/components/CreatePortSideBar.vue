@@ -1,13 +1,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router'
 import stockApi from '../composable/FetchStock';
 import { getTwelveDataRandomkey } from '../composable/FetchStock';
+import { decodeToken } from '../composable/Auth';
 
 const API_ROOT = import.meta.env.VITE_ROOT_API;
 const portsList = ref([]);
 const showModal = ref(false);
 const portName = ref()
 const portObj = ref({})
+const router = useRouter()
 
 // Props
 defineProps({
@@ -26,6 +29,11 @@ const createPortfolio = () => {
 const closeModal = () => {
   showModal.value = false;
 };
+
+const token = ref(localStorage.getItem("token"));
+const userData = ref("");
+console.log(token.value);
+
 
 const createPortPOST = async (portfolioObj) => {
     try {
@@ -133,6 +141,7 @@ const getMarketPrice = async (tic) => {
 
 const createPortBut = async () => {
     const portObj = {  // Initialize portObj here as an object
+        userId: userData.value.user_id,
         portfolio_name: portName.value,
         assets: []
     };
@@ -147,6 +156,10 @@ const handlePortfolioClick = (id) => {
 };
 
 onMounted(async () => {
+  if (token.value) {
+    userData.value = decodeToken(token.value)
+    console.log(userData.value.username);
+  }
   portsList.value = await stockApi.getPort();
   // console.log(portsList.value);
 });

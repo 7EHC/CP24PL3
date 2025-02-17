@@ -6,6 +6,7 @@ import Calculator from "../views/Calculator.vue"
 import StockView from "../views/StockView.vue";
 import Login from "../views/Login.vue";
 import History from "../views/History.vue"
+import Register from "../views/Register.vue";
 
 const router = createRouter({
     history: createWebHistory("/pl3"),
@@ -23,13 +24,7 @@ const router = createRouter({
             path: '/port',
             name: 'Port',
             component: Port,
-            // children: [
-            //     {
-            //         path: 'stockview/:ticker', // Nested route without leading slash
-            //         name: 'StockView',
-            //         component: StockView,
-            //     }
-            // ]
+            meta: { requiresAuth: true },
         },
         {
             path: '/stockView/:details',
@@ -49,14 +44,29 @@ const router = createRouter({
         {
             path: '/history',
             name: 'History',
-            component: History
+            component: History,
+            meta: { requiresAuth: true },
         },
         {
             path: '/login',
             name: 'Login',
             component: Login
         },
+        {
+            path: '/register',
+            name: 'Register',
+            component: Register
+        },
     ]
 })
+
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem("token")
+    if (to.meta.requiresAuth && !token) {
+      next("/login");
+    } else {
+      next();
+    }
+  });
 
 export default router;

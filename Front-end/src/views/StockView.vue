@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from "vue";
 import { useRoute, RouterLink } from "vue-router";
 import Chart from "chart.js/auto"; // Import Chart.js
 import stockApi from "../composable/FetchStock";
+import { decodeToken } from "../composable/Auth";
 import { getTwelveDataRandomkey,getPolygonRandomKey } from "../composable/FetchStock";
 
 const { params } = useRoute();
@@ -28,6 +29,8 @@ const portDetails = ref(null)
 const selectedOption = ref('usd'); // zตั้งค่า default เป็น USD Amount
 const isLimit = ref(false);
 const bidPrice = ref(null)
+const token = ref(localStorage.getItem("token"));
+const userData = ref("");
 let marketPriceInterval
 
 const setMarket = () => {
@@ -118,7 +121,7 @@ const stockTransaction = async (value) => {
   try {
     if (value === "buy") {
       let obj = {
-        userId: "user001",
+        userId: userData.value.user_id,
         portId: selectedPortfolio.value,
         symbol: result.ticker,
         action: modalValue.value,
@@ -174,7 +177,7 @@ const stockTransaction = async (value) => {
       }
 
       let obj = {
-        userId: "user001",
+        userId: userData.value.user_id,
         portId: selectedPortfolio.value,
         symbol: result.ticker,
         action: modalValue.value
@@ -645,6 +648,7 @@ const createNewChart = async (days, tic) => {
 };
 
 onMounted(async () => {
+  token.value && (userData.value = decodeToken(token.value));
   currentMaketPrice.value = await getMarketPrice(result.ticker);
   // console.log(currentMaketPrice.value)
   // console.log("This is answer: "+params.details)

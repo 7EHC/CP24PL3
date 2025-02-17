@@ -1,40 +1,63 @@
 <script setup>
-import { ref, nextTick } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { decodeToken } from "../composable/Auth";
+import authApi from "../composable/Auth";
 
 const API_ROOT = import.meta.env.VITE_ROOT_API;
 const router = useRouter();
 const username = ref("");
 const password = ref("");
-const failedMsg = ref("");
+const confirmPassword = ref("");
+const errors = ref({ username: "", password: "", confirmPassword: "" });
 
-const login = async () => {
-  failedMsg.value = "";
-  try {
-    const res = await fetch(`${API_ROOT}/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-      }),
-    });
+const validate = () => {
+  errors.value = { username: "", password: "", confirmPassword: "" };
+  let valid = true;
 
-    if (res.ok) {
-      const data = await res.json();
-      const token = data.token;
-      localStorage.setItem("token", token)
-      window.dispatchEvent(new Event("storage"));
-      router.push("/port");
-    } else if (res.status === 400) {
-      failedMsg.value = "Incorrect username or password.";
+  if (!username.value) {
+    errors.value.username = "Username is required.";
+    valid = false;
+  }
+  if (!password.value || password.value.length < 6) {
+    errors.value.password = "Password must be at least 6 characters.";
+    valid = false;
+  }
+  if (confirmPassword.value !== password.value) {
+    errors.value.confirmPassword = "Passwords do not match.";
+    valid = false;
+  }
+  return valid;
+};
+
+const register = async () => {
+  errors.value = { username: "", password: "", confirmPassword: "" };
+  if (validate()) {
+    try {
+      const res = await fetch(`${API_ROOT}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username.value,
+          password: password.value,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        router.push("/login");
+        return data;
+      } else if (res.status === 409) {
+        errors.value.username = "Username is already exist.";
+        return errors.value.username;
+      }
+    } catch (err) {
+      console.error("Registration Error:", err);
+      throw err;
     }
-  } catch (err) {
-    console.error("Login Error:", err);
-    throw err;
+  } else {
+    console.log("Invalid input");
   }
 };
 </script>
@@ -50,7 +73,6 @@ const login = async () => {
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     rel="stylesheet"
   />
-
   <div class="all -ml-24 w-full h-screen fixed flex justify-center">
     <div class="sub h-4/6 w-4/6 -ml-10 mt-14 rounded-xl">
       <div class="flex items-center justify-center h-full">
@@ -68,73 +90,77 @@ const login = async () => {
             ></div>
             <div class="relative w-14 h-2 bg-white rounded-full"></div>
           </div>
-
           <div class="w-3/5 bg-yellow-400 flex flex-col justify-center px-8">
-            <p class="text-black text-3xl font-extrabold mb-2 text-center">
-              Login
+            <p class="text-black text-3xl font-extrabold mb-3 text-center">
+              Register
             </p>
-            <form @submit.prevent="login">
+            <form @submit.prevent="register">
               <label class="text-black text-sm font-semibold" for="username"
                 >Username<span class="text-red-500">*</span>
+                <span class="text-red-500 text-xs float-right">{{
+                  errors.username
+                }}</span>
               </label>
-              <!-- <span class="text-red-500 text-xs float-right pt-1">{{
-                errors.username
-              }}</span> -->
               <input
                 v-model="username"
                 type="text"
                 id="username"
                 placeholder="Username"
-                :class="{
-                  'ring-2 ring-red-500': failedMsg.length !== 0,
-                }"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
                 required
               />
+
               <label
                 class="text-black text-sm font-semibold mb-2 mt-4"
                 for="password"
                 >Password<span class="text-red-500">*</span>
+                <span class="text-red-500 text-xs float-right">{{
+                  errors.password
+                }}</span>
               </label>
-              <!-- <span class="text-red-500 text-xs float-right">{{
-                errors.password
-              }}</span> -->
               <input
                 v-model="password"
                 type="password"
                 id="password"
                 placeholder="Password"
-                :class="{
-                  'ring-2 ring-red-500': failedMsg.length !== 0,
-                }"
-                class="bg-white h-10 w-full mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
+                maxlength="12"
+                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
                 required
               />
-              <div class="mt-2 text-xs flex items-center justify-between">
-                <label class="flex items-center gap-1 cursor-pointer">
-                  <input type="checkbox" />
-                  <span class="text-black">Remember me</span>
-                </label>
-                <span class="text-blue-600">Forgot password?</span>
-              </div>
-              <div v-if="failedMsg.length != 0">
-                <span class="text-red-500 text-xs">{{ failedMsg }}</span>
-              </div>
+
+              <label
+                class="text-black text-sm font-semibold mb-2 mt-4"
+                for="confirmPassword"
+                >Confirm Password<span class="text-red-500">*</span>
+                <span class="text-red-500 text-xs float-right">{{
+                  errors.confirmPassword
+                }}</span>
+              </label>
+              <input
+                v-model="confirmPassword"
+                type="password"
+                id="confirmPassword"
+                placeholder="Confirm Password"
+                maxlength="12"
+                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
+                required
+              />
+
               <div class="flex justify-center items-center">
                 <button
                   type="submit"
                   class="w-1/5 h-10 bg-white text-black font-semibold rounded-full hover:bg-gray-100 mt-3"
                 >
-                  Login
+                  Sign up
                 </button>
               </div>
             </form>
             <p class="text-black pt-5 text-center text-xs">
-              Don't have an account?
+              Already have an account?
               <span
                 class="text-blue-600 hover:underline cursor-pointer"
-                @click="router.push('/register')"
-                >Sign up now</span
+                @click="router.push('/login')"
+                >Login here</span
               >
             </p>
           </div>
