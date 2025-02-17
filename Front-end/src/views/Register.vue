@@ -20,10 +20,14 @@ const validate = () => {
     errors.value.username = "Username is required.";
     valid = false;
   }
-  if (!password.value || !regex.test(password.value) ) {
+    if (!password.value || password.value.length < 8) {
     errors.value.password = "Password must be at least 8 characters long.";
     valid = false;
   }
+  // if (!password.value || !regex.test(password.value)) {
+  //   errors.value.password = "Password must be at least 8 characters long.";
+  //   valid = false;
+  // }
   if (confirmPassword.value !== password.value) {
     errors.value.confirmPassword = "Passwords do not match.";
     valid = false;

@@ -181,7 +181,7 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
     <br /> -->
     <span class="text-zinc-500 text-lg">Total Value:</span> {{ totalValue }} USD
   </p>
-<p class="text-zinc-800 flex">
+<div class="text-zinc-800 flex">
   <span class="text-zinc-500 text-lg">Assets:</span> 
   <div class="flex flex-col border border-solid border-zinc-800 ml-3 rounded-lg bg-gray-100">
     <span v-for="asset in details.growth" @click="search(asset.name)" class="border-b border-black p-4 m-2 cursor-default hover:text-yellow-500 transition duration-300">
@@ -190,7 +190,7 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
       ({{ Number.isInteger(asset.quantity) ? asset.quantity : asset.quantity.toFixed(8) }} shares)
     </span>
   </div>
-</p>
+</div>
 </div>
 
 <div class="w-1/2">

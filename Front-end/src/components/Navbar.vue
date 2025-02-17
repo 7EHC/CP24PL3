@@ -1,14 +1,14 @@
 <script setup>
 import { onMounted, ref, watchEffect, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
-import { decodeToken } from '../composable/Auth';
+import { decodeToken } from "../composable/Auth";
 
 const router = useRouter();
-const route = useRoute()
+const route = useRoute();
 
 const token = ref(localStorage.getItem("token"));
 const userData = ref("");
-const showLogout = ref(false)
+const showLogout = ref(false);
 const protectedRoutes = ["/port", "/history"];
 
 const logout = () => {
@@ -18,7 +18,7 @@ const logout = () => {
   showLogout.value = false;
 
   if (protectedRoutes.includes(route.path)) {
-    router.push('/login');
+    router.push("/login");
   }
 };
 
@@ -26,11 +26,15 @@ window.addEventListener("storage", () => {
   token.value = localStorage.getItem("token");
 });
 
-watch(token, (newToken) => {
-  if (newToken) {
-    userData.value = decodeToken(newToken);
-  }
-}, { immediate: true });
+watch(
+  token,
+  (newToken) => {
+    if (newToken) {
+      userData.value = decodeToken(newToken);
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -86,40 +90,44 @@ watch(token, (newToken) => {
       </p> -->
 
       <div class="relative ml-auto">
-    <!-- กดแล้ว dropdown แสดง -->
-    <button
-      v-if="token"
-      @click="showLogout = !showLogout"
-      class="flex items-center gap-2 border border-yellow-500 text-white px-4 py-1 rounded-full"
-    >
-      <img src="../assets/user.png" alt="user" class="w-5 h-5" />
-      <span>{{ userData.username }}</span>
-      <svg
-        class="w-4 h-4 transition-transform duration-200"
-        :class="{ 'rotate-180': showLogout }"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-      </svg>
-    </button>
+        <!-- กดแล้ว dropdown แสดง -->
+        <button
+          v-if="token"
+          @click="showLogout = !showLogout"
+          class="flex items-center gap-2 border border-yellow-500 text-white px-4 py-1 rounded-full"
+        >
+          <img src="../assets/user.png" alt="user" class="w-5 h-5" />
+          <span>{{ userData.username }}</span>
+          <svg
+            class="w-4 h-4 transition-transform duration-200"
+            :class="{ 'rotate-180': showLogout }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
+        </button>
 
-    <!-- Dropdown Menu -->
-    <div
-      v-show="showLogout"
-      class="absolute right-0 mt-2 w-40 bg-white text-black rounded-lg shadow-lg overflow-hidden"
-    >
-      <button
-        @click="logout"
-        class="w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-150"
-      >
-        Logout
-      </button>
-    </div>
-  </div>
-
+        <!-- Dropdown Menu -->
+        <div
+          v-show="showLogout"
+          class="absolute right-0 mt-2 w-40 bg-white text-black rounded-lg shadow-lg overflow-hidden"
+        >
+          <button
+            @click="logout"
+            class="w-full text-left px-4 py-2 hover:bg-gray-100 transition duration-150"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
