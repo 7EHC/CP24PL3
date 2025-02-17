@@ -691,7 +691,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="-my-6">
+  <div class="-my-6 ml-14 mr-36">
     <RouterLink
       :to="{ name: 'Port' }"
       class="back-but fixed top-20 left-24 font-bold text-lg bg-zinc-800 text-yellow-400 p-2 rounded-2xl hover:bg-yellow-400 hover:text-zinc-800 duration-300"

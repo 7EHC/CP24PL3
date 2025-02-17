@@ -7,6 +7,7 @@ const API_ROOT = import.meta.env.VITE_ROOT_API;
 const router = useRouter();
 const username = ref("");
 const password = ref("");
+const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
 const confirmPassword = ref("");
 const errors = ref({ username: "", password: "", confirmPassword: "" });
 const success = ref(false)
@@ -19,8 +20,8 @@ const validate = () => {
     errors.value.username = "Username is required.";
     valid = false;
   }
-  if (!password.value || password.value.length < 6) {
-    errors.value.password = "Password must be at least 6 characters.";
+  if (!password.value || !regex.test(password.value) ) {
+    errors.value.password = "Password must be at least 8 characters long.";
     valid = false;
   }
   if (confirmPassword.value !== password.value) {
@@ -52,10 +53,12 @@ const register = async () => {
         return errors.value.username;
       }
     } catch (err) {
+      success.value = false
       console.error("Registration Error:", err);
       throw err;
     }
   } else {
+    success.value = false
     console.log("Invalid input");
   }
 };
@@ -105,6 +108,7 @@ const register = async () => {
                 type="text"
                 id="username"
                 placeholder="Username"
+                maxlength="10"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
@@ -122,7 +126,6 @@ const register = async () => {
                 type="password"
                 id="password"
                 placeholder="Password"
-                maxlength="12"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
@@ -140,7 +143,6 @@ const register = async () => {
                 type="password"
                 id="confirmPassword"
                 placeholder="Confirm Password"
-                maxlength="12"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />

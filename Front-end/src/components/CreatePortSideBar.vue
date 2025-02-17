@@ -32,8 +32,7 @@ const closeModal = () => {
 
 const token = ref(localStorage.getItem("token"));
 const userData = ref("");
-console.log(token.value);
-
+// console.log(token.value);
 
 const createPortPOST = async (portfolioObj) => {
     try {
@@ -158,7 +157,7 @@ const handlePortfolioClick = (id) => {
 onMounted(async () => {
   if (token.value) {
     userData.value = decodeToken(token.value)
-    console.log(userData.value.username);
+    // console.log(userData.value.username);
   }
   portsList.value = await stockApi.getPort();
   // console.log(portsList.value);

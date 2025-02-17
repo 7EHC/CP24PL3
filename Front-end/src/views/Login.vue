@@ -8,6 +8,13 @@ const router = useRouter();
 const username = ref("");
 const password = ref("");
 const failedMsg = ref("");
+const isSuccess = ref(false)
+
+const handleLogin = async () => {
+  isSuccess.value = false;
+  // await new Promise(resolve => setTimeout(resolve, 500));
+  isSuccess.value = true;
+};
 
 const login = async () => {
   failedMsg.value = "";
@@ -28,7 +35,10 @@ const login = async () => {
       const token = data.token;
       localStorage.setItem("token", token);
       window.dispatchEvent(new Event("storage"));
-      router.push("/port");
+      handleLogin()
+      setTimeout(() => {
+        router.push("/port");
+      }, 1800);
     } else if (res.status === 400) {
       failedMsg.value = "Incorrect username or password.";
     }
@@ -85,6 +95,7 @@ const login = async () => {
                 type="text"
                 id="username"
                 placeholder="Username"
+                maxlength="10"
                 :class="{
                   'ring-2 ring-red-500': failedMsg.length !== 0,
                 }"
@@ -123,8 +134,15 @@ const login = async () => {
               <div class="flex justify-center items-center">
                 <button
                   type="submit"
-                  class="w-1/5 h-10 bg-white text-black font-semibold rounded-full hover:bg-gray-100 mt-3"
+                  class="relative flex items-center justify-center w-1/5 h-10 bg-white text-black font-semibold rounded-full transition-all duration-500 ease-in-out hover:bg-gray-100 mt-3"
+                  :class="{ 'w-1/3 px-6': isSuccess }"
                 >
+                  <transition name="fade">
+                    <i
+                      v-if="isSuccess"
+                      class="fas fa-check-circle text-green-500 mr-2 text-lg"
+                    ></i>
+                  </transition>
                   Login
                 </button>
               </div>
@@ -145,6 +163,13 @@ const login = async () => {
 </template>
 
 <style scoped>
+/* เอฟเฟกต์ให้ไอคอน ✓ ค่อย ๆ ปรากฏ */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease-out;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
 p {
   font-family: "Kanit", sans-serif;
   font-style: normal;
