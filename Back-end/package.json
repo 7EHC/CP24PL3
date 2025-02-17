@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --watch routes index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -15,14 +16,18 @@
     "argon2": "^0.31.2",
     "bcryptjs": "^3.0.0",
     "cors": "^2.8.5",
+    "cron": "^3.5.0",
     "dotenv": "^16.3.1",
     "express": "^4.19.2",
     "express-async-errors": "^3.1.1",
+    "fetch": "^1.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.5.0",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "winston": "^3.17.0"
   }
 }

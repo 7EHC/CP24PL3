@@ -1,23 +1,31 @@
 import express from "express";
 import cors from "cors";
 import "./config/dotenv.js";
-import "express-async-errors";
-import myRouter from "./routes/myRoute.js"
+import "express-async-errors"; // จับ error ใน async function
+import morgan from "morgan";
+import errorHandler from "./middleware/errorHandler.js"; // นำเข้า Middleware Error
 
+import stockRoutes from "./routes/stock.route.js";
+import portfolioRoutes from "./routes/portfolio.route.js";
+import authRoutes from "./routes/auth.route.js";
+import transactionRoutes from "./routes/transaction.route.js";
+
+const app = express();
 const PORT = process.env.PORT || 5050;
-const app = express()
-
-// app.use((req,res)=>{
-//     res.end("<h1>Hello world!</h1>")
-// })
 
 app.use(cors());
-app.use(express.json()); // Enable JSON body parsing middleware
-
-// Load myRoute routes
-app.use('/api', myRouter);
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
 
-app.listen(PORT,()=>{
-    console.log(`Server is running on port ${PORT}`)
-})
+// ใช้ routes
+app.use("/api", stockRoutes);
+app.use("/api", portfolioRoutes);
+app.use("/api", authRoutes);
+app.use("/api", transactionRoutes);
+
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
