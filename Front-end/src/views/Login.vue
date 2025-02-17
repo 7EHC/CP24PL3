@@ -76,6 +76,11 @@
             >
               Login
             </button>
+
+            <div class="flex w-full justify-center mt-14">
+              <a class="text-black">Don't have an account?<span class="text-blue-600 hover:underline cursor-pointer"> Sign-up now</span></a>
+            </div>
+            
           </div>
         </div>
       </div>

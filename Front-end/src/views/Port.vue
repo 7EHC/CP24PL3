@@ -152,10 +152,11 @@ sm:w-40
 />
 
 <div class="all
-2xl:ml-0
-xl:ml-0
-md:ml-20
-sm:ml-20
+2xl:ml-48
+xl:ml-48
+md:ml-28
+sm:ml-28
+
 ">
 <!-- If not select portfolio dialog -->
 <div v-if="Object.keys(details).length === 0 && details.constructor === Object"
@@ -182,11 +183,11 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
   </p>
 <p class="text-zinc-800 flex">
   <span class="text-zinc-500 text-lg">Assets:</span> 
-  <div class="flex flex-col border border-solid border-zinc-800 ml-3 rounded-lg bg-zinc-100">
+  <div class="flex flex-col border border-solid border-zinc-800 ml-3 rounded-lg bg-gray-100">
     <span v-for="asset in details.growth" @click="search(asset.name)" class="border-b border-black p-4 m-2 cursor-default hover:text-yellow-500 transition duration-300">
      &nbsp;{{ asset.name }}&nbsp;{{ (asset.quantity * asset.latestPrice).toFixed(2) }} USD 
      ({{ Number(((asset.latestPrice - asset.current_mkt_price)/asset.current_mkt_price)*100).toFixed(2) }} %)
-      ({{ (asset.quantity).toFixed(8) }} shares)
+      ({{ Number.isInteger(asset.quantity) ? asset.quantity : asset.quantity.toFixed(8) }} shares)
     </span>
   </div>
 </p>
@@ -237,7 +238,7 @@ class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
   </div>
 </div>
 <div v-if="searchResult === false" class="text-center">Not Found.</div> -->
-<div v-if="searchResult.length > 0" class="border border-solid border-zinc-400 p-6 rounded-lg mt-4">
+<div v-if="searchResult.length > 0" class="border border-solid border-zinc-400 p-6 rounded-lg my-4 ">
 <div>Results: {{ searchResult.length }}</div>
 <div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-full overflow-y-auto ">
   <div v-for="(res, index) in searchResult" :key="index" class="result xl:w-1/3 lg:w-1/3 sm:w-3/4 md:text-lg sm:text-xs bg-zinc-800">
