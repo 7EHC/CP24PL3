@@ -469,7 +469,7 @@ router.post("/createTransaction", async (req, res) => {
 
 const buyStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
   try {
-    await fetch("http://localhost:5000/api/buyStock", {
+    await fetch(`${API_ROOT}/buyStock`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ _id, symbol, quantity, current_mkt_price }),
@@ -481,7 +481,7 @@ const buyStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
 
 const sellStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
   try {
-    await fetch("http://localhost:5000/api/sellStock", {
+    await fetch(`${API_ROOT}/sellStock`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ _id, symbol, quantity, current_mkt_price }),
