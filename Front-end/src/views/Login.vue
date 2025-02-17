@@ -26,7 +26,7 @@ const login = async () => {
     if (res.ok) {
       const data = await res.json();
       const token = data.token;
-      localStorage.setItem("token", token)
+      localStorage.setItem("token", token);
       window.dispatchEvent(new Event("storage"));
       router.push("/port");
     } else if (res.status === 400) {
@@ -75,7 +75,7 @@ const login = async () => {
             </p>
             <form @submit.prevent="login">
               <label class="text-black text-sm font-semibold" for="username"
-                >Username<span class="text-red-500">*</span>
+                >Username<span class="text-red-500"> *</span>
               </label>
               <!-- <span class="text-red-500 text-xs float-right pt-1">{{
                 errors.username
@@ -88,13 +88,13 @@ const login = async () => {
                 :class="{
                   'ring-2 ring-red-500': failedMsg.length !== 0,
                 }"
-                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
+                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
               <label
                 class="text-black text-sm font-semibold mb-2 mt-4"
                 for="password"
-                >Password<span class="text-red-500">*</span>
+                >Password<span class="text-red-500"> *</span>
               </label>
               <!-- <span class="text-red-500 text-xs float-right">{{
                 errors.password
@@ -107,7 +107,7 @@ const login = async () => {
                 :class="{
                   'ring-2 ring-red-500': failedMsg.length !== 0,
                 }"
-                class="bg-white h-10 w-full mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
+                class="bg-white h-10 w-full mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
               <div class="mt-2 text-xs flex items-center justify-between">

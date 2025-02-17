@@ -66,6 +66,7 @@ watch(token, (newToken) => {
       <RouterLink
         :to="{ name: 'History' }"
         class="hover:text-yellow-500 duration-200"
+        v-if="token"
         >HISTORY</RouterLink
       >
 

@@ -9,6 +9,7 @@ const username = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const errors = ref({ username: "", password: "", confirmPassword: "" });
+const success = ref(false)
 
 const validate = () => {
   errors.value = { username: "", password: "", confirmPassword: "" };
@@ -45,9 +46,7 @@ const register = async () => {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        router.push("/login");
-        return data;
+        success.value = true
       } else if (res.status === 409) {
         errors.value.username = "Username is already exist.";
         return errors.value.username;
@@ -94,9 +93,9 @@ const register = async () => {
             <p class="text-black text-3xl font-extrabold mb-3 text-center">
               Register
             </p>
-            <form @submit.prevent="register">
+            <form v-if="!success" @submit.prevent="register">
               <label class="text-black text-sm font-semibold" for="username"
-                >Username<span class="text-red-500">*</span>
+                >Username<span class="text-red-500"> *</span>
                 <span class="text-red-500 text-xs float-right">{{
                   errors.username
                 }}</span>
@@ -106,14 +105,14 @@ const register = async () => {
                 type="text"
                 id="username"
                 placeholder="Username"
-                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
+                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
 
               <label
                 class="text-black text-sm font-semibold mb-2 mt-4"
                 for="password"
-                >Password<span class="text-red-500">*</span>
+                >Password<span class="text-red-500"> *</span>
                 <span class="text-red-500 text-xs float-right">{{
                   errors.password
                 }}</span>
@@ -124,14 +123,14 @@ const register = async () => {
                 id="password"
                 placeholder="Password"
                 maxlength="12"
-                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
+                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
 
               <label
                 class="text-black text-sm font-semibold mb-2 mt-4"
                 for="confirmPassword"
-                >Confirm Password<span class="text-red-500">*</span>
+                >Confirm Password<span class="text-red-500"> *</span>
                 <span class="text-red-500 text-xs float-right">{{
                   errors.confirmPassword
                 }}</span>
@@ -142,7 +141,7 @@ const register = async () => {
                 id="confirmPassword"
                 placeholder="Confirm Password"
                 maxlength="12"
-                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black"
+                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
 
@@ -155,7 +154,20 @@ const register = async () => {
                 </button>
               </div>
             </form>
-            <p class="text-black pt-5 text-center text-xs">
+
+            <div v-if="success" class="flex flex-col justify-center items-center py-10">
+              <i class="fas fa-check-circle text-green-500 text-5xl"></i>
+              <p class="text-black font-bold mt-2">Sign Up Successful!</p>
+            </div>
+
+            <p v-if="success" class="text-black pt-5 text-center text-xs">
+              Thank you for your registration!
+              <span class="text-blue-600 hover:underline cursor-pointer" @click="router.push('/login')">
+                Login here
+              </span>
+            </p>
+
+            <p v-if="!success" class="text-black pt-5 text-center text-xs">
               Already have an account?
               <span
                 class="text-blue-600 hover:underline cursor-pointer"
