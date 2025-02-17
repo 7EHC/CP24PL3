@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from "vue";
+import { getPolygonRandomKey } from "../composable/FetchStock";
 
 const news = ref([]);
 // const newsTemp = ref([]);
@@ -52,8 +53,9 @@ const fetchNews = async () => {
   isLoading.value = true;
   searchText.value = "";
   try {
+    let key = getPolygonRandomKey()
     const res = await fetch(
-      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&limit=20&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
+      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&limit=20&apiKey=${key}`
     );
     if (res.ok) {
       const ticker = await res.json();

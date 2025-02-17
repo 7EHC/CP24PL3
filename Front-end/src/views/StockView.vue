@@ -3,36 +3,50 @@ import { ref, onMounted, computed } from "vue";
 import { useRoute, RouterLink } from "vue-router";
 import Chart from "chart.js/auto"; // Import Chart.js
 import stockApi from "../composable/FetchStock";
+import { decodeToken } from "../composable/Auth";
+import { getTwelveDataRandomkey,getPolygonRandomKey } from "../composable/FetchStock";
 
 const { params } = useRoute();
 let chartInstance = null; // Store the chart instance globally
 let intervalId = null;
 const currentDate = ref(new Date().toISOString().split("T")[0]);
-const result = JSON.parse(params.details);
-const growthValueArr = ref([]);
-const growthValue = ref();
-const activeButton = ref(7);
-const marketOpen = ref(false);
-const numOfDay = ref(0);
-const dayToShowGraph = ref(0);
-const portsList = ref();
-const showModal = ref(false);
-const lastUpdatedDate = ref();
-// const start = ref()
-// const end = ref()
-const currentMaketPrice = ref();
-const selectedPortfolio = ref();
-const amount = ref(0);
-const modalValue = ref(null);
-const portDetails = ref(null);
-let marketPriceInterval;
+const result = JSON.parse(params.details)
+const growthValueArr = ref([])
+const growthValue = ref()
+const activeButton = ref(7)
+const marketOpen = ref(false)
+const numOfDay = ref(0)
+const dayToShowGraph = ref(0)
+const portsList = ref()
+const showModal = ref(false)
+const lastUpdatedDate = ref()
+const currentMaketPrice = ref()
+const selectedPortfolio = ref()
+const amount = ref(0)
+const shares = ref(0)
+const modalValue = ref(null)
+const portDetails = ref(null)
+const selectedOption = ref('usd'); // zตั้งค่า default เป็น USD Amount
+const isLimit = ref(false);
+const bidPrice = ref(null)
+const token = ref(localStorage.getItem("token"));
+const userData = ref("");
+let marketPriceInterval
 
-const sellAll = () => {
-  amount.value = portDetails.value;
+const setMarket = () => {
+  isLimit.value = false;
 };
-const setAmount = (value) => {
-  amount.value = value;
+
+const setLimit = () => {
+  isLimit.value = true;
 };
+
+const sellAll = ()=>{
+  amount.value = portDetails.value 
+}
+const setAmount = (value)=>{
+  amount.value = value
+}
 
 const getPortDetails = async (id) => {
   try {
@@ -46,14 +60,53 @@ const getPortDetails = async (id) => {
   }
 };
 
+// const isFormValid = computed(() => {
+//   if (modalValue.value === 'buy' && selectedOption.value === 'usd' && amount.value > 0) {
+//     return amount.value > 0 && selectedPortfolio.value; // Valid if both fields are filled
+//   } else if (modalValue.value === 'buy' && selectedOption.value === 'shares') {
+//     if (isLimit.value === true && shares.value > 0) {
+//       return shares.value > 0 && bidPrice.value > 0 && selectedPortfolio.value;
+//     } else {
+//       return shares.value > 0 && selectedPortfolio.value;
+//     }
+//   } else if (modalValue.value === 'sell' && selectedOption.value === 'usd') {
+//     return amount.value > 0 && selectedPortfolio.value;
+//   } else if (modalValue.value === 'sell' && selectedOption.value === 'shares') {
+//     if (amount.value <= portDetails.value) { // Ensure amount is within available balance
+//       if (isLimit.value === true && bidPrice.value > 0) {
+//         return amount.value > 0 && bidPrice.value > 0 && selectedPortfolio.value;
+//       } else {
+//         return amount.value > 0 && selectedPortfolio.value;
+//       }
+//     } else {
+//       return false; // Invalid if amount exceeds available balance
+//     }
+//   }
+// })
 const isFormValid = computed(() => {
-  return amount.value > 0 && selectedPortfolio.value; // Valid if both fields are filled
+  if (!selectedPortfolio.value) return false;
+  
+  if (modalValue.value === 'buy') {
+    return selectedOption.value === 'usd' 
+      ? amount.value > 0 
+      : shares.value > 0 && (!isLimit.value || bidPrice.value > 0);
+  }
+  
+  if (modalValue.value === 'sell') {
+    if (amount.value > portDetails.value) return false;
+    return selectedOption.value === 'usd' 
+      ? amount.value > 0 
+      : amount.value > 0 && (!isLimit.value || bidPrice.value > 0);
+  }
+  
+  return false;
 });
 
 const getMarketPrice = async (tic) => {
   try {
+    let key = getTwelveDataRandomkey()
     const res = await fetch(
-      `https://api.twelvedata.com/time_series?apikey=a812690526f24184b0347c0ce8899b8b&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
+      `https://api.twelvedata.com/time_series?apikey=${key}&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
     );
     if (res.ok) {
       const data = await res.json();
@@ -65,60 +118,107 @@ const getMarketPrice = async (tic) => {
 };
 
 const stockTransaction = async (value) => {
-  const obj = {
-    _id: selectedPortfolio.value,
-    symbol: result.ticker,
-    quantity: amount.value / currentMaketPrice.value[0].close,
-    current_mkt_price: currentMaketPrice.value[0].close,
-  };
-
   try {
-    let response;
-
-    // Determine API call based on the value parameter
     if (value === "buy") {
-      response = await stockApi.buyStock(obj);
-    } else if (value === "sell") {
-      // console.log(portDetails.value)
-      // Validate amount for sell operation
-      if (
-        !amount.value ||
-        (amount.value < 1 && amount.value !== portDetails.value)
-      ) {
-        alert(
-          "You have to sell at least 1 share or match the available shares in your portfolio."
-        );
-        return; // Exit the function if validation fails
+      let obj = {
+        userId: userData.value.user_id,
+        portId: selectedPortfolio.value,
+        symbol: result.ticker,
+        action: modalValue.value,
+        totalAmount: amount.value
+      }
+
+      if (selectedOption.value === "usd") {
+        obj = {
+          ...obj,
+          status: "match",
+          bidPrice: Number(currentMaketPrice.value[0].close).toFixed(2),
+          actualPrice: Number(currentMaketPrice.value[0].close).toFixed(2),
+          quantity: amount.value / Number(currentMaketPrice.value[0].close),
+        };
+        // console.log(obj)
+      } else if (selectedOption.value === "shares") {
+        if (isLimit.value === true) {
+          obj = {
+            ...obj,
+            status: "pending",
+            bidPrice: bidPrice.value > Number(currentMaketPrice.value[0].close).toFixed(2) ? Number(currentMaketPrice.value[0].close).toFixed(2) : bidPrice.value,
+            totalAmount: bidPrice.value > Number(currentMaketPrice.value[0].close).toFixed(2) ? Number(currentMaketPrice.value[0].close).toFixed(2) * shares.value : shares.value * bidPrice.value,
+            actualPrice: "matching",
+            quantity: shares.value,
+          };
+        } else {
+          obj = {
+            ...obj,
+            status: "match",
+            bidPrice: Number(currentMaketPrice.value[0].close).toFixed(2),
+            totalAmount:shares.value * Number(currentMaketPrice.value[0].close).toFixed(2),
+            actualPrice: Number(currentMaketPrice.value[0].close).toFixed(2),
+            quantity: shares.value,
+          }
+        }
+      }
+      // console.log(obj)
+      const response = await stockApi.createTransaction(obj)
+      console.log("API Response:", response);
+
+      if (response.message === "Transaction created successfully.") {
+        showModal.value = false;
+        alert(`Successfully bought ${obj.symbol} at ${obj.bidPrice} USD.`);
+        clearFieldForSellandBuy();
       } else {
-        obj.quantity = amount.value;
-        response = await stockApi.sellStock(obj);
+        alert(response.message || "Failed to buy stock. Please try again.");
+      }
+    } else if (value === "sell") {
+      // ตรวจสอบก่อนว่า amount.value ที่จะขายต้องไม่เกิน portDetails.value
+      if (amount.value > portDetails.value) {
+        alert(`You cannot sell more than ${portDetails.value} shares.`);
+        return;
+      }
+
+      let obj = {
+        userId: userData.value.user_id,
+        portId: selectedPortfolio.value,
+        symbol: result.ticker,
+        action: modalValue.value
+      };
+
+      if (isLimit.value === false) {
+        obj = {
+          ...obj,
+          status: "match",
+          bidPrice: Number(currentMaketPrice.value[0].close).toFixed(2),
+          totalAmount: Number(currentMaketPrice.value[0].close).toFixed(2) * amount.value,
+          actualPrice: Number(currentMaketPrice.value[0].close).toFixed(2),
+          quantity: amount.value 
+        };
+      }else if (isLimit.value === true){
+          obj = {
+            ...obj,
+            status: "pending",
+            bidPrice: bidPrice.value < Number(currentMaketPrice.value[0].close).toFixed(2) ? Number(currentMaketPrice.value[0].close).toFixed(2) : bidPrice.value,
+            totalAmount: bidPrice.value < Number(currentMaketPrice.value[0].close).toFixed(2) ? amount.value * Number(currentMaketPrice.value[0].close).toFixed(2) : amount.value * bidPrice.value,
+            actualPrice: "matching",
+            quantity: amount.value,
+          }
+      }
+
+      const response = await stockApi.createTransaction(obj);
+      console.log("API Response:", response);
+
+      if (response.message === "Transaction created successfully.") {
+        showModal.value = false;
+        alert(`Successfully added sold ${obj.symbol} transaction at ${obj.totalAmount} USD.`);
+        clearFieldForSellandBuy();
+      } else {
+        alert(response.message || "Failed to sell stock. Please try again.");
       }
     } else {
       throw new Error("Invalid operation. Value must be 'buy' or 'sell'.");
     }
-
-    console.log("API Response:", response);
-
-    // Adjust the success condition based on the response structure
-    if (
-      (value === "buy" && response.message === "เพิ่มหุ้นสำเร็จ".trim()) ||
-      (value === "buy" && response.message === "ซื้อหุ้นสำเร็จ".trim()) ||
-      (value === "sell" && response.message === "ขายหุ้นสำเร็จ")
-    ) {
-      console.log(`Stock ${value}ed successfully:`, response);
-      showModal.value = false; // Close the modal
-      alert(
-        `Successfully ${value}ed ${obj.symbol} at ${obj.current_mkt_price} USD.`
-      );
-      clearFieldForSellandBuy();
-    } else {
-      alert(response.message || `Failed to ${value} stock. Please try again.`);
-    }
   } catch (error) {
     console.error(`Error during stock ${value}:`, error);
-    alert(
-      `An error occurred while trying to ${value} stock. Please try again. If buy, please make sure you have a share for this stock`
-    );
+    alert(`An error occurred while trying to ${value} stock. Please try again.`);
   }
 };
 const updateMarketPrice = async () => {
@@ -244,8 +344,9 @@ const isActiveButton = (buttonValue) => activeButton.value === buttonValue; // C
 const getStockAgg = async (tic, timeFrame, from, to) => {
   marketOpen.value = false;
   try {
+    let key = getPolygonRandomKey()
     const res = await fetch(
-      `https://api.polygon.io/v2/aggs/ticker/${tic}/range/1/${timeFrame}/${from}/${to}?adjusted=true&sort=asc&apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
+      `https://api.polygon.io/v2/aggs/ticker/${tic}/range/1/${timeFrame}/${from}/${to}?adjusted=true&sort=asc&apiKey=${key}`
     );
     if (res.ok) {
       const data = await res.json();
@@ -547,6 +648,7 @@ const createNewChart = async (days, tic) => {
 };
 
 onMounted(async () => {
+  token.value && (userData.value = decodeToken(token.value));
   currentMaketPrice.value = await getMarketPrice(result.ticker);
   // console.log(currentMaketPrice.value)
   // console.log("This is answer: "+params.details)
@@ -589,7 +691,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="-my-6">
+  <div class="-my-6 ml-14 mr-36">
     <RouterLink
       :to="{ name: 'Port' }"
       class="back-but fixed top-20 left-24 font-bold text-lg bg-zinc-800 text-yellow-400 p-2 rounded-2xl hover:bg-yellow-400 hover:text-zinc-800 duration-300"
@@ -719,189 +821,295 @@ onMounted(async () => {
         class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
       >
         <!-- buy section ------------------------------------------------------------------------------------>
-        <div
-          class="buy-modal bg-white p-6 rounded-lg w-96 shadow-lg"
-          v-if="modalValue === 'buy'"
-        >
-          <h3 class="text-xl font-bold mb-4">Buy Stock</h3>
+    <div class="buy-modal bg-white p-6 rounded-lg w-96 shadow-lg" v-if="modalValue === 'buy'">
+      <h3 class="text-xl font-bold mb-4">Buy Stock</h3>
 
-          <!-- Stock Details -->
-          <div class="mb-4">
-            <p class="text-gray-700 text-3xl font-bold">
-              {{ result.ticker || "Loading..." }}
-            </p>
-            <p v-if="currentMaketPrice !== undefined">
-              Latest price: {{ Number(currentMaketPrice[0].close).toFixed(2) }}
-            </p>
-          </div>
+      <!-- Stock Details -->
+      <div class="mb-4">
+        <p class="text-gray-700 text-3xl font-bold">
+          {{ result.ticker || "Loading..." }}
+        </p>
+        <p v-if="currentMaketPrice !== undefined">Latest price: {{ Number(currentMaketPrice[0].close).toFixed(2) }}</p>
+      </div>
 
-          <!-- Buy Amount -->
-          <div class="mb-4">
-            <label
-              for="buyAmount"
-              class="block text-sm font-medium text-gray-700"
+      <!-- Buy Amount -->
+      <div class="mb-4">
+        <div class="amount">
+        
+          <div class="buyChoice w-full flex flex-row justify-center">
+            <button 
+              @click="selectedOption = 'usd'" 
+              class="mx-2 mb-2 border rounded-md p-1 w-1/2 text-zinc-600 hover:bg-gray-200 hover:transition-all"
+              :class="{'font-bold': selectedOption === 'usd','bg-gray-200': selectedOption === 'usd'}"
             >
-              Amount (USD) <span class="text-red-600">* required</span>
-            </label>
-            <div class="flex flex-row gap-4">
-              <button
-                @click="setAmount(50)"
-                class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition"
-              >
-                50
-              </button>
-              <button
-                @click="setAmount(100)"
-                class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition"
-              >
-                100
-              </button>
-              <button
-                @click="setAmount(250)"
-                class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition"
-              >
-                250
-              </button>
-              <button
-                @click="setAmount(500)"
-                class="border border-solid border-zinc-400 p-1 w-12 rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition"
-              >
-                500
-              </button>
-            </div>
+              USD Amount
+            </button>
+            <button 
+              @click="selectedOption = 'shares'" 
+              class="mx-2 mb-2 border rounded-md p-1 w-1/2 text-zinc-600 hover:bg-gray-200 hover:transition-all"
+              :class="{'font-bold': selectedOption === 'shares','bg-gray-200': selectedOption === 'shares'}"
+            >
+              Shares
+            </button>
+          </div>
+        
+        <div class="amountUsd mt-3" v-if="selectedOption === 'usd'">
+          <label
+            for="buyAmount"
+            class="block text-sm font-medium text-gray-700"
+          >
+            Amount (USD) <span class="text-red-600">* required</span>
+          </label>
+          <div class="flex flex-row gap-4 my-2">
+            <button @click="setAmount(50)" 
+                    class="border p-1 w-1/4 rounded-2xl cursor-default hover:bg-gray-200 text-zinc-600 duration-300 transition">
+              50
+            </button>
+            <button @click="setAmount(100)" 
+                    class="border p-1 w-1/4 rounded-2xl cursor-default hover:bg-gray-200 text-zinc-600 duration-300 transition">
+              100
+            </button>
+            <button @click="setAmount(250)" 
+                    class="border p-1 w-1/4 rounded-2xl cursor-default hover:bg-gray-200 text-zinc-600 duration-300 transition">
+              250
+            </button>
+            <button @click="setAmount(500)" 
+                    class="border p-1 w-1/4 rounded-2xl cursor-default hover:bg-gray-200 text-zinc-600 duration-300 transition">
+              500
+            </button>
+          </div>
+          <div class="flex items-center border border-gray-300 rounded-md bg-white px-3">
             <input
               type="number"
               id="buyAmount"
-              class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              class="w-full px-2 py-2 focus:outline-none focus:ring-0 bg-white"
               placeholder="Enter amount"
               v-model="amount"
+              min="0"
             />
-            <label
-              for="portfolioDropdown"
-              class="block text-sm font-medium text-gray-700 mt-2"
-            >
-              Which port to enter? <span class="text-red-600">* required</span>
-            </label>
-            <select
-              v-model="selectedPortfolio"
-              id="portfolioDropdown"
-              class="block w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-            >
-              <option value="" disabled>Select a portfolio</option>
-              <option
-                v-for="port in portsList"
-                :key="port._id"
-                :value="port._id"
-              >
-                {{ port.portfolio_name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Buttons -->
-          <div class="flex justify-end gap-4">
-            <p v-if="marketOpen === false">Market is closed.</p>
-            <button
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!isFormValid"
-              @click="stockTransaction('buy')"
-            >
-              Buy
-            </button>
-            <button
-              @click="closeModal"
-              class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 duration-300"
-            >
-              Cancel
-            </button>
+            <span class="text-zinc-600">USD</span>
           </div>
         </div>
-        <!-- sell section ---------------------------------------------------------------------------------------------->
-        <div
-          class="buy-modal bg-white p-6 rounded-lg w-96 shadow-lg"
-          v-if="modalValue === 'sell'"
-        >
-          <h3 class="text-xl font-bold mb-4">Sell Stock</h3>
 
-          <!-- Stock Details -->
-          <div class="mb-4">
-            <p class="text-gray-700 text-3xl font-bold">
-              {{ result.ticker || "Loading..." }}
-            </p>
-            <p v-if="currentMaketPrice !== undefined">
-              Latest price: {{ Number(currentMaketPrice[0].close).toFixed(2) }}
-            </p>
-          </div>
-
-          <!-- Buy Amount -->
-          <div class="mb-4">
-            <label
-              for="portfolioDropdown"
-              class="block text-sm font-medium text-gray-700 mt-2"
-            >
-              Sell from which port? <span class="text-red-600">* required</span>
-            </label>
-            <select
-              v-model="selectedPortfolio"
-              @change="getPortDetails(selectedPortfolio)"
-              id="portfolioDropdown"
-              class="block w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-            >
-              <option value="" disabled>Select a portfolio</option>
-              <option
-                v-for="port in portsList"
-                :key="port._id"
-                :value="port._id"
-              >
-                {{ port.portfolio_name }}
-                <span class="text-zinc-500" v-if="portDetails !== null">
-                  ({{ portDetails }} shares)
-                </span>
-              </option>
-            </select>
-            <label
-              for="buyAmount"
-              class="block text-sm font-medium text-gray-700"
-            >
-              Shares of stock to sell
-              <span class="text-red-600">* required at least 1</span>
-            </label>
-            <p
-              @click="sellAll"
-              class="border border-solid border-zinc-400 p-1 w-fit rounded-2xl cursor-default hover:text-white hover:bg-zinc-400 duration-300 transition"
-            >
-              Sell All
-            </p>
+        <div class="shares" v-if="selectedOption === 'shares'">
+          <label
+            for="buyAmount"
+            class="block text-sm font-medium text-gray-700"
+          >
+            Number of Shares <span class="text-red-600">* required</span>
+          </label>
+          <div class="flex items-center border border-gray-300 rounded-md bg-white px-3">
             <input
               type="number"
               id="buyAmount"
-              class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              class="w-full px-2 py-2 focus:outline-none focus:ring-0 bg-white"
               placeholder="Enter amount"
-              v-model="amount"
+              v-model="shares"
+              min="0"
             />
-            <p>
-              ≈ {{ Number(amount * currentMaketPrice[0].close).toFixed(2) }} USD
-            </p>
+            <span class="text-zinc-600">Shares</span>
           </div>
 
-          <!-- Buttons -->
-          <div class="flex justify-end gap-4">
-            <p v-if="marketOpen === false">Market is closed.</p>
-            <button
-              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="!isFormValid"
-              @click="stockTransaction('sell')"
-            >
-              Sell
-            </button>
-            <button
-              @click="closeModal"
-              class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 duration-300"
-            >
-              Cancel
-            </button>
+          <p class="mt-2">Type of Buy Order 
+            <span class="float-right mb-0">
+              <div class="flex items-center justify-center p-0">
+                <div class="relative w-36 h-10 bg-gray-200 rounded-full flex items-center p-1">
+                  <div
+                    class="absolute top-1 left-1 h-8 w-16 bg-white rounded-full shadow-md transition-transform"
+                    :class="{ 'translate-x-[110%]': isLimit }"
+                  ></div>
+                  <button
+                    class="relative z-10 flex-1 text-center text-sm font-medium"
+                    :class="isLimit ? 'text-gray-500' : 'text-black'"
+                    @click="setMarket"
+                  >
+                    Market
+                  </button>
+                  <button
+                    class="relative z-10 flex-1 text-center text-sm font-medium"
+                    :class="isLimit ? 'text-black' : 'text-gray-500'"
+                    @click="setLimit"
+                  >
+                    Limit
+                  </button>
+                </div>
+              </div>
+            </span>
+          </p>
+
+          <div class="flex items-center border border-gray-300 rounded-md bg-white px-3 mt-6" v-if="isLimit === true">
+            <input
+              type="number"
+              id="buyAmount"
+              class="w-full px-2 py-2 focus:outline-none focus:ring-0 bg-white"
+              placeholder="Limit price"
+              v-model="bidPrice"
+              min="0"
+            />
+            <span class="text-zinc-600">USD</span>
           </div>
+
+          <p class=" p-4 float-right m-0">Estimate cost <span class="font-semibold text-zinc-600">{{ isLimit === false ? (shares * Number(currentMaketPrice[0].close)).toFixed(2) : (bidPrice*shares).toFixed(2)}} USD</span></p>
         </div>
+
+        </div>
+
+        <label
+          for="portfolioDropdown"
+          class="block text-sm font-medium text-gray-700 mt-20"
+        >
+          Which port to enter? <span class="text-red-600">* required</span>
+        </label>
+        <select
+          v-model="selectedPortfolio"
+          id="portfolioDropdown"
+          class="block w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-0 bg-white"
+        >
+          <option value="" disabled>Select a portfolio</option>
+          <option
+            v-for="port in portsList"
+            :key="port._id"
+            :value="port._id"
+          >
+            {{ port.portfolio_name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-end gap-4">
+        <p v-if="marketOpen === false">Market is closed.</p>
+        <button
+          class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="!isFormValid"
+          @click="stockTransaction('buy')"
+        >
+          Buy
+        </button>
+        <button
+          @click="closeModal"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 duration-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+    <!-- sell section ---------------------------------------------------------------------------------------------->
+    <div class="buy-modal bg-white p-6 rounded-lg w-96 shadow-lg" v-if="modalValue === 'sell'">
+      <h3 class="text-xl font-bold mb-4">Sell Stock</h3>
+
+      <!-- Stock Details -->
+      <div class="mb-4">
+        <p class="text-gray-700 text-3xl font-bold">
+          {{ result.ticker || "Loading..." }}
+        </p>
+        <p v-if="currentMaketPrice !== undefined">Latest price: {{ Number(currentMaketPrice[0].close).toFixed(2) }}</p>
+      </div>
+
+      <!-- Buy Amount -->
+      <div class="mb-4">
+        <label
+          for="portfolioDropdown"
+          class="block text-sm font-medium text-gray-700 mt-2"
+        >
+          Sell from which port? <span class="text-red-600">* required</span>
+        </label>
+        <select
+          v-model="selectedPortfolio"
+          @change="getPortDetails(selectedPortfolio)"
+          id="portfolioDropdown"
+          class="block w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-0 bg-white"
+        >
+          <option value="" disabled>Select a portfolio</option>
+          <option
+            v-for="port in portsList"
+            :key="port._id"
+            :value="port._id"
+          >
+            {{ port.portfolio_name }} 
+          </option>
+        </select>
+        <p class="text-zinc-500" v-if="portDetails !== null"> You have <span class="font-bold text-black">{{portDetails}}</span> shares</p>
+        <p class="text-red-500" v-if="portDetails === null"> This port doesn't have <span class="font-semibold">{{ result.ticker }}</span></p>
+
+          <label
+          for="buyAmount"
+          class="block text-sm font-medium text-gray-700 mt-5"
+          >
+            Shares of stock to sell <span class="text-red-600">* required at least 1</span>
+          </label>
+
+        <button @click="sellAll" class="border p-1 w-1/4 rounded-2xl cursor-default hover:bg-gray-200 text-zinc-600 duration-300 transition my-2">Sell All</button>
+        <div class="flex items-center border border-gray-300 rounded-md bg-white px-3">
+            <input
+              type="number"
+              id="buyAmount"
+              class="w-full px-2 py-2 focus:outline-none focus:ring-0 bg-white"
+              placeholder="Share"
+              v-model="amount"
+              min="0"
+            />
+            <span class="text-zinc-600">Shares</span>
+          </div>
+        <!-- <p>≈ {{ Number(amount*currentMaketPrice[0].close).toFixed(2) }} USD</p> -->
+        <p class="mt-2 mb-8">Type of Sell Order 
+            <span class="float-right mb-0">
+              <div class="flex items-center justify-center p-0">
+                <div class="relative w-36 h-10 bg-gray-200 rounded-full flex items-center p-1">
+                  <div
+                    class="absolute top-1 left-1 h-8 w-16 bg-white rounded-full shadow-md transition-transform"
+                    :class="{ 'translate-x-[110%]': isLimit }"
+                  ></div>
+                  <button
+                    class="relative z-10 flex-1 text-center text-sm font-medium"
+                    :class="isLimit ? 'text-gray-500' : 'text-black'"
+                    @click="setMarket"
+                  >
+                    Market
+                  </button>
+                  <button
+                    class="relative z-10 flex-1 text-center text-sm font-medium"
+                    :class="isLimit ? 'text-black' : 'text-gray-500'"
+                    @click="setLimit"
+                  >
+                    Limit
+                  </button>
+                </div>
+              </div>
+            </span>
+          </p>
+
+          <div class="flex items-center border border-gray-300 rounded-md bg-white px-3 mt-6" v-if="isLimit === true">
+            <input
+              type="number"
+              id="buyAmount"
+              class="w-full px-2 py-2 focus:outline-none focus:ring-0 bg-white"
+              placeholder="Limit price"
+              v-model="bidPrice"
+              min="0"
+            />
+            <span class="text-zinc-600">USD</span>
+          </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-end gap-4">
+        <p v-if="marketOpen === false">Market is closed.</p>
+        <button
+          class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="!isFormValid"
+          @click="stockTransaction('sell')"
+        >
+          Sell
+        </button>
+        <button
+          @click="closeModal"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 duration-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
       </div>
     </teleport>
   </div>

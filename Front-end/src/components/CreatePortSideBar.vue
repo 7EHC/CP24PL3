@@ -1,12 +1,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router'
 import stockApi from '../composable/FetchStock';
+import { getTwelveDataRandomkey } from '../composable/FetchStock';
+import { decodeToken } from '../composable/Auth';
 
 const API_ROOT = import.meta.env.VITE_ROOT_API;
 const portsList = ref([]);
 const showModal = ref(false);
 const portName = ref()
 const portObj = ref({})
+const router = useRouter()
 
 // Props
 defineProps({
@@ -25,6 +29,10 @@ const createPortfolio = () => {
 const closeModal = () => {
   showModal.value = false;
 };
+
+const token = ref(localStorage.getItem("token"));
+const userData = ref("");
+// console.log(token.value);
 
 const createPortPOST = async (portfolioObj) => {
     try {
@@ -66,8 +74,9 @@ const fetchDetails = async (id) => {
       // Function to fetch the latest market price for a stock
       const getMarketPrice = async (tic) => {
         try {
+          let key = getTwelveDataRandomkey()
           const res = await fetch(
-            `https://api.twelvedata.com/time_series?apikey=a812690526f24184b0347c0ce8899b8b&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
+            `https://api.twelvedata.com/time_series?apikey=${key}&interval=1min&timezone=Asia/Bangkok&format=JSON&symbol=${tic}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -131,6 +140,7 @@ const getMarketPrice = async (tic) => {
 
 const createPortBut = async () => {
     const portObj = {  // Initialize portObj here as an object
+        userId: userData.value.user_id,
         portfolio_name: portName.value,
         assets: []
     };
@@ -145,6 +155,10 @@ const handlePortfolioClick = (id) => {
 };
 
 onMounted(async () => {
+  if (token.value) {
+    userData.value = decodeToken(token.value)
+    // console.log(userData.value.username);
+  }
   portsList.value = await stockApi.getPort();
   // console.log(portsList.value);
 });
@@ -186,9 +200,9 @@ onMounted(async () => {
         <form>
           <div class="mb-4">
             <label for="portfolioName" class="block text-sm font-medium text-gray-700">Portfolio Name</label>
-            <input v-model="portName" type="text" id="portfolioName" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter portfolio name" />
+            <input v-model="portName" type="text" id="portfolioName" class="mt-1 w-full px-4 py-2 border bg-white border-gray-300 rounded-md" placeholder="Enter portfolio name" />
           </div>
-          <button @click="createPortBut" type="submit" class="w-full bg-yellow-400 text-zinc-900 p-2 rounded-lg hover:bg-yellow-300 duration-300">Create</button>
+          <button @click="createPortBut" type="submit" class="w-full bg-yellow-400 text-zinc-900 p-2 rounded-lg hover:bg-yellow-300 font-bold duration-300">Create</button>
         </form>
         
         <button @click="closeModal" class="mt-4 text-gray-500 hover:text-gray-700">
