@@ -17,9 +17,13 @@ const handleLogin = async () => {
 };
 
 const login = async () => {
+  username.value = username.value.trim()
+  password.value = password.value.trim()
   failedMsg.value = "";
-  try {
-    const res = await fetch(`${API_ROOT}/login`, {
+  if(username.value.length !== 0 && password.value.length !== 0) {
+
+    try {
+      const res = await fetch(`${API_ROOT}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,7 +33,7 @@ const login = async () => {
         password: password.value,
       }),
     });
-
+    
     if (res.ok) {
       const data = await res.json();
       const token = data.token;
@@ -46,6 +50,7 @@ const login = async () => {
     console.error("Login Error:", err);
     throw err;
   }
+}
 };
 </script>
 
@@ -95,7 +100,6 @@ const login = async () => {
                 type="text"
                 id="username"
                 placeholder="Username"
-                maxlength="10"
                 :class="{
                   'ring-2 ring-red-500': failedMsg.length !== 0,
                 }"
