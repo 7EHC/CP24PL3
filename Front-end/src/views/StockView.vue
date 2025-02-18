@@ -743,7 +743,7 @@ onMounted(async () => {
       </span>
     </p>
     <div
-      class="justify-center flex flex-row gap-6 text-zinc-800"
+      class="justify-center flex flex-row gap-6 text-zinc-800 -mt-7"
       v-if="currentMaketPrice !== undefined"
     >
       <p>Volume: {{ Number(currentMaketPrice[0].volume).toFixed(2) }}</p>
