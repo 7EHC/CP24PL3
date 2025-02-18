@@ -92,7 +92,7 @@ cron.schedule("*/1 * * * *", async () => {
         });
 
         console.log(
-          `✅ Transaction ${_id} matched at $${marketPrice.toFixed(2)}.`
+          `✅ Transaction ${_id} matched at $${marketPrice.toFixed(2)}`
         );
       }
     } catch (error) {
