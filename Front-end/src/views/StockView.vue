@@ -461,7 +461,6 @@ const RealtimeApiCall = (tic) => {
 
 const createChart = (dates, closePrices) => {
   const ctx = document.getElementById("stockChart").getContext("2d");
-  ctx.canvas.height = 230;
 
   // If a chart already exists, destroy it before creating a new one
   if (chartInstance) {
