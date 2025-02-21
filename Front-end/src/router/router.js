@@ -70,7 +70,7 @@ const router = createRouter({
 //   });
 const isTokenExpired = () => {
     const token = localStorage.getItem("token");
-    if (!token) return true; // No token, treat as expired
+    if (!token) return true; // No token, treat as expired (but don't show alert)
   
     try {
       const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
@@ -91,11 +91,15 @@ const isTokenExpired = () => {
   
   // Navigation guard to check authentication and token expiration
   router.beforeEach((to, from, next) => {
-    if (to.meta.requiresAuth && isTokenExpired()) {
-      alert("Session expired, please login again.");
-      next("/login");
+    if (to.meta.requiresAuth) {
+      if (isTokenExpired()) {
+        alert("Session expired, please login again.");
+        next("/login"); // Redirect to login page if token is expired
+      } else {
+        next(); // Continue navigation if token is valid
+      }
     } else {
-      next();
+      next(); // Allow navigation if no auth is required
     }
   });
 

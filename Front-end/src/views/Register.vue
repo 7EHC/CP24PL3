@@ -6,6 +6,7 @@ import authApi from "../composable/Auth";
 const API_ROOT = import.meta.env.VITE_ROOT_API;
 const router = useRouter();
 const username = ref("");
+const email = ref("")
 const password = ref("");
 const confirmPassword = ref("");
 const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
@@ -14,17 +15,25 @@ const success = ref(false)
 
 const validate = () => {
   username.value = username.value.trim()
+  email.value = email.value.trim()
   password.value = password.value.trim()
   confirmPassword.value = confirmPassword.value.trim()
-  errors.value = { username: "", password: "", confirmPassword: "" };
+  errors.value = { username: "", password: "", confirmPassword: "",email: "" };
   let valid = true;
 
   if (!username.value) {
     errors.value.username = "Username is required.";
     valid = false;
   }
-    if (!password.value || password.value.length < 8) {
-    errors.value.password = "Password must be at least 8 characters long.";
+  if (!email.value) {
+    errors.value.email = "Email is required.";
+    valid = false;
+  }else if (!/\S+@\S+\.\S+/.test(email.value)) {
+  errors.value.email = "Please enter a valid email address.";
+  valid = false;
+}
+    if (!password.value || password.value.length < 8 || password.value.length > 15) {
+    errors.value.password = "Password must between 8-15 characters.";
     valid = false;
   }
   // if (!password.value || !regex.test(password.value)) {
@@ -39,7 +48,7 @@ const validate = () => {
 };
 
 const register = async () => {
-  errors.value = { username: "", password: "", confirmPassword: "" };
+  errors.value = { username: "", password: "", confirmPassword: "",email: "" };
   if (validate()) {
     try {
       const res = await fetch(`${API_ROOT}/register`, {
@@ -48,7 +57,8 @@ const register = async () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username.value,
+          username: username.value.toLowerCase(),
+          email: email.value.toLowerCase(),
           password: password.value,
         }),
       });
@@ -115,6 +125,23 @@ const register = async () => {
                 type="text"
                 id="username"
                 placeholder="Username"
+                class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
+                required
+              />
+
+              <label
+                class="text-black text-sm font-semibold mb-2 mt-4"
+                for="password"
+                >Email<span class="text-red-500"> *</span>
+                <span class="text-red-500 text-xs float-right">{{
+                  errors.email
+                }}</span>
+              </label>
+              <input
+                v-model="email"
+                type="text"
+                id="email"
+                placeholder="Email"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
