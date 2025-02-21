@@ -82,12 +82,12 @@ onMounted(() => {
     <div class="inputs-container">
       <div class="input-group">
         <label for="initialCap">Initial Capital</label>
-        <input v-model="initialCap" id="initialCap" type="number" 
+        <input v-model="initialCap" id="initialCap" type="number" step="1000" 
         class="bg-white border-gray-300 border p-1 rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none"/>
       </div>
       <div class="input-group">
         <label for="monthlyInvest">Monthly Investment</label>
-        <input v-model="monthlyInvest" id="monthlyInvest" type="number"
+        <input v-model="monthlyInvest" id="monthlyInvest" type="number" step="1000"
         class="bg-white border-gray-300 border p-1 rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
       </div>
       <div class="input-group">
