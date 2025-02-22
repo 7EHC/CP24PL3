@@ -93,7 +93,7 @@ const isTokenExpired = () => {
   router.beforeEach((to, from, next) => {
     if (to.meta.requiresAuth) {
       if (isTokenExpired()) {
-        alert("Session expired, please login again.");
+        alert("This page need an authentication, please login again.");
         next("/login"); // Redirect to login page if token is expired
       } else {
         next(); // Continue navigation if token is valid
