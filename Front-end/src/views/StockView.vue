@@ -35,6 +35,8 @@ let marketPriceInterval
 const buySellAlert = ref('default')
 const buySellMsg = ref('')
 
+const checkToken = localStorage.getItem("token");
+
 const setMarket = () => {
   isLimit.value = false;
 };
@@ -723,12 +725,19 @@ onMounted(async () => {
       </div>
     </transition>
 
-    <RouterLink
+    <RouterLink v-if="token"
       :to="{ name: 'Port' }"
       class="back-but fixed top-20 left-24 font-bold text-lg bg-zinc-800 text-yellow-400 p-2 rounded-2xl hover:bg-yellow-400 hover:text-zinc-800 duration-300"
     >
       BACK
     </RouterLink>
+    <RouterLink v-if="!token"
+      :to="{ name: 'Home' }"
+      class="back-but fixed top-20 left-24 font-bold text-lg bg-zinc-800 text-yellow-400 p-2 rounded-2xl hover:bg-yellow-400 hover:text-zinc-800 duration-300"
+    >
+      BACK
+    </RouterLink>
+
     <button
       class="buy-sell-button fixed top-20 right-24 font-bold text-lg p-1 rounded-2xl text-green-600 border border-solid border-green-600 hover:bg-green-600 hover:text-white w-1/12 duration-300"
       @click="openModal('buy')"
