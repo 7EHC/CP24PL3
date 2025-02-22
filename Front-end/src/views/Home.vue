@@ -99,9 +99,9 @@ onMounted(async () => {
       }));
   }
 
-  top20.value = await getTop20Stocks(changeArr.value)
-  mag7.value = await getMagnificent7Stocks(changeArr.value)
-  console.log(mag7.value)
+  top20.value = getTop20Stocks(changeArr.value)
+  mag7.value = getMagnificent7Stocks(changeArr.value)
+  // console.log(top20.value)
 
 })
 </script>
