@@ -39,15 +39,15 @@ const selectStock = (stock) => {
 
 onMounted(async () => {
   const getPreviousBusinessDay = ()=>{
-      const date = new Date();
-      date.setDate(date.getDate() - 1); // ถอยไป 1 วันก่อน
+    const date = new Date();
+    date.setDate(date.getDate() - 1); // ถอยไป 1 วันก่อน
 
-      // ถ้าวันที่เป็นวันเสาร์ (6) -> ถอยกลับไปวันศุกร์ (2 วัน)
-      // ถ้าวันที่เป็นวันอาทิตย์ (0) -> ถอยกลับไปวันศุกร์ (2 วัน)
-      if (date.getDay() === 6) date.setDate(date.getDate() - 1);
-      if (date.getDay() === 0) date.setDate(date.getDate() - 2);
+    // ถ้าวันที่เป็นวันเสาร์ (6) -> ถอยกลับไปวันศุกร์ (1 วัน)
+    // ถ้าวันที่เป็นวันอาทิตย์ (0) -> ถอยกลับไปวันศุกร์ (2 วัน)
+    if (date.getDay() === 6) date.setDate(date.getDate() - 1);
+    if (date.getDay() === 0) date.setDate(date.getDate() - 2);
 
-      return date.toISOString().split('T')[0]; // แปลงเป็น YYYY-MM-DD
+    return date.toLocaleDateString('en-CA'); // ใช้ en-CA เพื่อให้ได้ YYYY-MM-DD
   }
   // console.log(getPreviousBusinessDay())
 
@@ -184,7 +184,7 @@ onMounted(async () => {
   </div>
 
   <div v-if="mag7.length>0">
-    <p class="text-3xl font-bold text-center bg-gradient-to-r bg-zinc-800 text-white py-4 rounded-lg shadow-md mt-6">
+    <p class="text-3xl font-bold text-center bg-gradient-to-r bg-zinc-800 text-yellow-400 py-4 rounded-lg shadow-md mt-6">
     🔥 Magnificent 7 Stocks
     </p>
     <div class="bg-white shadow-lg rounded-xl p-5 border border-gray-200 my-6">
@@ -205,7 +205,7 @@ onMounted(async () => {
   
 
   <div class="top20 mt-10 text-zinc-800" v-if="top20.length > 0">
-  <p class="text-3xl font-bold text-center bg-gradient-to-r bg-zinc-800 text-white py-4 rounded-lg shadow-md">
+  <p class="text-3xl font-bold text-center bg-gradient-to-r bg-zinc-800 text-yellow-400 py-4 rounded-lg shadow-md">
     🚀 Top 20 Fastest Rising Stocks Last Night
   </p>
 
