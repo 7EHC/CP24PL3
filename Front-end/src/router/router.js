@@ -60,12 +60,46 @@ const router = createRouter({
     ]
 })
 
-router.beforeEach((to, from, next) => {
-    const token = localStorage.getItem("token")
-    if (to.meta.requiresAuth && !token) {
-      next("/login");
+// router.beforeEach((to, from, next) => {
+//     const token = localStorage.getItem("token")
+//     if (to.meta.requiresAuth && !token) {
+//       next("/login");
+//     } else {
+//       next();
+//     }
+//   });
+const isTokenExpired = () => {
+    const token = localStorage.getItem("token");
+    if (!token) return true; // No token, treat as expired (but don't show alert)
+  
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      const exp = payload.exp * 1000; // Convert seconds to milliseconds
+      const now = Date.now();
+      
+      if (now >= exp) {
+        localStorage.removeItem("token"); // Remove expired token
+        return true; // Token is expired
+      }
+      return false; // Token is valid
+    } catch (err) {
+      console.error("Invalid token:", err);
+      localStorage.removeItem("token"); // Remove corrupted token
+      return true; // Treat as expired
+    }
+  };
+  
+  // Navigation guard to check authentication and token expiration
+  router.beforeEach((to, from, next) => {
+    if (to.meta.requiresAuth) {
+      if (isTokenExpired()) {
+        alert("This page need an authentication, please login again.");
+        next("/login"); // Redirect to login page if token is expired
+      } else {
+        next(); // Continue navigation if token is valid
+      }
     } else {
-      next();
+      next(); // Allow navigation if no auth is required
     }
   });
 

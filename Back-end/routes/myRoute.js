@@ -6,6 +6,7 @@ import fetch from "node-fetch";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import authMiddleware from "../middlewares/authMiddleware.js";
+import nodemailer from "nodemailer";
 
 const API_ROOT = process.env.VITE_ROOT_API;
 
@@ -92,7 +93,7 @@ cron.schedule("*/1 * * * *", async () => {
         });
 
         console.log(
-          `✅ Transaction ${_id} matched at $${marketPrice.toFixed(2)}.`
+          `✅ Transaction ${_id} matched at $${marketPrice.toFixed(2)}`
         );
       }
     } catch (error) {
@@ -490,47 +491,127 @@ const sellStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
     console.error("Error calling sellStock:", error);
   }
 };
+
+// Setup NodeMailer transporter
+const transporter = nodemailer.createTransport({
+  service: "gmail",  // You can use other services or SMTP
+  auth: {
+    user: "sit.invest.pl3@gmail.com", // Your email here
+    pass: "xgss blmw aakh jpww",  // Your email password or app password
+  },
+});
 //Register
 router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  // const { username, password } = req.body;
 
-  // 1) ตรวจสอบ Input
-  if (!username || !password) {
+  // // 1) ตรวจสอบ Input
+  // if (!username || !password) {
+  //   return res.status(400).send("All input is required");
+  // }
+
+  // try {
+  //   // 2) เช็คว่ามี user ซ้ำไหม
+  //   const oldUser = await userSchema.findOne({ username });
+  //   if (oldUser) {
+  //     return res.status(409).send("User already exists, please login.");
+  //   }
+
+  //   // 3) เข้ารหัส password
+  //   const encryptedPassword = await bcrypt.hash(password, 10);
+
+  //   // 4) สร้าง user
+  //   const newUser = {
+  //     username,
+  //     password: encryptedPassword,
+  //     createdAt: new Date().toISOString(),
+  //   };
+
+  //   const result = await userSchema.insertOne(newUser);
+
+  //   // 5) สร้าง Token
+  //   const token = jwt.sign(
+  //     { user_id: result.insertedId, username },
+  //     process.env.TOKEN_KEY, // ตรวจสอบว่ามีค่าใน .env
+  //     { expiresIn: "1d" }
+  //   );
+
+  //   // 6) ใส่ token ลงใน user object
+  //   newUser.token = token;
+
+  //   // 7) ส่งกลับโดยตัด password ออก
+  //   const { password: _, ...userWithoutPassword } = newUser;
+  //   res.status(201).json(userWithoutPassword);
+  // } catch (err) {
+  //   console.error("Register Error:", err);
+  //   res.status(500).send("Internal Server Error");
+  // }
+  const { username, password, email } = req.body;
+
+  // 1) Validate Input
+  if (!username || !password || !email) {
     return res.status(400).send("All input is required");
   }
 
   try {
-    // 2) เช็คว่ามี user ซ้ำไหม
-    const oldUser = await userSchema.findOne({ username });
-    if (oldUser) {
+    // 2) Check if the user already exists (by username and email)
+    const oldUserByUsername = await userSchema.findOne({ username: username.toLowerCase() });
+    if (oldUserByUsername) {
       return res.status(409).send("User already exists, please login.");
     }
 
-    // 3) เข้ารหัส password
+    const oldUserByEmail = await userSchema.findOne({ email: email.toLowerCase() });
+    if (oldUserByEmail) {
+      return res.status(409).send("Email is already registered, please use another email.");
+    }
+
+    // 3) Hash the password
     const encryptedPassword = await bcrypt.hash(password, 10);
 
-    // 4) สร้าง user
+    // 4) Create new user object
     const newUser = {
-      username,
+      username: username.toLowerCase(),
       password: encryptedPassword,
+      email: email.toLowerCase(),  // Store the user's email
       createdAt: new Date().toISOString(),
     };
 
+    // 5) Insert the new user into the database
     const result = await userSchema.insertOne(newUser);
 
-    // 5) สร้าง Token
+    // 6) Create JWT token
     const token = jwt.sign(
       { user_id: result.insertedId, username },
-      process.env.TOKEN_KEY, // ตรวจสอบว่ามีค่าใน .env
+      process.env.TOKEN_KEY, // Ensure TOKEN_KEY is set in your environment variables
       { expiresIn: "1d" }
     );
 
-    // 6) ใส่ token ลงใน user object
+    // 7) Add the token to the user object
     newUser.token = token;
 
-    // 7) ส่งกลับโดยตัด password ออก
+    // 8) Remove the password before sending the response
     const { password: _, ...userWithoutPassword } = newUser;
-    res.status(201).json(userWithoutPassword);
+
+    // 9) Send email notification to the user
+    const mailOptions = {
+      from: "sit.invest.pl3@gmail.com",  // Sender's email address
+      to: email,  // User's email address
+      subject: "SIT Invest Registration",  // Email subject
+      text: `Your registration with email ${email} was successful. Welcome to SIT Invest!`,  // Email body
+    };
+
+    // Send the email and handle any errors
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+        // Ensure the registration response is sent only if the email is sent successfully
+        return res.status(500).send("Failed to send confirmation email.");
+      } else {
+        console.log("Email sent: " + info.response);
+        // Send back the user object without password if email is sent successfully
+        res.status(201).json(userWithoutPassword);
+      }
+    });
+
   } catch (err) {
     console.error("Register Error:", err);
     res.status(500).send("Internal Server Error");
@@ -539,16 +620,72 @@ router.post("/register", async (req, res) => {
 
 //Login
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  // const { username, password } = req.body;
 
-  // ตรวจสอบว่ามี username และ password มาหรือไม่
-  if (!username || !password) {
-    return res.status(400).send("All input is required");
+  // // ตรวจสอบว่ามี username และ password มาหรือไม่
+  // if (!username || !password) {
+  //   return res.status(400).send("All input is required");
+  // }
+
+  // try {
+  //   // ค้นหา user จากฐานข้อมูล
+  //   const user = await userSchema.findOne({ username });
+  //   if (!user) {
+  //     return res.status(400).send("Invalid Credentials");
+  //   }
+
+  //   // ตรวจสอบความถูกต้องของรหัสผ่าน
+  //   const isPasswordValid = await bcrypt.compare(password, user.password);
+  //   if (!isPasswordValid) {
+  //     return res.status(400).send("Invalid Credentials");
+  //   }
+
+  //   // สร้าง JWT token
+  //   const token = jwt.sign(
+  //     { user_id: user._id, username },
+  //     process.env.TOKEN_KEY,
+  //     { expiresIn: "1d" }
+  //   );
+
+  //   // ใส่ token ลงใน user object
+  //   user.token = token;
+
+  //   // ส่งกลับข้อมูล user โดยไม่แสดงรหัสผ่าน
+  //   const { password: pwd, ...userWithoutPassword } = user;
+  //   res.status(200).json(userWithoutPassword);
+  // } catch (err) {
+  //   console.error("Login Error:", err);
+  //   res.status(500).send("Internal Server Error");
+  // }
+  let { username, email, password } = req.body;
+
+  // ตรวจสอบว่าได้รับ password หรือไม่ และต้องมี username หรือ email อย่างน้อยหนึ่งอย่าง
+  if (!password || (!username && !email)) {
+    return res.status(400).send("Username or Email and Password are required");
   }
 
   try {
-    // ค้นหา user จากฐานข้อมูล
-    const user = await userSchema.findOne({ username });
+    let user;
+
+    // ทำให้ username และ email เป็น lowercase
+    if (username) username = username.toLowerCase();
+    if (email) email = email.toLowerCase();
+
+    if (username) {
+      // ค้นหา user ด้วย username (เป็น lowercase)
+      user = await userSchema.findOne({ username: username.toLowerCase() });
+      if (user && !email) {
+        email = user.email; // ถ้า user มี email ให้ใช้จากฐานข้อมูล
+      }
+    } else if (email) {
+      // ค้นหา user ด้วย email (เป็น lowercase)
+      user = await userSchema.findOne({ email: email.toLowerCase() });
+      if (user && !username) {
+        username = user.username; // ถ้า user มี username ให้ใช้จากฐานข้อมูล
+      }
+    }
+
+    // ถ้า user ไม่ถูกพบ
     if (!user) {
       return res.status(400).send("Invalid Credentials");
     }
@@ -559,19 +696,16 @@ router.post("/login", async (req, res) => {
       return res.status(400).send("Invalid Credentials");
     }
 
-    // สร้าง JWT token
+    // สร้าง JWT token ใส่ username และ email (เป็น lowercase)
     const token = jwt.sign(
-      { user_id: user._id, username },
+      { user_id: user._id, username, email },
       process.env.TOKEN_KEY,
       { expiresIn: "1d" }
     );
 
-    // ใส่ token ลงใน user object
-    user.token = token;
-
     // ส่งกลับข้อมูล user โดยไม่แสดงรหัสผ่าน
-    const { password: pwd, ...userWithoutPassword } = user;
-    res.status(200).json(userWithoutPassword);
+    const { password: _, ...userWithoutPassword } = user;
+    res.status(200).json({ ...userWithoutPassword, token });
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).send("Internal Server Error");

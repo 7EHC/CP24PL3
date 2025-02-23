@@ -32,6 +32,10 @@ const bidPrice = ref(null)
 const token = ref(localStorage.getItem("token"));
 const userData = ref("");
 let marketPriceInterval
+const buySellAlert = ref('default')
+const buySellMsg = ref('')
+
+const checkToken = localStorage.getItem("token");
 
 const setMarket = () => {
   isLimit.value = false;
@@ -164,8 +168,15 @@ const stockTransaction = async (value) => {
 
       if (response.message === "Transaction created successfully.") {
         showModal.value = false;
-        alert(`Successfully bought ${obj.symbol} at ${obj.bidPrice} USD.`);
+        // alert(`Successfully bought ${obj.symbol} at ${obj.bidPrice} USD.`);
+        buySellAlert.value = "buy"
+        buySellMsg.value = `Successfully bought ${obj.symbol} at ${obj.bidPrice} USD.`
         clearFieldForSellandBuy();
+
+        // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
+        setTimeout(() => {
+          buySellAlert.value = "default";
+        }, 3000);
       } else {
         alert(response.message || "Failed to buy stock. Please try again.");
       }
@@ -208,8 +219,15 @@ const stockTransaction = async (value) => {
 
       if (response.message === "Transaction created successfully.") {
         showModal.value = false;
-        alert(`Successfully added sold ${obj.symbol} transaction at ${obj.totalAmount} USD.`);
+        // alert(`Successfully added sold ${obj.symbol} transaction at ${obj.totalAmount} USD.`);
+        buySellAlert.value = "sell"
+        buySellMsg.value = `Successfully added sold ${obj.symbol} transaction at ${obj.totalAmount} USD.`
         clearFieldForSellandBuy();
+
+        // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
+        setTimeout(() => {
+          buySellAlert.value = "default";
+        }, 3000);
       } else {
         alert(response.message || "Failed to sell stock. Please try again.");
       }
@@ -692,12 +710,34 @@ onMounted(async () => {
 
 <template>
   <div class="-my-6 ml-14 mr-36">
-    <RouterLink
+
+    <transition name="fade">
+      <div 
+      v-if="buySellAlert !== 'default'" 
+      class="p-4 fixed right-12 z-50 border-l-4" role="alert"
+      :class="{
+      'bg-green-100 border-green-500 text-green-700': buySellAlert === 'buy',
+      'bg-red-100 border-red-500 text-red-700': buySellAlert === 'sell'
+      }"
+      >
+        <p class="font-bold">Successfully</p>
+        <p>{{ buySellMsg }}</p>
+      </div>
+    </transition>
+
+    <RouterLink v-if="token"
       :to="{ name: 'Port' }"
       class="back-but fixed top-20 left-24 font-bold text-lg bg-zinc-800 text-yellow-400 p-2 rounded-2xl hover:bg-yellow-400 hover:text-zinc-800 duration-300"
     >
       BACK
     </RouterLink>
+    <RouterLink v-if="!token"
+      :to="{ name: 'Home' }"
+      class="back-but fixed top-20 left-24 font-bold text-lg bg-zinc-800 text-yellow-400 p-2 rounded-2xl hover:bg-yellow-400 hover:text-zinc-800 duration-300"
+    >
+      BACK
+    </RouterLink>
+
     <button
       class="buy-sell-button fixed top-20 right-24 font-bold text-lg p-1 rounded-2xl text-green-600 border border-solid border-green-600 hover:bg-green-600 hover:text-white w-1/12 duration-300"
       @click="openModal('buy')"
@@ -743,7 +783,7 @@ onMounted(async () => {
       </span>
     </p>
     <div
-      class="justify-center flex flex-row gap-6 text-zinc-800"
+      class="justify-center flex flex-row gap-6 text-zinc-800 -mt-7"
       v-if="currentMaketPrice !== undefined"
     >
       <p>Volume: {{ Number(currentMaketPrice[0].volume).toFixed(2) }}</p>
@@ -1148,5 +1188,12 @@ onMounted(async () => {
     font-size: 10px;
     padding: 3px;
   }
+}
+/* เอฟเฟกต์ fade-in / fade-out */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
 </style>
