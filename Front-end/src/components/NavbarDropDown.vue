@@ -12,7 +12,7 @@ const toggleDropdown = () => {
 </script>
  
 <template>
-  <div class="flex items-center justify-between w-full h-16 bg-zinc-900 px-7">
+  <div class="flex items-center justify-between w-full h-16 bg-zinc-900 px-7 z-50">
     <!-- Smaller Logo Section -->
     <div class="bg-sit-image bg-cover bg-no-repeat w-48 h-8"></div>
 

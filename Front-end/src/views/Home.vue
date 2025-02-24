@@ -163,7 +163,7 @@ onMounted(async () => {
           placeholder="Search stock here..." />
 
         <!-- Search Results Dropdown -->
-        <ul v-if="searchResult.length > 0" class="absolute w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg z-50">
+        <ul v-if="searchResult.length > 0" class="absolute w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg z-40">
           <li 
             v-for="stock in searchResult" 
             :key="stock" 

@@ -39,7 +39,7 @@ watch(
 
 <template>
   <div
-    class="all w-screen h-16 bg-zinc-900 flex items-center justify-between px-7"
+    class="all w-screen h-16 bg-zinc-900 flex items-center justify-between px-7 z-50"
   >
     <RouterLink :to="{ name: 'Home' }"
       ><div class="bg-sit-image bg-cover bg-no-repeat w-64 h-11"></div
