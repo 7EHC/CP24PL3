@@ -53,9 +53,34 @@ cron.schedule("*/1 * * * *", async () => {
     const expTime = new Date(expiredAt);
 
     try {
+      // Ensure that userId is properly converted to ObjectId if it's a string
+      const userId = await transaction.findOne({ _id: new ObjectId(_id) }, { _id:0, userId:1});
+      // console.log(userId)
+      const user = await userSchema.findOne({ _id: new ObjectId(userId.userId) }, { _id:0, email: 1 });
+      const userEmail = user ? user.email : "Unknown";
+      // console.log(userEmail)
+
       if (now >= expTime) {
         await transaction.updateOne({ _id }, { $set: { status: "failed" } });
         console.log(`❌ Transaction ${_id} expired.`);
+        console.log(`📧 User email: ${userEmail}`);  // Log the email after expiration
+        const detail = await transaction.findOne({ _id: new ObjectId(_id) }, { _id:0, userId:1});
+        // Send email notification
+        const mailOptions = {
+          from: "sit.invest.pl3@gmail.com",  // Sender's email address
+          to: userEmail,  // User's email address
+          subject: "Transaction result",  // Email subject
+          text: `${detail.action.toUpperCase()}: ${detail.symbol} amount ${detail.totalAmount} is ${detail.status}`,  // Email body
+        };
+
+        // Send the email
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error("Error sending email:", error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
         continue;
       }
 
@@ -95,6 +120,24 @@ cron.schedule("*/1 * * * *", async () => {
         console.log(
           `✅ Transaction ${_id} matched at $${marketPrice.toFixed(2)}`
         );
+        console.log(`📧 User email: ${userEmail}`);  // Log the email after matching
+        const detail = await transaction.findOne({ _id: new ObjectId(_id) }, { _id:0, userId:1});
+
+        const mailOptions = {
+          from: "sit.invest.pl3@gmail.com",  // Sender's email address
+          to: userEmail,  // User's email address
+          subject: "Transaction result",  // Email subject
+          text: `${detail.action.toUpperCase()}: ${detail.symbol} amount ${detail.totalAmount} is ${detail.status}`,  // Email body
+        };
+
+        // Send the email
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error("Error sending email:", error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
       }
     } catch (error) {
       console.error(`⚠️ Error checking transaction ${_id}:`, error);
