@@ -738,13 +738,13 @@ onMounted(async () => {
       BACK
     </RouterLink>
 
-    <button
+    <button v-if="token"
       class="buy-sell-button fixed top-20 right-24 font-bold text-lg p-1 rounded-2xl text-green-600 border border-solid border-green-600 hover:bg-green-600 hover:text-white w-1/12 duration-300"
       @click="openModal('buy')"
     >
       BUY
     </button>
-    <button
+    <button v-if="token"
       class="buy-sell-button fixed top-32 right-24 font-bold text-lg p-1 rounded-2xl text-red-600 border border-solid border-red-600 hover:bg-red-600 hover:text-white w-1/12 duration-300"
       @click="openModal('sell')"
     >
