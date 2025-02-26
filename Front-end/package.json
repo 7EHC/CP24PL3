@@ -9,6 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/vue": "^1.0.6",
+    "@vue-hero-icons/outline": "^1.7.2",
+    "@vuepic/vue-datepicker": "^11.0.1",
     "@vueuse/core": "^10.11.0",
     "axios": "^1.7.2",
     "chart.js": "^4.4.8",

@@ -1,13 +1,19 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import stockApi from '../composable/FetchStock';
 import { RouterLink } from "vue-router";
+import Datepicker from "@vuepic/vue-datepicker";
+import "@vuepic/vue-datepicker/dist/main.css";
+import { FilterIcon } from '@heroicons/vue/outline';
 
 const allTrans = ref([]);
 const openIndex = ref(null);
 const portfolioNames = ref({}); // เก็บชื่อของพอร์ตแต่ละอัน
 const isLoading = ref(false)
 const isHaveTrans = ref(false)
+const showFilter = ref(false); // Toggle filter dropdown
+const filters = ref()
+const portOptions = ref()
 
 const getName = async (id) => {
   if (!id || portfolioNames.value[id]) return;
@@ -17,6 +23,41 @@ const getName = async (id) => {
   } catch (error) {
     console.error("Error fetching portfolio name:", error);
   }
+};
+
+// Computed property to remove duplicates
+const uniqueSymbols = computed(() => {
+  const seen = new Set();
+  return portOptions.value.filter((trans) => {
+    if (seen.has(trans.symbol)) {
+      return false;
+    } else {
+      seen.add(trans.symbol);
+      return true;
+    }
+  });
+})
+
+const uniquePortIds = computed(() => {
+  const uniquePorts = new Set();
+  return portOptions.value.filter((trans) => {
+    if (!uniquePorts.has(trans.portId)) {
+      uniquePorts.add(trans.portId);
+      return true;
+    }
+    return false;
+  });
+});
+
+const clearFilter = () => {
+  filters.value = {
+    symbol: undefined,
+    portId: undefined,
+    fromDate: undefined,
+    toDate: undefined,
+    action: undefined,
+    status: undefined,
+  };
 };
 
 // คอยดึงข้อมูลเมื่อ allTrans เปลี่ยน
@@ -35,12 +76,54 @@ const toggleAccordion = (index) => {
   openIndex.value = openIndex.value === index ? null : index;
 };
 
+const toggleFilter = () => {
+  showFilter.value = !showFilter.value;
+};
+
+const applyFilter = async () => {
+  isLoading.value = true;
+  try {
+    const params = {
+      symbol: filters.value.symbol || undefined,
+      portId: filters.value.portId,
+      fromDate: filters.value.fromDate 
+      ? new Date(filters.value.fromDate).setUTCHours(0, 0, 0, 0) && new Date(filters.value.fromDate).toISOString()
+      : undefined,
+    toDate: filters.value.toDate 
+      ? new Date(filters.value.toDate).setUTCHours(0, 0, 0, 0) && new Date(filters.value.toDate).toISOString()
+      : undefined,
+      action: filters.value.action || undefined,
+      status: filters.value.status || undefined,
+    };
+
+    // allTrans.value = await stockApi.getAllTransaction(params);
+    // กรองค่า undefined ออก
+    const queryString = new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined) acc[key] = value;
+        return acc;
+      }, {})
+    ).toString();
+
+    console.log(queryString); // ตรวจสอบค่า query string ที่สร้างได้
+
+    allTrans.value = await stockApi.getAllTransaction(queryString);
+    isHaveTrans.value = allTrans.value.length === 0;
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+  } finally {
+    isLoading.value = false;
+    showFilter.value = false;
+  }
+};
+
 onMounted(async () => {
   // allTrans.value = await stockApi.getAllTransaction();
   const fetchTransactions = async () => {
     isLoading.value = true;
     try {
         allTrans.value = await stockApi.getAllTransaction();
+        portOptions.value = await stockApi.getAllTransaction();
         isHaveTrans.value = allTrans.value.length === 0; // ถ้าไม่มี transaction ให้เป็น true
     } catch (error) {
         console.error("Error fetching transactions:", error);
@@ -49,11 +132,95 @@ onMounted(async () => {
     }
 }
 fetchTransactions()
+
+filters.value = {
+  symbol: undefined,
+  portId: undefined,
+  fromDate: undefined,
+  toDate: undefined,
+  action: undefined,
+  status: undefined,
+}
 });
 </script>
 
 <template>
-  <p class="text-3xl text-zinc-800 my-3 font-bold">History</p>
+  <p class="text-3xl text-zinc-800 my-3 font-bold w-full">
+    History 
+    <button @click="toggleFilter" class="float-right text-sm bg-gray-200 p-2 rounded-md flex items-center">
+    <!-- Filter Icon -->
+    <FilterIcon class="h-5 w-5 mr-2" />
+    Filter
+    <span class="ml-2 transform transition" :class="{ 'rotate-180': showFilter }">▼</span>
+  </button>
+  </p>
+
+  <!-- Filter Dropdown -->
+  <div v-if="showFilter" class="bg-white shadow-lg rounded-lg p-4 border w-80 absolute right-5 z-10">
+    <!-- Symbol -->
+    <div class="mb-3">
+      <label class="block text-sm font-medium mb-1">Symbol</label>
+      <!-- <input v-model="filters.symbol" type="text" class="w-full p-2 border rounded bg-white focus:ring-2 focus:ring-yellow-400 focus:outline-none" placeholder="AAPL, TSLA, etc." /> -->
+      <select v-model="filters.symbol" class="w-full p-2 border rounded bg-white focus:ring-2 focus:ring-yellow-400 focus:outline-none">
+        <option value="">Select Symbol</option>
+        <option v-for="(trans, index) in uniqueSymbols" :key="index" :value="trans.symbol">
+          {{ trans.symbol }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Port -->
+  <div class="mb-3">
+    <label class="block text-sm font-medium mb-1">Port</label>
+    <select v-model="filters.portId" class="w-full p-2 border rounded bg-white focus:ring-2 focus:ring-yellow-400 focus:outline-none">
+      <option value="">Select Port</option>
+      <option v-for="(trans, index) in uniquePortIds" :key="index" :value="trans.portId">
+        {{ portfolioNames[trans.portId] || `Port ID: ${trans.portId}` }}
+      </option>
+    </select>
+  </div>
+
+    <!-- Date Range -->
+    <div class="mb-3">
+      <label class="block text-sm font-medium mb-1">From Date</label>
+      <Datepicker v-model="filters.fromDate" />
+    </div>
+    <div class="mb-3">
+      <label class="block text-sm font-medium mb-1">To Date</label>
+      <Datepicker v-model="filters.toDate" />
+    </div>
+
+    <!-- Action -->
+    <div class="mb-3">
+      <label class="block text-sm font-medium mb-1">Action</label>
+      <select v-model="filters.action" class="w-full p-2 border rounded bg-white focus:ring-2 focus:ring-yellow-400 focus:outline-none">
+        <option value="">All</option>
+        <option value="buy">Buy</option>
+        <option value="sell">Sell</option>
+      </select>
+    </div>
+
+    <!-- Status -->
+    <div class="mb-3">
+      <label class="block text-sm font-medium mb-1">Status</label>
+      <select v-model="filters.status" class="w-full p-2 border rounded bg-white focus:ring-2 focus:ring-yellow-400 focus:outline-none">
+        <option value="">All</option>
+        <option value="pending">Pending</option>
+        <option value="match">Matched</option>
+        <option value="failed">Failed</option>
+      </select>
+    </div>
+
+    <!-- Apply and Clear Buttons -->
+    <div class="flex space-x-2">
+      <button @click="applyFilter" class="bg-yellow-400 text-zinc-800 font-semibold w-full py-2 rounded-lg">
+        Apply Filters
+      </button>
+      <button @click="clearFilter" class="bg-gray-300 text-zinc-800 font-semibold w-full py-2 rounded-lg">
+        Clear Filters
+      </button>
+    </div>
+  </div>
 
   <div
       v-if="isLoading"
