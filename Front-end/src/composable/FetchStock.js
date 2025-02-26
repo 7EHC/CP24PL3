@@ -91,10 +91,10 @@ class StockApi {
     }
   }
 
-  async getAllTransaction() {
+  async getAllTransaction(filter) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/getAllTransaction`, {
+      const res = await fetch(`${API_ROOT}/getAllTransaction?${filter}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -39,7 +39,33 @@ const selectStock = (stock) => {
 
 onMounted(async () => {
   const getPreviousBusinessDay = ()=>{
-    const date = new Date();
+    // const date = new Date();
+    // date.setDate(date.getDate() - 1); // ถอยไป 1 วันก่อน
+
+    // // ถ้าวันที่เป็นวันเสาร์ (6) -> ถอยกลับไปวันศุกร์ (1 วัน)
+    // // ถ้าวันที่เป็นวันอาทิตย์ (0) -> ถอยกลับไปวันศุกร์ (2 วัน)
+    // if (date.getDay() === 6) date.setDate(date.getDate() - 1);
+    // if (date.getDay() === 0) date.setDate(date.getDate() - 2);
+
+    // return date.toLocaleDateString('en-CA'); // ใช้ en-CA เพื่อให้ได้ YYYY-MM-DD
+    const now = new Date();
+    
+    // เวลาปัจจุบันในไทย (UTC+7)
+    const thailandOffset = 7 * 60; 
+    const usMarketOffset = -5 * 60; // Eastern Time (เปลี่ยนเป็น -4 ถ้า DST)
+
+    // คำนวณเวลา UTC
+    const utcTime = now.getTime() - (thailandOffset * 60 * 1000);
+
+    // คำนวณเวลาใน US Eastern Time
+    const usTime = new Date(utcTime + (usMarketOffset * 60 * 1000));
+
+    // ถ้าตอนนี้ที่ไทยเป็นวันใหม่แล้ว แต่ที่ US ยังเป็นวันก่อนอยู่
+    if (usTime.getDate() !== now.getDate()) {
+        now.setDate(now.getDate() - 1); // ถอยไปอีกวัน
+    }
+
+    let date = new Date(now);
     date.setDate(date.getDate() - 1); // ถอยไป 1 วันก่อน
 
     // ถ้าวันที่เป็นวันเสาร์ (6) -> ถอยกลับไปวันศุกร์ (1 วัน)
@@ -47,7 +73,7 @@ onMounted(async () => {
     if (date.getDay() === 6) date.setDate(date.getDate() - 1);
     if (date.getDay() === 0) date.setDate(date.getDate() - 2);
 
-    return date.toLocaleDateString('en-CA'); // ใช้ en-CA เพื่อให้ได้ YYYY-MM-DD
+    return date.toLocaleDateString('en-CA'); // YYYY-MM-DD
   }
   // console.log(getPreviousBusinessDay())
 
@@ -206,7 +232,7 @@ onMounted(async () => {
 
   <div class="top20 mt-10 text-zinc-800" v-if="top20.length > 0">
   <p class="text-3xl font-bold text-center bg-gradient-to-r bg-zinc-800 text-yellow-400 py-4 rounded-lg shadow-md">
-    🚀 Top 20 Fastest Rising Stocks Last Night
+    🚀 Top 20 Fastest Rising Stocks in Past Few Days
   </p>
 
   <div class="grid md:grid-cols-2 gap-6 my-6">

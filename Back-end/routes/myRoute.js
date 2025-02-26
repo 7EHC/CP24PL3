@@ -428,10 +428,39 @@ router.post("/sellStock", async (req, res) => {
 
 router.get("/getAllTransaction", authMiddleware, async (req, res) => {
   try {
-    const allTransactions = await transaction
-      .find({ userId: req.userId })
-      .sort({ date: -1 })
-      .toArray();
+    const filter = { userId: req.userId };
+    // ถ้ามีพารามิเตอร์ action ให้เพิ่มลงใน filter
+    if (req.query.action) {filter.action = req.query.action;}
+    // ถ้ามีพารามิเตอร์ status ให้เพิ่มลงใน filter
+    if (req.query.status) {filter.status = req.query.status;}
+    // Port ID
+    if (req.query.portId) {filter.portId = req.query.portId;}
+
+    if (req.query.symbol) {filter.symbol = req.query.symbol;}
+
+    if (req.query.fromDate || req.query.toDate) {
+      const isoFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+      filter.date = {};
+    
+      if (req.query.fromDate) {
+        if (isoFormatRegex.test(req.query.fromDate)) {
+          filter.date.$gte = req.query.fromDate
+        } else {
+          return res.status(400).json({ error: "Invalid fromDate format. Use ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)" });
+        }
+      }
+    
+      if (req.query.toDate) {
+        if (isoFormatRegex.test(req.query.toDate)) {
+          filter.date.$lte = req.query.toDate
+        } else {
+          return res.status(400).json({ error: "Invalid toDate format. Use ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)" });
+        }
+      }
+    }
+
+    const allTransactions = await transaction.find(filter).sort({ date: -1 }).toArray();
+    
     res.status(200).json(allTransactions);
   } catch (error) {
     console.error("Error:", error);
