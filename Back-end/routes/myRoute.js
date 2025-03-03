@@ -34,14 +34,24 @@ function getNextApiKey() {
 
 cron.schedule("*/1 * * * *", async () => {
   const now = new Date();
-  const hour = now.getHours();
-  const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+  // const hour = now.getHours();
+  // const day = now.getDay(); // 0 = Sunday, 6 = Saturday
 
-  // ❌ หยุดทำงานถ้าเป็นวันเสาร์หรืออาทิตย์
-  if (day === 0 || day === 6) return;
+  // // ❌ หยุดทำงานถ้าเป็นวันเสาร์หรืออาทิตย์
+  // if (day === 0 || day === 6) return;
 
-  // ❌ ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
-  if (hour < 20 && hour >= 4) return;
+  // // ❌ ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
+  // if (hour < 20 && hour >= 4) return;
+  const res = await fetch(`https://api.polygon.io/v1/marketstatus/now?apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`);
+    if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
+    
+    const status = await res.json();
+    console.log(`📢 Market Status: ${status.market}`);
+    if (status.market.toString() !== "open") {
+      console.log("⏸ Market is closed, skipping transaction check.");
+      return;
+    }
+
 
   console.log(`🔄 Checking pending transactions... at ${now}`);
 
