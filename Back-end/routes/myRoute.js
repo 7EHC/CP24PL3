@@ -47,7 +47,7 @@ cron.schedule("*/1 * * * *", async () => {
     
     const status = await res.json();
     console.log(`📢 Market Status: ${status.market}`);
-    if (status.market.toString() !== "open") {
+    if (status.market.toString() === "closed") {
       console.log("⏸ Market is closed, skipping transaction check.");
       return;
     }

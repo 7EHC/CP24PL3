@@ -21,6 +21,12 @@ cron.schedule("0 0 1 * *", async () => {
         console.log("Fetching user IDs...");
         const users = await userSchema.find({}, { projection: { _id: 1, email: 1 } }).toArray();
 
+        // หาค่าเดือนและปีที่ผ่านมาจากวันที่ปัจจุบัน
+        const now = new Date();
+        const previousMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1));
+        const previousMonthNumber = previousMonth.getMonth() + 1; // Get the previous month (1-based index)
+        const previousYear = previousMonth.getFullYear();
+
         for (const user of users) {
             const userId = user._id.toString();
             const email = user.email;
@@ -28,7 +34,7 @@ cron.schedule("0 0 1 * *", async () => {
             console.log(`Generating report for user: ${userId} (${email})`);
 
             // เรียก API เพื่อดึงไฟล์ Excel
-            const response = await fetch(`http://localhost:5000/test/exportTransactions/${userId}`);
+            const response = await fetch(`http://localhost:5000/test/exportTransactions/${userId}?month=${previousMonthNumber}&year=${previousYear}`);
             if (!response.ok) throw new Error(`Failed to fetch report for ${userId}`);
 
             // ใช้ arrayBuffer() แทน buffer()
@@ -72,28 +78,39 @@ cron.schedule("0 0 1 * *", async () => {
     }
 });
 
-// API สำหรับ Export ข้อมูลเป็น Excel ตาม userId
 router.get("/exportTransactions/:userId", async (req, res) => {
     try {
         const { userId } = req.params;
-        
+        const { year, month } = req.query; // รับค่า year และ month จาก query
+
         // ตรวจสอบ userId ว่าถูกต้องหรือไม่
         if (!ObjectId.isValid(userId)) {
             return res.status(400).send("Invalid userId");
         }
 
-        // หาค่าเดือนก่อนหน้า
+        // กำหนดค่าปัจจุบัน
         const now = new Date();
-        const previousMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1));
+        let startOfMonth, endOfMonth;
 
-        // กำหนดเวลาให้เป็นเวลา 00:00:00 UTC ของวันแรกของเดือน
-        const startOfMonth = new Date(Date.UTC(previousMonth.getFullYear(), previousMonth.getMonth(), 1));
-
-        // หาค่าวันสุดท้ายของเดือน
-        const endOfMonth = new Date(Date.UTC(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0));
-
-        // กำหนดเวลาให้เป็นเวลา 23:59:59.999 UTC ของวันสุดท้ายของเดือน
-        endOfMonth.setUTCHours(23, 59, 59, 999);
+        if (!year && !month) {
+            // ถ้าไม่มีปีและเดือน ให้ดึงข้อมูลทั้งหมด
+            startOfMonth = new Date(0); // เริ่มต้นจาก 1 มกราคม 1970
+            endOfMonth = new Date();
+        } else if (year && !month) {
+            // ถ้ามีแค่ปี ให้ดึงข้อมูลตั้งแต่วันที่ 1 มกราคม ปีนั้นถึง 31 ธันวาคม
+            startOfMonth = new Date(`${year}-01-01T00:00:00.000Z`);
+            endOfMonth = new Date(`${year}-12-31T23:59:59.999Z`);
+        } else if (!year && month) {
+            // ถ้ามีแค่เดือน ให้ดึงข้อมูลจากวันที่ 1 เดือนนั้นถึงวันสุดท้ายของเดือนนั้น
+            startOfMonth = new Date(Date.UTC(now.getFullYear(), month - 1, 1));
+            endOfMonth = new Date(Date.UTC(now.getFullYear(), month, 0)); // วันสุดท้ายของเดือน
+            endOfMonth.setUTCHours(23, 59, 59, 999);
+        } else if (year && month) {
+            // ถ้ามีทั้งปีและเดือน ให้ดึงข้อมูลตั้งแต่วันที่ 1 เดือนนั้นถึงวันสุดท้ายของเดือน
+            startOfMonth = new Date(Date.UTC(year, month - 1, 1));
+            endOfMonth = new Date(Date.UTC(year, month, 0)); // วันสุดท้ายของเดือน
+            endOfMonth.setUTCHours(23, 59, 59, 999);
+        }
 
         // แปลงเป็น ISODate
         const startOfMonthISO = startOfMonth.toISOString();
@@ -108,11 +125,11 @@ router.get("/exportTransactions/:userId", async (req, res) => {
                 $lt: endOfMonthISO
             }
         }).toArray();
-        
+
         // สร้างไฟล์ Excel
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet(`Transactions ${startOfMonth.toLocaleString('default', { month: 'long' })}`); // ชื่อชีทจะเป็นชื่อเดือน
-        
+
         // หัวตาราง
         worksheet.columns = [
             { header: "Symbol", key: "symbol", width: 10 },
@@ -123,7 +140,7 @@ router.get("/exportTransactions/:userId", async (req, res) => {
         ];
 
         worksheet.getRow(1).height = 30;  // กำหนดให้แถวที่ 1 มีความสูง 30 จุด
-        
+
         // เพิ่มสีและการตกแต่งแถวที่ 1 (header)
         const headerRow = worksheet.getRow(1);
         headerRow.eachCell((cell, colNumber) => {
@@ -174,7 +191,7 @@ router.get("/exportTransactions/:userId", async (req, res) => {
                 };
             }
         });
-        
+
         // เพิ่มข้อมูลลงใน Excel
         transactions.forEach((tx) => {
             const row = worksheet.addRow({
@@ -184,7 +201,7 @@ router.get("/exportTransactions/:userId", async (req, res) => {
                 quantity: tx.quantity,
                 date: new Date(tx.date).toISOString().split("T")[0],
             });
-        
+
             // กำหนดสีพื้นหลังของคอลัมน์ Action ตามเงื่อนไข
             const actionCell = row.getCell('action');
             if (tx.action.toUpperCase() === 'BUY') {
@@ -200,7 +217,7 @@ router.get("/exportTransactions/:userId", async (req, res) => {
                     fgColor: { argb: '00FFC7CE' } // สีแดงอ่อน
                 };
             }
-        
+
             // กำหนดเส้นขอบ (Border) ให้ทุกเซลล์ในแถว
             row.eachCell((cell) => {
                 cell.border = {
@@ -211,11 +228,11 @@ router.get("/exportTransactions/:userId", async (req, res) => {
                 };
             });
         });
-        
+
         // คำนวณยอดรวมของ BUY และ SELL
         let buyTotal = 0;
         let sellTotal = 0;
-        
+
         // คำนวณผลรวมของ BUY และ SELL
         transactions.forEach((tx) => {
             if (tx.action === "buy") {
@@ -275,9 +292,13 @@ router.get("/exportTransactions/:userId", async (req, res) => {
             });
         });
 
-        
+
         // กำหนดชื่อไฟล์
-        const fileName = `Transaction_Report_${startOfMonth.toLocaleString('default', { month: 'long' })}.xlsx`;
+        const fileName = (year && month)
+    ? `Transaction_Report_${year}_${new Date(`${year}-${month}-01`).toLocaleString('default', { month: 'long' })}.xlsx`
+    : (year || month)
+    ? `Transaction_Report_${year || new Date().getFullYear()}_${new Date(`${year || new Date().getFullYear()}-${month || new Date().getMonth() + 1}-01`).toLocaleString('default', { month: 'long' })}.xlsx`
+    : `Transaction_Report_All.xlsx`;
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
         
@@ -286,8 +307,9 @@ router.get("/exportTransactions/:userId", async (req, res) => {
         res.end();
     } catch (error) {
         console.error("Error exporting Excel:", error);
-        res.status(500).send("Error generating Excel file");
+        res.status(500).send("Error generating Excel file.");
     }
 });
+
 
 export default router;
