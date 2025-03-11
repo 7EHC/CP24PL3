@@ -102,6 +102,7 @@ router.get("/exportTransactions/:userId", async (req, res) => {
         // ดึงข้อมูลจากฐานข้อมูลตามช่วงเวลาที่กำหนด
         const transactions = await transaction.find({
             status: "match",
+            userId: userId,
             date: {
                 $gte: startOfMonthISO,
                 $lt: endOfMonthISO
