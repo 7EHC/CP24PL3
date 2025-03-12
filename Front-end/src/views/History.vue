@@ -14,6 +14,44 @@ const isHaveTrans = ref(false)
 const showFilter = ref(false); // Toggle filter dropdown
 const filters = ref()
 const portOptions = ref()
+const cancelAlert = ref(false)
+const cancelMsg = ref('')
+
+// ตัวแปรสำหรับ Modal ยกเลิกคำสั่ง
+const isCancelModalOpen = ref(false);
+const selectedTransId = ref(null); 
+
+const openCancelModal = (transId) => {
+  selectedTransId.value = transId;
+  isCancelModalOpen.value = true;
+};
+
+const closeCancelModal = () => {
+  isCancelModalOpen.value = false;
+  selectedTransId.value = null;
+};
+
+const cancelTransaction = async (status) => {
+  try {
+    const result = await stockApi.updateTransaction(selectedTransId.value, status);
+    
+    if (result) {
+      cancelAlert.value = true;
+      cancelMsg.value = JSON.stringify(result.message); // Convert object to string if necessary
+    }
+
+    console.log("Transaction Update Result:", result);
+    closeCancelModal();
+    allTrans.value = await stockApi.getAllTransaction();
+
+    // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
+    setTimeout(() => {
+          cancelAlert.value = false
+        }, 3000);
+  } catch (error) {
+    console.error("ERROR in cancelTransaction:", error);
+  }
+};
 
 const getName = async (id) => {
   if (!id || portfolioNames.value[id]) return;
@@ -145,6 +183,34 @@ filters.value = {
 </script>
 
 <template>
+  <transition name="fade">
+      <div 
+      v-if="cancelAlert === true" 
+      class="p-4 fixed right-12 z-50 border-l-4 bg-red-100 border-red-500 text-red-700" role="alert"
+      >
+        <p class="font-bold">Transaction successfully cancel.</p>
+      </div>
+  </transition>
+
+  <!-- Modal ยืนยันการยกเลิก -->
+  <teleport to="body">
+    <div v-if="isCancelModalOpen" class="fixed inset-0 flex justify-center items-center z-50 bg-black bg-opacity-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+        <p class="text-lg font-semibold text-gray-800">Confirm Cancellation</p>
+        <p class="text-sm text-gray-600 mt-2">Are you sure you want to cancel this order?</p>
+        
+        <div class="flex justify-end space-x-2 mt-4">
+          <button @click="closeCancelModal" class="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-200 duration-300">
+            Cancel
+          </button>
+          <button @click="cancelTransaction('cancel')" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 duration-300">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  </teleport>
+
   <p class="text-3xl text-zinc-800 my-3 font-bold w-full">
     History 
     <button @click="toggleFilter" class="float-right text-sm bg-gray-200 p-2 rounded-md flex items-center">
@@ -242,7 +308,7 @@ filters.value = {
   <div
     v-for="(trans, index) in allTrans"
     :key="trans.id"
-    :class="{ 'opacity-50': trans.status.toLowerCase() === 'failed' }"
+    :class="{ 'opacity-50': trans.status.toLowerCase() === 'failed'|| trans.status.toLowerCase() === 'cancel' }"
     class="border-b border-gray-700 py-4"
   >
     <div @click="toggleAccordion(index)" class="flex justify-between items-center cursor-pointer hover:bg-gray-100 hover:rounded-lg hover:px-1 transition-all duration-200">
@@ -274,10 +340,9 @@ filters.value = {
     </div>
 
     <div class="flex justify-between items-center text-lg text-gray-800">
-      <p v-if="trans.status.toLowerCase() !== 'failed'">
-        Actual price: {{ trans.actualPrice }}
-      </p>
-      <p v-else class="text-red-500 font-bold">FAILED</p>
+      <p v-if="trans.status.toLowerCase() === 'failed'" class="text-red-500 font-bold">FAILED</p>
+      <p v-else-if="trans.status.toLowerCase() === 'cancel'" class="text-red-500 font-bold">CANCEL ORDER</p>
+      <p v-else>Actual price: {{ trans.actualPrice }}</p>
       <p class="text-gray-800 text-sm">{{ formatDate(trans.date) }}</p>
     </div>
 
@@ -287,6 +352,13 @@ filters.value = {
         <p><strong>Status:</strong> {{ trans.status }}</p>
         <p><strong>Shares:</strong> {{ trans.quantity }}</p>
         <p><strong>Bid price:</strong> {{ trans.bidPrice }}</p>
+
+        <!-- ปุ่ม Cancel Order -->
+          <button v-if="trans.status.toLowerCase() === 'pending'" 
+            @click="openCancelModal(trans._id)" 
+            class="text-red-500 cursor-pointer underline decoration-red-500 decoration-2 mt-2 w-full">
+            <strong>Cancel Order</strong>
+          </button>
       </div>
     </transition>
   </div>
@@ -304,5 +376,12 @@ filters.value = {
 .accordion-enter-to, .accordion-leave-from {
   max-height: 150px;
   opacity: 1;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 1s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
 }
 </style>

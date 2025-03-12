@@ -550,6 +550,31 @@ router.post("/createTransaction", async (req, res) => {
   }
 });
 
+router.put("/updateTransaction/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params; // รับ transactionId จาก URL
+    const { status } = req.query; // รับ status ใหม่จาก query parameter
+
+    if (!status) {
+      return res.status(400).json({ error: "status is required" });
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const update = { $set: { status } };
+
+    const result = await transaction.updateOne(filter, update);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Transaction not found or not authorized" });
+    }
+
+    res.status(200).json({ message: "Transaction status updated successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 const buyStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
   try {
     await fetch(`${API_ROOT}/buyStock`, {

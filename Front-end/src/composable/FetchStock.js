@@ -112,6 +112,27 @@ class StockApi {
     }
   }
 
+  async updateTransaction(id,status) {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_ROOT}/updateTransaction/${id}?status=${status}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const transaction = await res.json();
+        return transaction;
+      } else {
+        console.log(`ERROR: Server responded with status ${res.status}`);
+      }
+    } catch (error) {
+      console.log(`ERROR cannot read data: ${error}`);
+    }
+  }
+
   async createTransaction(transactionObj) {
     try {
       const res = await fetch(`${API_ROOT}/createTransaction`, {
