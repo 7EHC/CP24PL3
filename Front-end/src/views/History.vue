@@ -274,6 +274,7 @@ filters.value = {
         <option value="pending">Pending</option>
         <option value="match">Matched</option>
         <option value="failed">Failed</option>
+        <option value="cancel">Cancel</option>
       </select>
     </div>
 
