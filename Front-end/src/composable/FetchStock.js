@@ -152,6 +152,42 @@ class StockApi {
       console.error(`ERROR cannot send data: ${error}`);
     }
   }
+
+  async exportExcel(userId, year, month) {
+    try {
+      const res = await fetch(`http://localhost:5000/test/exportTransactions/${userId}?year=${year}&month=${month}`);
+  
+      if (!res.ok) {
+        console.error(`ERROR: Server responded with status ${res.status}`);
+        return;
+      }
+  
+      // รับข้อมูลเป็น Blob (รองรับไฟล์ทุกประเภท รวมถึง application/octet-stream)
+      const blob = await res.blob(); 
+  
+      // Debug: ตรวจสอบ MIME Type ว่าเป็น application/octet-stream หรือไม่
+      // console.log("MIME Type from response:", blob.type);
+  
+      // แปลง Blob เป็น URL และดาวน์โหลดไฟล์
+      const fileUrl = URL.createObjectURL(blob);
+      this.downloadFile(fileUrl, `Transaction_Report_${year}_${month}.xlsx`);
+    } catch (error) {
+      console.error(`ERROR cannot read data: ${error}`);
+    }
+  }
+  
+  downloadFile(fileUrl, fileName) {
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  
+    // Cleanup URL object เพื่อป้องกัน memory leak
+    URL.revokeObjectURL(fileUrl);
+  }
+
 }
 const getPolygonRandomKey = () => {
   const keyPool = [
