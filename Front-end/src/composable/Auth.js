@@ -24,6 +24,28 @@ class Auth {
     }
   }
 
+  async verify(token) {
+    try {
+      const res = await fetch(`http://localhost:5000/verify/verify-email?token=${token}`, {
+        method: "GET", // Change to GET
+        headers: {
+          "Content-Type": "application/json", // You can still keep the headers, though they are not required for GET requests
+        },
+      });
+  
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      } else {
+        const error = await res.text();
+        return error;
+      }
+    } catch (err) {
+      console.error("Verification Error:", err);
+      throw err;
+    }
+  }
+
   async login(username, password) {
     try {
       const res = await fetch(`${API_ROOT}/login`, {

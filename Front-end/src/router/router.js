@@ -7,6 +7,7 @@ import StockView from "../views/StockView.vue";
 import Login from "../views/Login.vue";
 import History from "../views/History.vue"
 import Register from "../views/Register.vue";
+import VerifyUser from "../views/VerifyUser.vue";
 
 const router = createRouter({
     history: createWebHistory("/pl3"),
@@ -30,6 +31,11 @@ const router = createRouter({
             path: '/stockView/:details',
             name: 'StockView',
             component: StockView
+        },
+        {
+          path: '/verify/:token',
+          name: 'VerifyUser',
+          component: VerifyUser
         },
         {
             path: '/news',

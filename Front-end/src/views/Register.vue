@@ -51,7 +51,8 @@ const register = async () => {
   errors.value = { username: "", password: "", confirmPassword: "",email: "" };
   if (validate()) {
     try {
-      const res = await fetch(`${API_ROOT}/register`, {
+      // const res = await fetch(`${API_ROOT}/register`, {
+      const res = await fetch(`http://localhost:5000/verify/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -192,11 +193,15 @@ const register = async () => {
 
             <div v-if="success" class="flex flex-col justify-center items-center py-10">
               <i class="fas fa-check-circle text-green-500 text-5xl"></i>
-              <p class="text-black font-bold mt-2">Sign Up Successful!</p>
+              <p class="text-black font-bold mt-2">
+                <!-- Sign Up Successful! -->
+                We have sent a verification link to your email.
+              </p>
             </div>
 
             <p v-if="success" class="text-black pt-5 text-center text-xs">
-              Thank you for your registration!
+              <!-- Thank you for your registration! -->
+              Please check your inbox to verify your email address.
               <span class="text-blue-600 hover:underline cursor-pointer" @click="router.push('/login')">
                 Login here
               </span>
