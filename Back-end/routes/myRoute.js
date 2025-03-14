@@ -34,14 +34,24 @@ function getNextApiKey() {
 
 cron.schedule("*/1 * * * *", async () => {
   const now = new Date();
-  const hour = now.getHours();
-  const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+  // const hour = now.getHours();
+  // const day = now.getDay(); // 0 = Sunday, 6 = Saturday
 
-  // ❌ หยุดทำงานถ้าเป็นวันเสาร์หรืออาทิตย์
-  if (day === 0 || day === 6) return;
+  // // ❌ หยุดทำงานถ้าเป็นวันเสาร์หรืออาทิตย์
+  // if (day === 0 || day === 6) return;
 
-  // ❌ ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
-  if (hour < 20 && hour >= 4) return;
+  // // ❌ ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
+  // if (hour < 20 && hour >= 4) return;
+  const res = await fetch(`https://api.polygon.io/v1/marketstatus/now?apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`);
+    if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
+    
+    const status = await res.json();
+    console.log(`📢 Market Status: ${status.market}`);
+    if (status.market.toString() === "closed") {
+      console.log("⏸ Market is closed, skipping transaction check.");
+      return;
+    }
+
 
   console.log(`🔄 Checking pending transactions... at ${now}`);
 
@@ -537,6 +547,31 @@ router.post("/createTransaction", async (req, res) => {
     res
       .status(500)
       .json({ message: "Error creating transaction.", error: error.message });
+  }
+});
+
+router.put("/updateTransaction/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params; // รับ transactionId จาก URL
+    const { status } = req.query; // รับ status ใหม่จาก query parameter
+
+    if (!status) {
+      return res.status(400).json({ error: "status is required" });
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const update = { $set: { status } };
+
+    const result = await transaction.updateOne(filter, update);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Transaction not found or not authorized" });
+    }
+
+    res.status(200).json({ message: "Transaction status updated successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
