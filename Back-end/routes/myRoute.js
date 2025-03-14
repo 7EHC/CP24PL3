@@ -660,16 +660,23 @@ router.post("/register", async (req, res) => {
   }
 
   try {
+    let errors = {}
     // 2) Check if the user already exists (by username and email)
     const oldUserByUsername = await userSchema.findOne({ username: username.toLowerCase() });
     if (oldUserByUsername) {
-      return res.status(409).send("User already exists, please login.");
+      errors.username = "User already exists, please login."
+      // return res.status(409).send("User already exists, please login.");
     }
 
     const oldUserByEmail = await userSchema.findOne({ email: email.toLowerCase() });
     if (oldUserByEmail) {
-      return res.status(409).send("Email is already registered, please use another email.");
+      errors.email = "Email is already registered, please use another email."
+      // return res.status(409).send("Email is already registered, please use another email.");
     }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(409).json(errors);
+  }
 
     // 3) Hash the password
     const encryptedPassword = await bcrypt.hash(password, 10);

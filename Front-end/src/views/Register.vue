@@ -9,7 +9,7 @@ const username = ref("");
 const email = ref("")
 const password = ref("");
 const confirmPassword = ref("");
-const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[_!@#$%^&*(),.?":{}|<>]).{8,}$/;
 const errors = ref({ username: "", password: "", confirmPassword: "" });
 const success = ref(false)
 
@@ -32,8 +32,8 @@ const validate = () => {
   errors.value.email = "Please enter a valid email address.";
   valid = false;
 }
-    if (!password.value || password.value.length < 8 || password.value.length > 15) {
-    errors.value.password = "Password must between 8-15 characters.";
+    if (!password.value || ( password.value.length < 8 || password.value.length > 15 ) || !regex.test(password.value)) {
+    errors.value.password = "Password must be 8-15 characters with a mix of cases, a number, and a special character.";
     valid = false;
   }
   // if (!password.value || !regex.test(password.value)) {
@@ -48,7 +48,7 @@ const validate = () => {
 };
 
 const register = async () => {
-  errors.value = { username: "", password: "", confirmPassword: "",email: "" };
+  errors.value = { username: "", password: "", confirmPassword: "", email: "" };
   if (validate()) {
     try {
       // const res = await fetch(`${API_ROOT}/register`, {
@@ -67,8 +67,9 @@ const register = async () => {
       if (res.ok) {
         success.value = true
       } else if (res.status === 409) {
-        errors.value.username = await res.text();
-        return errors.value.username;
+        errors.value = await res.json();
+        // console.log(errors.value);
+      
       }
     } catch (err) {
       success.value = false
@@ -97,7 +98,7 @@ const register = async () => {
     <div class="sub h-4/6 w-4/6 -ml-10 mt-14 rounded-xl">
       <div class="flex items-center justify-center h-full">
         <div
-          class="login w-5/6 h-5/6 flex bg-white rounded-2xl shadow-lg overflow-hidden"
+          class="login w-5/6 flex bg-white rounded-2xl shadow-lg overflow-hidden"
         >
           <div
             class="w-2/5 bg-zinc-900 flex flex-col justify-center items-center"
@@ -110,7 +111,7 @@ const register = async () => {
             ></div>
             <div class="relative w-14 h-2 bg-white rounded-full"></div>
           </div>
-          <div class="w-3/5 bg-yellow-400 flex flex-col justify-center px-8">
+          <div class="w-3/5 h-[500px] py-5 bg-yellow-400 flex flex-col justify-center px-8">
             <p class="text-black text-3xl font-extrabold mb-3 text-center">
               Register
             </p>
@@ -126,6 +127,9 @@ const register = async () => {
                 type="text"
                 id="username"
                 placeholder="Username"
+                :class="{
+                  'ring-2 ring-red-500': errors.username,
+                }"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
@@ -140,9 +144,12 @@ const register = async () => {
               </label>
               <input
                 v-model="email"
-                type="text"
+                type="email"
                 id="email"
                 placeholder="Email"
+                :class="{
+                  'ring-2 ring-red-500': errors.email,
+                }"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
@@ -160,6 +167,9 @@ const register = async () => {
                 type="password"
                 id="password"
                 placeholder="Password"
+                :class="{
+                  'ring-2 ring-red-500': errors.password,
+                }"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />
@@ -177,6 +187,9 @@ const register = async () => {
                 type="password"
                 id="confirmPassword"
                 placeholder="Confirm Password"
+                :class="{
+                  'ring-2 ring-red-500': errors.confirmPassword,
+                }"
                 class="bg-white h-10 w-full mb-2 mt-1 rounded-full pl-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-black transition duration-300 ease-out"
                 required
               />

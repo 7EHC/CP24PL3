@@ -14,7 +14,7 @@ const options = {
 };
 const isSearch = ref(false);
 const searchText = ref("");
-const itemsToShow = ref(15);
+const itemsToShow = ref(20);
 const showScrollTopButton = ref(false);
 const isLoading = ref(false);
 const sixMonthAgo = ref("");
@@ -55,7 +55,7 @@ const fetchNews = async () => {
   try {
     let key = getPolygonRandomKey()
     const res = await fetch(
-      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&limit=20&apiKey=${key}`
+      `https://api.polygon.io/v2/reference/news?published_utc.gte=${sixMonthAgo.value}&limit=100&apiKey=${key}`
     );
     if (res.ok) {
       const ticker = await res.json();
@@ -71,7 +71,7 @@ const fetchNews = async () => {
 };
 
 const loadMore = () => {
-  itemsToShow.value += 10;
+  itemsToShow.value += 12;
 };
 
 const newsToShow = computed(() => {
