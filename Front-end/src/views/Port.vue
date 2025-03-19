@@ -123,13 +123,22 @@ const createOrUpdateChart = () => {
 };
 
 // Watch for changes in `details` and call createOrUpdateChart
-watch(details, (newDetails) => {
-  if (newDetails?.assets?.length) {
-    createOrUpdateChart();
-  } else {
-    console.log("No assets found in details");
-  }
-}, { deep: true, immediate: true });
+// watch(details, (newDetails) => {
+//   if (newDetails?.assets?.length) {
+//     createOrUpdateChart();
+//   } else {
+//     console.log("No assets found in details");
+//   }
+// }, { deep: true, immediate: true });
+watch(
+  () => details.value.assets?.map(({ name, quantity, current_mkt_price }) => ({ name, quantity, current_mkt_price })),
+  (newAssets, oldAssets) => {
+    if (JSON.stringify(newAssets) !== JSON.stringify(oldAssets)) {
+      createOrUpdateChart()
+    }
+  },
+  { deep: true, immediate: true }
+)
 
 const handleUpdateDetails = (updatedDetails) => {
       details.value = updatedDetails; // Update the details
@@ -196,12 +205,15 @@ class="p-4 border border-solid border-gray-400 justify-center flex rounded-2xl w
           </div>
 
           <!-- Asset Details -->
+          <transition name="fade">
           <div v-if="asset.isOpen" class="p-4 border-t border-gray-200 bg-gray-100">
             <span class="text-gray-500 text-sm">{{ asset.name }} Shares: </span>
             <span class="font-medium">
               {{ Number.isInteger(asset.quantity) ? asset.quantity : asset.quantity.toFixed(8) }} shares
             </span>
           </div>
+          </transition>
+
         </div>
       </div>
     </div>
@@ -237,23 +249,6 @@ class="p-4 border border-solid border-gray-400 justify-center flex rounded-2xl w
   </svg>
 </label>
 
-<!-- <div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-screen">
-  <div v-for="(res, index) in searchResult" :key="index" class="result w-1/4">
-    <div class="block space-y-2">
-      <p class="text-3xl font-bold text-yellow-400">{{ res.ticker }}</p>
-      <p><span class="highlight">Name:</span> {{ res.name }}</p>
-      <p>
-        <span class="highlight">Type:</span>
-        {{ res.type === "CS" ? "Common Stock" : res.type }}
-      </p>
-      <RouterLink :to="{name:'StockView'}" 
-      class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-slate-900 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-3เ00">
-      View
-    </RouterLink>
-    </div>
-  </div>
-</div>
-<div v-if="searchResult === false" class="text-center">Not Found.</div> -->
 <div v-if="searchResult.length > 0" class="border border-solid border-zinc-400 p-6 rounded-lg my-4 ">
 <div>Results: {{ searchResult.length }}</div>
 <div class="result-container mt-5 flex flex-row flex-wrap gap-5 w-full overflow-y-auto ">
@@ -271,21 +266,6 @@ class="p-4 border border-solid border-gray-400 justify-center flex rounded-2xl w
       </button>
     </div>
   </div>
-
-  <!-- <div v-for="(res, index) in searchFilter" :key="index" class="result xl:w-1/3 lg:w-1/3 sm:w-3/4 md:text-lg sm:text-xs bg-zinc-800">
-    <div class="block space-y-2">
-      <p class="md:text-3xl sm:text-xl font-bold text-yellow-400">{{ res.ticker }}</p>
-      <p><span class="highlight">Name:</span> {{ res.name }}</p>
-      <p>
-        <span class="highlight">Type:</span>
-        {{ res.type === "CS" ? "Common Stock" : res.type }}
-      </p>
-      <button @click="goToStockView(res)"
-      class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-zinc-800 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-300">
-        View
-      </button>
-    </div>
-  </div> -->
 
 </div>
 </div>
@@ -335,5 +315,13 @@ class="p-4 border border-solid border-gray-400 justify-center flex rounded-2xl w
   .search-box{
     width: 275px;
   }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

@@ -4,7 +4,7 @@ import stockApi from '../composable/FetchStock';
 import { RouterLink } from "vue-router";
 import Datepicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
-import { FilterIcon, DownloadIcon } from '@heroicons/vue/outline';
+import { FilterIcon, DownloadIcon, ChartBarIcon, HomeIcon, ClockIcon, CurrencyDollarIcon } from '@heroicons/vue/outline';
 import {jwtDecode} from "jwt-decode";
 
 const allTrans = ref([]);
@@ -440,10 +440,38 @@ if (token.value) {
 
     <transition name="accordion">
       <div v-if="openIndex === index" class="mt-2 text-zinc-500 text-lg pt-2">
-        <p><strong>Portfolio Name:</strong> {{ portfolioNames[trans.portId] || "Loading..." }}</p>
-        <p><strong>Status:</strong> {{ trans.status }}</p>
-        <p><strong>Shares:</strong> {{ trans.quantity }}</p>
-        <p><strong>Bid price:</strong> {{ trans.bidPrice }}</p>
+        <div class="space-y-2 text-gray-700 font-medium">
+          <div class="flex items-center gap-2">
+            <HomeIcon class="w-5 h-5 text-gray-500" />
+            <span>Portfolio Name:</span>
+            <span class="font-semibold text-gray-900">{{ portfolioNames[trans.portId] || "Loading..." }}</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <ClockIcon class="w-5 h-5 text-gray-500" />
+            <span>Status:</span>
+            <span :class="{
+              'text-yellow-500': trans.status.toLowerCase() === 'pending',
+              'text-green-500': trans.status.toLowerCase() === 'match',
+              'text-red-500': trans.status.toLowerCase() === 'failed',
+              'text-red-600': trans.status.toLowerCase() === 'cancel'
+            }" class="font-semibold">
+              {{ trans.status }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <ChartBarIcon class="w-5 h-5 text-gray-500" />
+            <span>Shares:</span>
+            <span class="font-semibold text-gray-900">{{ trans.quantity }}</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <CurrencyDollarIcon class="w-5 h-5 text-gray-500" />
+            <span>Bid Price:</span>
+            <span class="font-semibold text-gray-900">${{ trans.bidPrice }}</span>
+          </div>
+        </div>
 
         <!-- ปุ่ม Cancel Order -->
           <button v-if="trans.status.toLowerCase() === 'pending'" 
@@ -458,7 +486,7 @@ if (token.value) {
 
 <style scoped>
 .accordion-enter-active, .accordion-leave-active {
-  transition: max-height 0.6s ease-in-out, opacity 0.6s ease-in-out;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
   overflow: hidden;
 }
 .accordion-enter-from, .accordion-leave-to {
