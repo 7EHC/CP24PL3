@@ -165,39 +165,55 @@ class="p-4 border border-solid border-gray-400 justify-center flex rounded-2xl w
 <p>Please Select Portfolio</p>
 </div>
 
-<!-- Assets in port dialog -->
 <div v-if="Object.keys(details).length > 0 && details.constructor === Object"
-class="p-3 border border-solid border-gray-400 rounded-2xl w-full flex flex-row"
->
-<div class="w-1/2 flex flex-col gap-8">
-<p class="text-zinc-800 ">
-  <span class="text-zinc-500 text-lg">Port's Name:</span> {{ details.portfolio_name }}
-</p>
-<p class="text-zinc-800">
-    <!-- Value: 
-    <span v-for="asset in details.assets" :key="asset.id">
-      &nbsp;{{ asset.quantity * asset.current_mkt_price }}&nbsp;USD
-    </span>
-    <br /> -->
-    <span class="text-zinc-500 text-lg">Total Value:</span> {{ totalValue }} USD
-  </p>
-<div class="text-zinc-800 flex">
-  <span class="text-zinc-500 text-lg">Assets:</span> 
-  <div class="flex flex-col border border-solid border-zinc-800 ml-3 rounded-lg bg-gray-100">
-    <span v-for="asset in details.growth" @click="search(asset.name)" class="border-b border-black p-4 m-2 cursor-default hover:text-yellow-500 transition duration-300">
-     &nbsp;{{ asset.name }}&nbsp;{{ (asset.quantity * asset.latestPrice).toFixed(2) }} USD 
-     ({{ Number(((asset.latestPrice - asset.current_mkt_price)/asset.current_mkt_price)*100).toFixed(2) }} %)
-      ({{ Number.isInteger(asset.quantity) ? asset.quantity : asset.quantity.toFixed(8) }} shares)
-    </span>
+  class="p-6 md:p-8 border border-gray-300 rounded-2xl w-full flex flex-col md:flex-row bg-white shadow-xl">
+
+  <!-- Portfolio Info Section -->
+  <div class="w-full md:w-1/2 flex flex-col gap-6 text-">
+    <p class="text-gray-800">
+      <span class="text-gray-500 text-lg">Port's Name: </span> 
+      <span class="font-semibold">{{ details.portfolio_name }}</span>
+    </p>
+    <p class="text-gray-800">
+      <span class="text-gray-500 text-lg">Total Value: </span> 
+      <span class="font-semibold">{{ totalValue }} USD</span>
+    </p>
+
+    <!-- Assets List Section -->
+    <div class="text-gray-800">
+      <span class="text-gray-500 text-lg">Assets:</span>
+      <div class="flex flex-col mt-4 gap-3 border border-gray-200 rounded-lg bg-gray-50 shadow-inner">
+        <div v-for="asset in details.growth" :key="asset.name" class="cursor-pointer">
+          <div @click="asset.isOpen = !asset.isOpen && search(asset.name)" class="p-4 flex justify-between hover:bg-gray-200 transition-all duration-300 ease-in-out">
+            <span class="font-medium text-gray-700">{{ asset.name }}</span>
+            <span class="text-gray-600 text-sm">{{ (asset.quantity * asset.latestPrice).toFixed(2) }} USD</span>
+            <span :class="{
+              'text-green-600': (asset.latestPrice - asset.current_mkt_price) >= 0,
+              'text-red-600': (asset.latestPrice - asset.current_mkt_price) < 0
+            }" class="text-sm">
+              {{ Number(((asset.latestPrice - asset.current_mkt_price) / asset.current_mkt_price) * 100).toFixed(2) }}%
+            </span>
+          </div>
+
+          <!-- Asset Details -->
+          <div v-if="asset.isOpen" class="p-4 border-t border-gray-200 bg-gray-100">
+            <span class="text-gray-500 text-sm">{{ asset.name }} Shares: </span>
+            <span class="font-medium">
+              {{ Number.isInteger(asset.quantity) ? asset.quantity : asset.quantity.toFixed(8) }} shares
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- Portfolio Graph Section -->
+  <div class="w-full md:w-1/2 mt-6 md:mt-0 flex justify-center items-center">
+    <canvas v-if="details.assets.length > 0" id="pieChart" class="chart-canvas w-56 h-80 md:w-96 md:h-96"></canvas>
+  </div>
+
 </div>
 
-<div class="w-1/2">
-  <canvas v-if="details.assets.length > 0" id="pieChart" class="chart-canvas"></canvas>
-</div>
-
-</div>
 
 <p class="text-zinc-800 m-1 mt-6 text-xl">Search stocks here</p>
 <label class="search-box input input-bordered flex items-center gap-2 bg-white border border-zinc-400 border-solid rounded-2xl text-zinc-800 w-80 h-12 p-2">

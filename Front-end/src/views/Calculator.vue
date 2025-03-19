@@ -113,6 +113,34 @@ onMounted(() => {
         <span class="value text-green-500">{{ totalDCA.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') }}</span>
       </div>
     </div>
+
+    <div class="bg-white p-6 md:p-10 rounded-lg border-yellow-400 border-2  mx-auto">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+        Understanding Dollar-Cost Averaging (DCA)
+      </h2>
+      <p class="text-gray-700 leading-relaxed mb-6">
+        Dollar-Cost Averaging (DCA) is an investment strategy that involves consistently investing a fixed amount of money at regular intervals, 
+        rather than making a single large investment. This method helps mitigate the effects of market volatility, as it spreads purchases across different price levels over time.
+      </p>
+
+      <h3 class="text-xl md:text-2xl font-semibold text-gray-900 mb-3">
+        Why Consider DCA?
+      </h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li><span class="font-medium text-gray-900">Minimizes Market Timing Stress</span> – By investing at fixed intervals, you avoid the pressure of trying to buy at the "perfect" time.</li>
+        <li><span class="font-medium text-gray-900">Reduces Volatility Impact</span> – Investing gradually helps smooth out price fluctuations, lowering the risk of buying at market peaks.</li>
+        <li><span class="font-medium text-gray-900">Encourages Financial Discipline</span> – A systematic approach fosters consistency and commitment to long-term investment goals.</li>
+        <li><span class="font-medium text-gray-900">Effective in Various Market Conditions</span> – Whether markets are bullish or bearish, DCA ensures continuous investment without overreacting to short-term trends.</li>
+        <li><span class="font-medium text-gray-900">Prevents Emotional Decision-Making</span> – Automated and consistent investments reduce impulsive trading influenced by market fluctuations.</li>
+      </ul>
+
+      <p class="text-gray-700 mt-6">
+        DCA is widely used by long-term investors seeking steady wealth accumulation while minimizing short-term market risks. 
+        It is commonly applied in stock investments, ETFs, cryptocurrencies, and retirement savings plans.
+      </p>
+    </div>
+
+
   </div>
 </template>
 
