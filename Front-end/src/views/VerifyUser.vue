@@ -31,15 +31,15 @@ onMounted(async () => {
 <template>
   <div class="fixed inset-0 flex items-center justify-center bg-gray-100 z-50">
     <div v-if="tokenAuthen === true" class="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md">
-      <CheckCircleIcon class="text-yellow-500 w-16 h-16 mx-auto mb-4" />
+      <CheckCircleIcon class="text-green-500 w-16 h-16 mx-auto mb-4" />
       <h1 class="text-2xl font-semibold text-gray-800">Email Verified!</h1>
       <p class="text-gray-600 mt-2">
-        Your email <span v-if="decodedToken" class="font-semibold text-yellow-500">{{ decodedToken.email }}</span> has been successfully verified. You can now log in and start
+        Your email <span v-if="decodedToken" class="font-semibold text-green-500">{{ decodedToken.email }}</span> has been successfully verified. You can now log in and start
         using our platform.
       </p>
       <RouterLink
         :to="{ name: 'Login' }"
-        class="mt-6 inline-block bg-yellow-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-yellow-400 transition"
+        class="mt-6 inline-block bg-green-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-400 transition"
       >
         Go to Login
       </RouterLink>
