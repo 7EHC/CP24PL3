@@ -159,7 +159,7 @@ onUnmounted(() => {
         NEWS
       </p>
     </div>
-    <div class="lg:flex gap-5 mb-6" v-if="!isSearch">
+    <div class="lg:flex gap-5 mb-6 max-w-screen-2xl mx-auto" v-if="!isSearch">
       <div class="w-11/12 md:w-full">
         <div class="relative w-full overflow-hidden rounded-lg shadow-lg mb-4">
           <div
@@ -278,7 +278,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div class="flex items-center">
+    <div class="flex items-center max-w-screen-2xl mx-auto">
       <p
         class="text-xl text-yellow-400 my-3 font-bold hover:cursor-pointer"
         @click="refresh()"
@@ -296,7 +296,7 @@ onUnmounted(() => {
       <button type="submit" class="p-2" @click="searchNews(searchText)">
         <i class="fa fa-search"></i>
       </button>
-    </div>
+  </div>
     <hr />
     <!-- <p class="pt-2 text-left" v-if="isSearch"> -->
     <!-- Search Results Found: {{ news.length }} -->

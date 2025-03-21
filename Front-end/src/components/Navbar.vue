@@ -2,6 +2,7 @@
 import { onMounted, ref, watchEffect, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { decodeToken } from "../composable/Auth";
+import { jwtDecode } from "jwt-decode";
 
 const router = useRouter();
 const route = useRoute();
@@ -30,7 +31,7 @@ watch(
   token,
   (newToken) => {
     if (newToken) {
-      userData.value = decodeToken(newToken);
+      userData.value = jwtDecode(newToken);
     }
   },
   { immediate: true }
@@ -73,6 +74,8 @@ watch(
         v-if="token"
         >HISTORY</RouterLink
       >
+
+      <p v-if="token">Balance: ${{ userData.balance }}</p>
 
       <RouterLink
         v-if="!token"

@@ -167,7 +167,7 @@ const stockTransaction = async (value) => {
         // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
         setTimeout(() => {
           buySellAlert.value = "default";
-        }, 3000);
+        }, 5000);
       } else {
         alert(response.message || "Failed to buy stock. Please try again.");
       }
@@ -226,7 +226,7 @@ const stockTransaction = async (value) => {
         // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
         setTimeout(() => {
           buySellAlert.value = "default";
-        }, 3000);
+        }, 5000);
       } else {
         alert(response.message || "Failed to sell stock. Please try again.");
       }
@@ -285,78 +285,78 @@ const setActiveButton = (buttonValue, ticker) => {
   createNewChart(buttonValue, ticker); // Trigger the chart update
 };
 
-const isMarketOpen = () => {
-  const currDate = new Date();
-  // currDate.setDate(currDate.getDate() + 1)
-  const months = currDate.toLocaleString("en-US", { month: "short" });
-  const year = currDate.getFullYear();
-  const hours = currDate.getHours();
-  const minutes = currDate.getMinutes();
+// const isMarketOpen = () => {
+//   const currDate = new Date();
+//   // currDate.setDate(currDate.getDate() + 1)
+//   const months = currDate.toLocaleString("en-US", { month: "short" });
+//   const year = currDate.getFullYear();
+//   const hours = currDate.getHours();
+//   const minutes = currDate.getMinutes();
 
-  lastUpdatedDate.value = `${currDate.getDate()} ${months} ${year} ${hours
-    .toString()
-    .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+//   lastUpdatedDate.value = `${currDate.getDate()} ${months} ${year} ${hours
+//     .toString()
+//     .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
-  const currDateTS = currDate.getTime();
-  // const currDateTS = new Date(currDate.setHours(5, 30, 0, 0)).getTime()
-  // console.log(currDate);
+//   const currDateTS = currDate.getTime();
+//   // const currDateTS = new Date(currDate.setHours(5, 30, 0, 0)).getTime()
+//   // console.log(currDate);
 
-  const openTime = new Date(currDate);
-  openTime.setHours(21, 30, 0, 0);
+//   const openTime = new Date(currDate);
+//   openTime.setHours(21, 30, 0, 0);
 
-  const openTime2 = new Date(currDate);
-  openTime2.setDate(openTime2.getDate() - 1);
-  openTime2.setHours(21, 30, 0, 0);
+//   const openTime2 = new Date(currDate);
+//   openTime2.setDate(openTime2.getDate() - 1);
+//   openTime2.setHours(21, 30, 0, 0);
 
-  const closeTime = new Date(currDate);
-  closeTime.setDate(closeTime.getDate() + 1);
-  closeTime.setHours(4, 0, 0, 0);
+//   const closeTime = new Date(currDate);
+//   closeTime.setDate(closeTime.getDate() + 1);
+//   closeTime.setHours(4, 0, 0, 0);
 
-  const closeTime2 = new Date(currDate);
-  closeTime2.setHours(4, 0, 0, 0);
+//   const closeTime2 = new Date(currDate);
+//   closeTime2.setHours(4, 0, 0, 0);
 
-  // console.log("ปัจจุบัน " + currDate + currDateTS);
-  // console.log("3 ครึ่งวันถัดไป " + openTime + openTime.getTime());
-  // console.log("ตี 4 วันถัดไป " + closeTime + closeTime.getTime());
-  // console.log("3 ครึ่งวันก่อนหน้า " + openTime2 + openTime2.getTime());
-  // console.log("ตี 4 วันก่อนหน้า " + closeTime2 + closeTime2.getTime());
+//   // console.log("ปัจจุบัน " + currDate + currDateTS);
+//   // console.log("3 ครึ่งวันถัดไป " + openTime + openTime.getTime());
+//   // console.log("ตี 4 วันถัดไป " + closeTime + closeTime.getTime());
+//   // console.log("3 ครึ่งวันก่อนหน้า " + openTime2 + openTime2.getTime());
+//   // console.log("ตี 4 วันก่อนหน้า " + closeTime2 + closeTime2.getTime());
 
-  if (
-    (currDateTS >= openTime.getTime() && currDateTS <= closeTime.getTime()) ||
-    (currDateTS >= openTime2.getTime() &&
-      currDateTS <= closeTime2.getTime() &&
-      currDate.getDay() != 0)
-  ) {
-    if (
-      currDateTS >= openTime2.getTime() &&
-      currDateTS <= closeTime2.getTime() &&
-      currDate.getDay() == 1
-    ) {
-      dayToShowGraph.value = 3;
-      marketOpen.value = false;
-    } else if (
-      currDateTS >= openTime.getTime() &&
-      currDateTS <= closeTime.getTime() &&
-      currDate.getDay() == 6
-    ) {
-      dayToShowGraph.value = 2;
-      marketOpen.value = false;
-    } else {
-      marketOpen.value = true;
-    }
-  } else {
-    if (currDate.getDay() == 0 || currDate.getDay() == 6) {
-      dayToShowGraph.value = 2;
-    } else if (currDate.getDay() == 1) {
-      dayToShowGraph.value = 3;
-    } else {
-      dayToShowGraph.value = 1;
-    }
-    marketOpen.value = false;
-  }
-  // console.log(marketOpen.value);
-  // console.log(dayToShowGraph.value);
-};
+//   if (
+//     (currDateTS >= openTime.getTime() && currDateTS <= closeTime.getTime()) ||
+//     (currDateTS >= openTime2.getTime() &&
+//       currDateTS <= closeTime2.getTime() &&
+//       currDate.getDay() != 0)
+//   ) {
+//     if (
+//       currDateTS >= openTime2.getTime() &&
+//       currDateTS <= closeTime2.getTime() &&
+//       currDate.getDay() == 1
+//     ) {
+//       dayToShowGraph.value = 3;
+//       marketOpen.value = false;
+//     } else if (
+//       currDateTS >= openTime.getTime() &&
+//       currDateTS <= closeTime.getTime() &&
+//       currDate.getDay() == 6
+//     ) {
+//       dayToShowGraph.value = 2;
+//       marketOpen.value = false;
+//     } else {
+//       marketOpen.value = true;
+//     }
+//   } else {
+//     if (currDate.getDay() == 0 || currDate.getDay() == 6) {
+//       dayToShowGraph.value = 2;
+//     } else if (currDate.getDay() == 1) {
+//       dayToShowGraph.value = 3;
+//     } else {
+//       dayToShowGraph.value = 1;
+//     }
+//     marketOpen.value = false;
+//   }
+//   // console.log(marketOpen.value);
+//   // console.log(dayToShowGraph.value);
+// };
 
 const getMarketStatus = async () => {
   const currDate = new Date();
@@ -580,7 +580,8 @@ const createNewChart = async (days, tic) => {
   }
 
   let results;
-
+  console.log(marketOpen.value);
+  
   if (days !== 1) {
     // Fetch the stock data
     results = await getStockAgg(tic, timeFrame, fromDate, toDate);
