@@ -812,7 +812,7 @@ router.post("/login", async (req, res) => {
 
     // สร้าง JWT token ใส่ username และ email (เป็น lowercase)
     const token = jwt.sign(
-      { user_id: user._id, username, email },
+      { user_id: user._id, username, email, balance: user.balance },
       process.env.TOKEN_KEY,
       { expiresIn: "1d" }
     );
