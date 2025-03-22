@@ -370,8 +370,8 @@ const getMarketStatus = async () => {
     .toString()
     .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
-  if (currDate.getDay() == 0 || currDate.getDay() == 6) {
-    dayToShowGraph.value = 5;
+  if (currDate.getDay() == 0) {
+    dayToShowGraph.value = 2;
   } else if (currDate.getDay() == 1) {
     dayToShowGraph.value = 3;
   } else {
@@ -581,7 +581,7 @@ const createNewChart = async (days, tic) => {
 
   let results;
   console.log(marketOpen.value);
-  
+
   if (days !== 1) {
     // Fetch the stock data
     results = await getStockAgg(tic, timeFrame, fromDate, toDate);
