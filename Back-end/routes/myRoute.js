@@ -42,16 +42,17 @@ cron.schedule("*/1 * * * *", async () => {
 
   // // ❌ ทำงานเฉพาะช่วง 20:00 - 03:59 (เพราะ 04:00 ไม่รวม)
   // if (hour < 20 && hour >= 4) return;
-  const res = await fetch(`https://api.polygon.io/v1/marketstatus/now?apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`);
-    if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
-    
-    const status = await res.json();
-    console.log(`📢 Market Status: ${status.market}`);
-    if (status.market.toString() === "closed") {
-      console.log("⏸ Market is closed, skipping transaction check.");
-      return;
-    }
+  const res = await fetch(
+    `https://api.polygon.io/v1/marketstatus/now?apiKey=30mHX3fZfxe_ievjRkBlJJCjv6DvmpdU`
+  );
+  if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
 
+  const status = await res.json();
+  console.log(`📢 Market Status: ${status.market}`);
+  if (status.market.toString() === "closed") {
+    console.log("⏸ Market is closed, skipping transaction check.");
+    return;
+  }
 
   console.log(`🔄 Checking pending transactions... at ${now}`);
 
@@ -64,23 +65,34 @@ cron.schedule("*/1 * * * *", async () => {
 
     try {
       // Ensure that userId is properly converted to ObjectId if it's a string
-      const userId = await transaction.findOne({ _id: new ObjectId(_id) }, { _id:0, userId:1});
+      const userId = await transaction.findOne(
+        { _id: new ObjectId(_id) },
+        { _id: 0, userId: 1 }
+      );
       // console.log(userId)
-      const user = await userSchema.findOne({ _id: new ObjectId(userId.userId) }, { _id:0, email: 1 });
+      const user = await userSchema.findOne(
+        { _id: new ObjectId(userId.userId) },
+        { _id: 0, email: 1 }
+      );
       const userEmail = user ? user.email : "Unknown";
       // console.log(userEmail)
 
       if (now >= expTime) {
         await transaction.updateOne({ _id }, { $set: { status: "failed" } });
         console.log(`❌ Transaction ${_id} expired.`);
-        console.log(`📧 User email: ${userEmail}`);  // Log the email after expiration
-        const detail = await transaction.findOne({ _id: new ObjectId(_id) }, { _id:0, userId:1});
+        console.log(`📧 User email: ${userEmail}`); // Log the email after expiration
+        const detail = await transaction.findOne(
+          { _id: new ObjectId(_id) },
+          { _id: 0, userId: 1 }
+        );
         // Send email notification
         const mailOptions = {
-          from: "sit.invest.pl3@gmail.com",  // Sender's email address
-          to: userEmail,  // User's email address
-          subject: "Transaction result",  // Email subject
-          text: `${detail.action.toUpperCase()}: ${detail.symbol} amount ${detail.totalAmount} is ${detail.status}`,  // Email body
+          from: "sit.invest.pl3@gmail.com", // Sender's email address
+          to: userEmail, // User's email address
+          subject: "Transaction result", // Email subject
+          text: `${detail.action.toUpperCase()}: ${detail.symbol} amount ${
+            detail.totalAmount
+          } is ${detail.status}`, // Email body
         };
 
         // Send the email
@@ -112,10 +124,18 @@ cron.schedule("*/1 * * * *", async () => {
           { $set: { status: "match", actualPrice: marketPrice.toFixed(2) } }
         );
 
+        await userSchema.updateOne(
+          { _id: userId },
+          {
+            $inc: {
+              balance:
+                action === "buy" ? -bidPrice * quantity : bidPrice * quantity,
+            },
+          }
+        );
+
         const apiUrl =
-          action === "buy"
-            ? `${API_ROOT}/buyStock`
-            : `${API_ROOT}/sellStock`;
+          action === "buy" ? `${API_ROOT}/buyStock` : `${API_ROOT}/sellStock`;
         await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -130,14 +150,19 @@ cron.schedule("*/1 * * * *", async () => {
         console.log(
           `✅ Transaction ${_id} matched at $${marketPrice.toFixed(2)}`
         );
-        console.log(`📧 User email: ${userEmail}`);  // Log the email after matching
-        const detail = await transaction.findOne({ _id: new ObjectId(_id) }, { _id:0, userId:1});
+        console.log(`📧 User email: ${userEmail}`); // Log the email after matching
+        const detail = await transaction.findOne(
+          { _id: new ObjectId(_id) },
+          { _id: 0, userId: 1 }
+        );
 
         const mailOptions = {
-          from: "sit.invest.pl3@gmail.com",  // Sender's email address
-          to: userEmail,  // User's email address
-          subject: "Transaction result",  // Email subject
-          text: `${detail.action.toUpperCase()}: ${detail.symbol} amount ${detail.totalAmount} is ${detail.status}`,  // Email body
+          from: "sit.invest.pl3@gmail.com", // Sender's email address
+          to: userEmail, // User's email address
+          subject: "Transaction result", // Email subject
+          text: `${detail.action.toUpperCase()}: ${detail.symbol} amount ${
+            detail.totalAmount
+          } is ${detail.status}`, // Email body
         };
 
         // Send the email
@@ -190,12 +215,10 @@ router.post("/portfolios/create", async (req, res) => {
   const { userId, portfolio_name, assets } = req.body;
 
   if (!portfolio_name || !assets) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "กรุณากรอกชื่อพอร์ตและข้อมูลหุ้นที่ต้องการสร้าง (portfolio_name และ assets)",
-      });
+    return res.status(400).json({
+      message:
+        "กรุณากรอกชื่อพอร์ตและข้อมูลหุ้นที่ต้องการสร้าง (portfolio_name และ assets)",
+    });
   }
 
   try {
@@ -440,37 +463,58 @@ router.get("/getAllTransaction", authMiddleware, async (req, res) => {
   try {
     const filter = { userId: req.userId };
     // ถ้ามีพารามิเตอร์ action ให้เพิ่มลงใน filter
-    if (req.query.action) {filter.action = req.query.action;}
+    if (req.query.action) {
+      filter.action = req.query.action;
+    }
     // ถ้ามีพารามิเตอร์ status ให้เพิ่มลงใน filter
-    if (req.query.status) {filter.status = req.query.status;}
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
     // Port ID
-    if (req.query.portId) {filter.portId = req.query.portId;}
+    if (req.query.portId) {
+      filter.portId = req.query.portId;
+    }
 
-    if (req.query.symbol) {filter.symbol = req.query.symbol;}
+    if (req.query.symbol) {
+      filter.symbol = req.query.symbol;
+    }
 
     if (req.query.fromDate || req.query.toDate) {
       const isoFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
       filter.date = {};
-    
+
       if (req.query.fromDate) {
         if (isoFormatRegex.test(req.query.fromDate)) {
-          filter.date.$gte = req.query.fromDate
+          filter.date.$gte = req.query.fromDate;
         } else {
-          return res.status(400).json({ error: "Invalid fromDate format. Use ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)" });
+          return res
+            .status(400)
+            .json({
+              error:
+                "Invalid fromDate format. Use ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)",
+            });
         }
       }
-    
+
       if (req.query.toDate) {
         if (isoFormatRegex.test(req.query.toDate)) {
-          filter.date.$lte = req.query.toDate
+          filter.date.$lte = req.query.toDate;
         } else {
-          return res.status(400).json({ error: "Invalid toDate format. Use ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)" });
+          return res
+            .status(400)
+            .json({
+              error:
+                "Invalid toDate format. Use ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)",
+            });
         }
       }
     }
 
-    const allTransactions = await transaction.find(filter).sort({ date: -1 }).toArray();
-    
+    const allTransactions = await transaction
+      .find(filter)
+      .sort({ date: -1 })
+      .toArray();
+
     res.status(200).json(allTransactions);
   } catch (error) {
     console.error("Error:", error);
@@ -565,10 +609,14 @@ router.put("/updateTransaction/:id", authMiddleware, async (req, res) => {
     const result = await transaction.updateOne(filter, update);
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({ error: "Transaction not found or not authorized" });
+      return res
+        .status(404)
+        .json({ error: "Transaction not found or not authorized" });
     }
 
-    res.status(200).json({ message: "Transaction status updated successfully" });
+    res
+      .status(200)
+      .json({ message: "Transaction status updated successfully" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -601,10 +649,10 @@ const sellStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
 
 // Setup NodeMailer transporter
 const transporter = nodemailer.createTransport({
-  service: "gmail",  // You can use other services or SMTP
+  service: "gmail", // You can use other services or SMTP
   auth: {
     user: "sit.invest.pl3@gmail.com", // Your email here
-    pass: "xgss blmw aakh jpww",  // Your email password or app password
+    pass: "xgss blmw aakh jpww", // Your email password or app password
   },
 });
 //Register
@@ -660,23 +708,27 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    let errors = {}
+    let errors = {};
     // 2) Check if the user already exists (by username and email)
-    const oldUserByUsername = await userSchema.findOne({ username: username.toLowerCase() });
+    const oldUserByUsername = await userSchema.findOne({
+      username: username.toLowerCase(),
+    });
     if (oldUserByUsername) {
-      errors.username = "User already exists, please login."
+      errors.username = "User already exists, please login.";
       // return res.status(409).send("User already exists, please login.");
     }
 
-    const oldUserByEmail = await userSchema.findOne({ email: email.toLowerCase() });
+    const oldUserByEmail = await userSchema.findOne({
+      email: email.toLowerCase(),
+    });
     if (oldUserByEmail) {
-      errors.email = "Email is already registered, please use another email."
+      errors.email = "Email is already registered, please use another email.";
       // return res.status(409).send("Email is already registered, please use another email.");
     }
 
     if (Object.keys(errors).length > 0) {
       return res.status(409).json(errors);
-  }
+    }
 
     // 3) Hash the password
     const encryptedPassword = await bcrypt.hash(password, 10);
@@ -685,7 +737,7 @@ router.post("/register", async (req, res) => {
     const newUser = {
       username: username.toLowerCase(),
       password: encryptedPassword,
-      email: email.toLowerCase(),  // Store the user's email
+      email: email.toLowerCase(), // Store the user's email
       createdAt: new Date().toISOString(),
     };
 
@@ -707,10 +759,10 @@ router.post("/register", async (req, res) => {
 
     // 9) Send email notification to the user
     const mailOptions = {
-      from: "sit.invest.pl3@gmail.com",  // Sender's email address
-      to: email,  // User's email address
-      subject: "SIT Invest Registration",  // Email subject
-      text: `Your registration with email ${email} was successful. Welcome to SIT Invest!`,  // Email body
+      from: "sit.invest.pl3@gmail.com", // Sender's email address
+      to: email, // User's email address
+      subject: "SIT Invest Registration", // Email subject
+      text: `Your registration with email ${email} was successful. Welcome to SIT Invest!`, // Email body
     };
 
     // Send the email and handle any errors
@@ -725,7 +777,6 @@ router.post("/register", async (req, res) => {
         res.status(201).json(userWithoutPassword);
       }
     });
-
   } catch (err) {
     console.error("Register Error:", err);
     res.status(500).send("Internal Server Error");
