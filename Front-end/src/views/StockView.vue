@@ -4,11 +4,13 @@ import { useRoute, RouterLink } from "vue-router";
 import Chart from "chart.js/auto"; // Import Chart.js
 import stockApi from "../composable/FetchStock";
 import { decodeToken } from "../composable/Auth";
+import { useUserStore } from "../stores/userStore";
 import {
   getTwelveDataRandomkey,
   getPolygonRandomKey,
 } from "../composable/FetchStock";
 
+const userStore = useUserStore();
 const { params } = useRoute();
 let chartInstance = null; // Store the chart instance globally
 let intervalId = null;
@@ -163,7 +165,7 @@ const stockTransaction = async (value) => {
         buySellAlert.value = "buy";
         buySellMsg.value = `Successfully bought ${obj.symbol} at ${obj.bidPrice} USD.`;
         clearFieldForSellandBuy();
-
+        userStore.fetchBalance(userData.value.user_id);
         // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
         setTimeout(() => {
           buySellAlert.value = "default";
@@ -222,7 +224,7 @@ const stockTransaction = async (value) => {
         buySellAlert.value = "sell";
         buySellMsg.value = `Successfully added sold ${obj.symbol} transaction at ${obj.totalAmount} USD.`;
         clearFieldForSellandBuy();
-
+        userStore.fetchBalance(userData.value.user_id);
         // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
         setTimeout(() => {
           buySellAlert.value = "default";
