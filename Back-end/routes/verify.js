@@ -1,6 +1,7 @@
 import express, { query } from "express";
 import db from "../config/database.js";
 import { ObjectId } from "mongodb";
+import { Decimal128 } from 'mongodb';
 import cron from "node-cron";
 import fetch from "node-fetch";
 import bcrypt from "bcryptjs";
@@ -34,19 +35,20 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    let errors = {}
+    let errors = {};
     const existingUser = await userSchema.findOne({
-      username: username.toLowerCase(),});
-      if (existingUser) {
-        errors.username = "Username is already registered.";
-      }
+      username: username.toLowerCase(),
+    });
+    if (existingUser) {
+      errors.username = "Username is already registered.";
+    }
     // 1) ตรวจสอบว่าอีเมลถูกใช้แล้วหรือยัง
     const existingEmail = await userSchema.findOne({
       email: email.toLowerCase(),
     });
     if (existingEmail) {
-        errors.email = "Email is already registered.";
-    //   return res.status(409).send("Email is already registered.");
+      errors.email = "Email is already registered.";
+      //   return res.status(409).send("Email is already registered.");
     }
 
     // 2) ตรวจสอบว่ามีอีเมลนี้รอการยืนยันอยู่หรือไม่
@@ -54,12 +56,12 @@ router.post("/register", async (req, res) => {
       email: email.toLowerCase(),
     });
     if (pendingVerification) {
-        errors.pendingEmail = "Email is already pending verification.";
-    //   return res.status(409).send("Email is already pending verification.");
+      errors.pendingEmail = "Email is already pending verification.";
+      //   return res.status(409).send("Email is already pending verification.");
     }
 
-    if(Object.keys(errors).length > 0){
-        return res.status(409).json(errors)
+    if (Object.keys(errors).length > 0) {
+      return res.status(409).json(errors);
     }
 
     // 3) เข้ารหัส password
@@ -103,10 +105,14 @@ router.post("/register", async (req, res) => {
       from: "sit.invest.pl3@gmail.com",
       to: email,
       subject: "Verify Your Email",
-      html: `<p>Click the link below to verify your email:</p>
+      html: `<div style = "text-align: center; background-color: #f3f4f6; padding: 20px;">
+            <h1>Welcome to SIT Invest</h1>
+            <h2>Thank you for choosing SIT Invest. To get started, please verify your email address.</h2>
+            <p>Click the button below to verify your email:</p>
             <a href="${VERIFY_API_ROOT}/${frontToken}" 
-   style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #22c55e; text-decoration: none; border-radius: 5px; cursor: pointer; border: none;">
-   Verify Email</a>`,
+                style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #22c55e; text-decoration: none; border-radius: 5px; cursor: pointer; border: none;">
+                Verify Email</a>
+            </div>`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -143,7 +149,7 @@ router.get("/verify-email", async (req, res) => {
       username: record.username,
       email: record.email,
       password: record.password, // ใช้ password ที่ hash แล้วจากก่อนหน้า
-      balance: "100,000.00",
+      balance: Decimal128.fromString('100000.00'),
       createdAt: new Date().toISOString(),
     });
 
