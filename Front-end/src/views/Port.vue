@@ -51,7 +51,7 @@ const createOrUpdateChart = () => {
   nextTick(() => {  // Ensure DOM updates are complete
     const canvas = document.getElementById("pieChart");
     if (!canvas) {
-      console.error("Canvas element not found");
+      // console.error("Canvas element not found");
       return;
     }
 
