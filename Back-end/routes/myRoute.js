@@ -300,6 +300,75 @@ router.get("/portfolios/portDetails/:portId", async (req, res) => {
   }
 });
 
+router.delete(
+  "/portfolios/delete/:portId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const portId = req.params.portId;
+      const findPort = await portfolio.findOne({ _id: new ObjectId(portId) });
+      // console.log(findPort.assets);
+      if (findPort.assets.length === 0) {
+        await portfolio.deleteOne({ _id: new ObjectId(portId) });
+        res.status(200).json({
+          success: true,
+          message: findPort.portfolio_name + " deleted successfully!",
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot delete portfolio with assets in it.",
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
+router.patch("/portfolios/update/:portId", async (req, res) => {
+  try {
+    const portId = req.params.portId;
+    const newPortName = req.body.portfolio_name;
+    // console.log(newPortName);
+
+    const existingPort = await portfolio.findOne({
+      _id: new ObjectId(portId),
+    });
+
+    if (!existingPort) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Portfolio not found" });
+    }
+    const allPort = await portfolio
+      .find({ userId: existingPort.userId })
+      .toArray();
+    const isDuplicate = allPort.some(
+      (port) => port.portfolio_name.toLowerCase() === newPortName.toLowerCase()
+    );
+    if (isDuplicate) {
+      return res.status(400).json({
+        success: false,
+        message: "Error: Portfolio name " + newPortName + " already exists.",
+      });
+    } else {
+      await portfolio.updateOne(
+        { _id: new ObjectId(portId) },
+        { $set: { portfolio_name: newPortName } }
+      );
+      return res.status(200).json({
+        success: true,
+        message: "Portfolio name updated successfully!",
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.post("/buyStock", async (req, res) => {
   const { _id, symbol, quantity, current_mkt_price } = req.body;
 
