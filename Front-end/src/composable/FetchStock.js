@@ -196,15 +196,13 @@ class StockApi {
   async getUserDetails(userId) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/userDetails/${userId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch(`${API_ROOT}/userDetails/${userId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.ok) {
         const user = await res.json();
         return user;
@@ -213,6 +211,43 @@ class StockApi {
       }
     } catch (error) {
       console.log(`ERROR cannot read data: ${error}`);
+    }
+  }
+
+  async deletePortfolio(portId) {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_ROOT}/portfolios/delete/${portId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log(`ERROR cannot send data: ${error}`);
+    }
+  }
+
+  async updatePortfolioName(portId, portName) {
+    // console.log(portName);
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_ROOT}/portfolios/update/${portId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ portfolio_name: portName }),
+      });
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.log(`ERROR cannot send data: ${error}`);
     }
   }
 }
