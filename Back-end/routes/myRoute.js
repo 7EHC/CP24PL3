@@ -300,22 +300,40 @@ router.get("/portfolios/portDetails/:portId", async (req, res) => {
   }
 });
 
+
+
 router.delete(
   "/portfolios/delete/:portId",
   authMiddleware,
   async (req, res) => {
     try {
       const portId = req.params.portId;
+
+      // ตรวจสอบว่า ObjectId ถูกต้องมั้ย
+      if (!ObjectId.isValid(portId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid portfolio ID.",
+        });
+      }
+
       const findPort = await portfolio.findOne({ _id: new ObjectId(portId) });
-      // console.log(findPort.assets);
+
+      if (!findPort) {
+        return res.status(404).json({
+          success: false,
+          message: "Portfolio not found.",
+        });
+      }
+
       if (findPort.assets.length === 0) {
         await portfolio.deleteOne({ _id: new ObjectId(portId) });
         res.status(200).json({
           success: true,
-          message: findPort.portfolio_name + " deleted successfully!",
+          message: `${findPort.portfolio_name} deleted successfully!`,
         });
       } else {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: "Cannot delete portfolio with assets in it.",
         });
@@ -326,6 +344,7 @@ router.delete(
     }
   }
 );
+ 
 
 router.patch("/portfolios/update/:portId", async (req, res) => {
   try {
