@@ -25,9 +25,11 @@ const idToUpdate = ref("");
 const portNameToUpdate = ref("");
 const msgAlert = ref("default");
 const msgDisplay = ref("");
+const editValue = ref(false)
 
 const activeEditDelete = () => {
   editDelete.value = !editDelete.value;
+  editValue.value = !editValue.value
 };
 
 // Props
@@ -249,7 +251,8 @@ onMounted(async () => {
         :class="{ 'bg-zinc-600': editDelete === true }"
       >
         <PencilIcon class="w-5 h-5" />
-        <p>EDIT</p>
+        <p v-if="editValue === false">EDIT</p>
+        <p v-if="editValue === true">CANCEL</p>
       </div>
 
       <!-- List of Portfolios -->
