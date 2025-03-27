@@ -15,6 +15,20 @@ class StockApi {
     }
   }
 
+  async getTickerInfo(tick) {
+    try {
+      const res = await fetch(`${API_ROOT}/getTicker/${tick}`);
+      if (res.ok) {
+        const ticker = await res.json();
+        return ticker;
+      } else {
+        console.log(`ERROR: Server responded with status ${res.status}`);
+      }
+    } catch (error) {
+      console.log(`ERROR cannot read data: ${error}`);
+    }
+  }
+
   async getPort() {
     const token = localStorage.getItem("token");
 

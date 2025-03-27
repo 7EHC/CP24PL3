@@ -191,10 +191,15 @@ router.get("/userDetails/:userId", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/allticker", async (req, res) => {
+router.get("/getTicker/:identifier", async (req, res) => {
   try {
-    const allTicker = await ticker.find({}).toArray(); // ดึงข้อมูล ticker ทั้งหมดจาก MongoDB
-    res.status(200).json(allTicker); // ส่งข้อมูล ticker กลับในรูปแบบ JSON
+    const identifier = req.params.identifier.toString().toUpperCase()
+    const formForShow = {
+      projection: { _id: 0, ticker: 1, name: 1, market: 1, type: 1 },
+    };
+    const ResultTic = await ticker.find({ticker : identifier}, formForShow).toArray();
+
+    res.status(200).json(ResultTic); // ส่งผลลัพธ์กลับ
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -300,8 +305,6 @@ router.get("/portfolios/portDetails/:portId", async (req, res) => {
   }
 });
 
-
-
 router.delete(
   "/portfolios/delete/:portId",
   authMiddleware,
@@ -344,7 +347,6 @@ router.delete(
     }
   }
 );
- 
 
 router.patch("/portfolios/update/:portId", async (req, res) => {
   try {
@@ -407,6 +409,16 @@ router.post("/buyStock", async (req, res) => {
     const assetExists = Findportfolio.assets.some(
       (asset) => asset.name === symbol
     );
+    const user = await userSchema.findOne({
+      _id: new ObjectId(Findportfolio.userId),
+    });
+    const totalCost = current_mkt_price * quantity;
+
+    if (!user || user.balance < totalCost) {
+      return res.status(400).json({
+        message: "ยอดเงินไม่เพียงพอในการซื้อหุ้น",
+      });
+    }
 
     if (assetExists) {
       const updatedPortfolio = await portfolio.updateOne(
@@ -591,6 +603,13 @@ router.get("/getAllTransaction", authMiddleware, async (req, res) => {
       .sort({ date: -1 })
       .toArray();
 
+    if (allTransactions.length === 0) {
+      return res.status(200).json({
+        message: "Item not found",
+        data: [],
+      });
+    }
+
     res.status(200).json(allTransactions);
   } catch (error) {
     console.error("Error:", error);
@@ -727,136 +746,9 @@ const sellStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
 const transporter = nodemailer.createTransport({
   service: "gmail", // You can use other services or SMTP
   auth: {
-    user: "sit.invest.pl3@gmail.com", // Your email here
-    pass: "xgss blmw aakh jpww", // Your email password or app password
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
-});
-//Register
-router.post("/register", async (req, res) => {
-  // const { username, password } = req.body;
-
-  // // 1) ตรวจสอบ Input
-  // if (!username || !password) {
-  //   return res.status(400).send("All input is required");
-  // }
-
-  // try {
-  //   // 2) เช็คว่ามี user ซ้ำไหม
-  //   const oldUser = await userSchema.findOne({ username });
-  //   if (oldUser) {
-  //     return res.status(409).send("User already exists, please login.");
-  //   }
-
-  //   // 3) เข้ารหัส password
-  //   const encryptedPassword = await bcrypt.hash(password, 10);
-
-  //   // 4) สร้าง user
-  //   const newUser = {
-  //     username,
-  //     password: encryptedPassword,
-  //     createdAt: new Date().toISOString(),
-  //   };
-
-  //   const result = await userSchema.insertOne(newUser);
-
-  //   // 5) สร้าง Token
-  //   const token = jwt.sign(
-  //     { user_id: result.insertedId, username },
-  //     process.env.TOKEN_KEY, // ตรวจสอบว่ามีค่าใน .env
-  //     { expiresIn: "1d" }
-  //   );
-
-  //   // 6) ใส่ token ลงใน user object
-  //   newUser.token = token;
-
-  //   // 7) ส่งกลับโดยตัด password ออก
-  //   const { password: _, ...userWithoutPassword } = newUser;
-  //   res.status(201).json(userWithoutPassword);
-  // } catch (err) {
-  //   console.error("Register Error:", err);
-  //   res.status(500).send("Internal Server Error");
-  // }
-  const { username, password, email } = req.body;
-
-  // 1) Validate Input
-  if (!username || !password || !email) {
-    return res.status(400).send("All input is required");
-  }
-
-  try {
-    let errors = {};
-    // 2) Check if the user already exists (by username and email)
-    const oldUserByUsername = await userSchema.findOne({
-      username: username.toLowerCase(),
-    });
-    if (oldUserByUsername) {
-      errors.username = "User already exists, please login.";
-      // return res.status(409).send("User already exists, please login.");
-    }
-
-    const oldUserByEmail = await userSchema.findOne({
-      email: email.toLowerCase(),
-    });
-    if (oldUserByEmail) {
-      errors.email = "Email is already registered, please use another email.";
-      // return res.status(409).send("Email is already registered, please use another email.");
-    }
-
-    if (Object.keys(errors).length > 0) {
-      return res.status(409).json(errors);
-    }
-
-    // 3) Hash the password
-    const encryptedPassword = await bcrypt.hash(password, 10);
-
-    // 4) Create new user object
-    const newUser = {
-      username: username.toLowerCase(),
-      password: encryptedPassword,
-      email: email.toLowerCase(), // Store the user's email
-      createdAt: new Date().toISOString(),
-    };
-
-    // 5) Insert the new user into the database
-    const result = await userSchema.insertOne(newUser);
-
-    // 6) Create JWT token
-    const token = jwt.sign(
-      { user_id: result.insertedId, username },
-      process.env.TOKEN_KEY, // Ensure TOKEN_KEY is set in your environment variables
-      { expiresIn: "1d" }
-    );
-
-    // 7) Add the token to the user object
-    newUser.token = token;
-
-    // 8) Remove the password before sending the response
-    const { password: _, ...userWithoutPassword } = newUser;
-
-    // 9) Send email notification to the user
-    const mailOptions = {
-      from: "sit.invest.pl3@gmail.com", // Sender's email address
-      to: email, // User's email address
-      subject: "SIT Invest Registration", // Email subject
-      text: `Your registration with email ${email} was successful. Welcome to SIT Invest!`, // Email body
-    };
-
-    // Send the email and handle any errors
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-        // Ensure the registration response is sent only if the email is sent successfully
-        return res.status(500).send("Failed to send confirmation email.");
-      } else {
-        console.log("Email sent: " + info.response);
-        // Send back the user object without password if email is sent successfully
-        res.status(201).json(userWithoutPassword);
-      }
-    });
-  } catch (err) {
-    console.error("Register Error:", err);
-    res.status(500).send("Internal Server Error");
-  }
 });
 
 //Login

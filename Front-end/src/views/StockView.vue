@@ -39,6 +39,7 @@ const userData = ref("");
 let marketPriceInterval;
 const buySellAlert = ref("default");
 const buySellMsg = ref("");
+const checkBalance = ref()
 
 const checkToken = localStorage.getItem("token");
 
@@ -73,9 +74,19 @@ const isFormValid = computed(() => {
   if (!selectedPortfolio.value) return false;
 
   if (modalValue.value === "buy") {
-    return selectedOption.value === "usd"
-      ? amount.value > 0
-      : shares.value > 0 && (!isLimit.value || bidPrice.value > 0);
+    if (selectedOption.value === "usd") {
+      // ✅ เช็กว่าใส่เงินถูกต้อง และเงินในกระเป๋าพอ
+      return amount.value > 0 && amount.value <= Number(userStore.balance.replace(/,/g, ""));
+    }  else if(selectedOption.value === "shares") {
+      if(isLimit.value === true){
+        // console.log('heyy')
+        return Number(userStore.balance.replace(/,/g, "")) >= shares.value * bidPrice.value
+      }else{
+        return Number(userStore.balance.replace(/,/g, "")) >= shares.value * Number(currentMaketPrice.value[0].close).toFixed(2)
+      }
+      return shares.value > 0 && (!isLimit.value || bidPrice.value > 0)
+      // console.log('hey')
+    }
   }
 
   if (modalValue.value === "sell") {
@@ -677,6 +688,8 @@ const createNewChart = async (days, tic) => {
 onMounted(async () => {
   token.value && (userData.value = decodeToken(token.value));
   currentMaketPrice.value = await getMarketPrice(result.ticker);
+  checkBalance.value = Number(userStore.balance.replace(/,/g, ""))
+  console.log(checkBalance.value)
   // console.log(currentMaketPrice.value)
   // console.log("This is answer: "+params.details)
   // console.log(result)
@@ -766,7 +779,7 @@ onMounted(async () => {
     </button>
 
     <p
-      class="text-xs font-semibold text-zinc-400 fixed mt-5 right-14 sm:right-28 md:right-36 lg:right-40 xl:right-64 2xl:right-72"
+      class="text-xs font-semibold text-zinc-400 fixed mr-10 mt-5 right-14 sm:right-28 md:right-36 lg:right-40 xl:right-64 2xl:right-72"
       v-if="marketOpen"
     >
       Last updated: {{ lastUpdatedDate }}
@@ -1042,7 +1055,7 @@ onMounted(async () => {
                         : (bidPrice * shares).toFixed(2)
                     }}
                     USD</span
-                  >
+                  ><br/>
                 </p>
               </div>
             </div>
@@ -1086,6 +1099,9 @@ onMounted(async () => {
               Cancel
             </button>
           </div>
+          <span v-if="isLimit === false && shares * currentMaketPrice[0].close > checkBalance" class="float-right text-red-600 font-medium text-sm mt-4">* Not enough money.</span>
+          <span v-if="isLimit === true && shares * bidPrice > checkBalance" class="float-right text-red-600 font-medium text-sm mt-4">* Not enough money.</span>
+          <span v-if="selectedOption === 'usd' && amount > checkBalance" class="float-right text-red-600 font-medium text-sm mt-4">* Not enough money.</span>
         </div>
         <!-- sell section ---------------------------------------------------------------------------------------------->
         <div

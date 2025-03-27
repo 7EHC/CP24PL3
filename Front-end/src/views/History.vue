@@ -175,7 +175,13 @@ const applyFilter = async () => {
     console.log(queryString); // ตรวจสอบค่า query string ที่สร้างได้
 
     allTrans.value = await stockApi.getAllTransaction(queryString);
-    isHaveTrans.value = allTrans.value.length === 0;
+    if(Array.isArray(allTrans.value)){
+      isHaveTrans.value = allTrans.value.length === 0;
+    }else{
+      allTrans.value = []
+      isHaveTrans.value = allTrans.value.length === 0;
+    }
+    
   } catch (error) {
     console.error("Error fetching transactions:", error);
   } finally {
@@ -267,13 +273,13 @@ if (token.value) {
 
   <p class="text-3xl text-zinc-800 my-3 font-bold w-full">
     History 
-    <button v-if="!isHaveTrans" @click="toggleFilter" class="float-right text-sm bg-gray-200 p-2 rounded-md flex items-center">
+    <button @click="toggleFilter" class="float-right text-sm bg-gray-200 p-2 rounded-md flex items-center">
       <!-- Filter Icon -->
       <FilterIcon class="h-5 w-5 mr-2" />
       Filter
       <span class="ml-2 transform transition" :class="{ 'rotate-180': showFilter }">▼</span>
     </button>
-    <button v-if="!isHaveTrans" @click="toggleDownload" class="float-right text-sm bg-gray-200 p-2 rounded-md flex items-center mx-2">
+    <button @click="toggleDownload" class="float-right text-sm bg-gray-200 p-2 rounded-md flex items-center mx-2">
       <!-- Filter Icon -->
       <DownloadIcon class="h-5 w-5 mr-2" />
       Download Summary

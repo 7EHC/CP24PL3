@@ -6,6 +6,7 @@ import CreatePortSideBar from "../components/CreatePortSideBar.vue";
 import { Chart } from "chart.js/auto"; // Import Chart.js
 
 const searchResult = ref([]);
+const assetInfoResult = ref([])
 const searchModel = ref();
 const router = useRouter();
 const details = ref({});
@@ -21,6 +22,10 @@ const totalValue = computed(() => {
   }, 0);
   return sum.toFixed(2);
 });
+
+const viewAssetInfo = async (param)=>{
+  assetInfoResult.value = await stockApi.getTickerInfo(param)
+}
 
 const search = async (param) => {
   if (param.length !== 0) {
@@ -154,6 +159,7 @@ watch(
 
 const handleUpdateDetails = (updatedDetails) => {
   details.value = updatedDetails; // Update the details
+  assetInfoResult.value = []
 };
 </script>
 
@@ -207,7 +213,7 @@ const handleUpdateDetails = (updatedDetails) => {
               class="cursor-pointer"
             >
               <div
-                @click="asset.isOpen = !asset.isOpen && search(asset.name)"
+                @click="asset.isOpen = !asset.isOpen && viewAssetInfo(asset.name)"
                 class="p-4 flex justify-between hover:bg-gray-200 transition-all duration-300 ease-in-out"
               >
                 <span class="font-medium text-gray-700">{{ asset.name }}</span>
@@ -258,6 +264,39 @@ const handleUpdateDetails = (updatedDetails) => {
             </div>
           </div>
         </div>
+
+        <div
+          v-if="assetInfoResult.length > 0"
+          class="my-4"
+        >
+          <div
+            class="result-container mt-5 flex flex-row flex-wrap gap-5 w-full overflow-y-auto"
+          >
+            <div
+              v-for="(res, index) in assetInfoResult"
+              :key="index"
+              class="result xl:w-1/3 lg:w-1/3 sm:w-3/4 md:text-lg sm:text-xs bg-zinc-800"
+            >
+              <div class="block space-y-2">
+                <p class="md:text-3xl sm:text-xl font-bold text-yellow-400">
+                  {{ res.ticker }}
+                </p>
+                <p><span class="highlight">Name:</span> {{ res.name }}</p>
+                <p>
+                  <span class="highlight">Type:</span>
+                  {{ res.type === "CS" ? "Common Stock" : res.type }}
+                </p>
+                <button
+                  @click="goToStockView(res)"
+                  class="mt-3 float-right bg-yellow-400 text-zinc-800 p-1 rounded-lg border border-solid border-yellow-400 hover:bg-zinc-800 hover:text-yellow-400 hover:border-yellow-400 hover:border hover:border-solid transition duration-300"
+                >
+                  View
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Portfolio Graph Section -->
