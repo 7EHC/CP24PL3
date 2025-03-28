@@ -5,16 +5,23 @@ import "express-async-errors";
 import myRouter from "./routes/myRoute.js"
 import reportRouter from "./routes/report.js"
 import verify from "./routes/verify.js"
+import cookieParser from "cookie-parser";
 // import path from "path";
 
 const PORT = process.env.PORT || 5050;
 const app = express()
 
+app.use(cookieParser());
+
 // app.use((req,res)=>{
 //     res.end("<h1>Hello world!</h1>")
 // })
 
-app.use(cors());
+app.use(cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+}));
 app.use(express.json()); // Enable JSON body parsing middleware
 
 // Load myRoute routes
