@@ -7,8 +7,9 @@ const API_ROOT = import.meta.env.VITE_ROOT_API;
 const router = useRouter();
 const username = ref("");
 const password = ref("");
+const isRememberMe = ref(false);
 const failedMsg = ref("");
-const isSuccess = ref(false)
+const isSuccess = ref(false);
 
 const handleLogin = async () => {
   isSuccess.value = false;
@@ -17,40 +18,43 @@ const handleLogin = async () => {
 };
 
 const login = async () => {
-  username.value = username.value.trim()
-  password.value = password.value.trim()
+  username.value = username.value.trim();
+  password.value = password.value.trim();
   failedMsg.value = "";
-  if(username.value.length !== 0 && password.value.length !== 0) {
+  console.log(username.value, password.value, isRememberMe.value);
 
+  if (username.value.length !== 0 && password.value.length !== 0) {
     try {
       const res = await fetch(`${API_ROOT}/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username.value.toLowerCase(),
-        password: password.value,
-      }),
-    });
-    
-    if (res.ok) {
-      const data = await res.json();
-      const token = data.token;
-      localStorage.setItem("token", token);
-      window.dispatchEvent(new Event("storage"));
-      handleLogin()
-      setTimeout(() => {
-        router.push("/port");
-      }, 1800);
-    } else if (res.status === 400) {
-      failedMsg.value = "Incorrect username or password.";
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username.value.toLowerCase(),
+          password: password.value,
+          rememberMe: isRememberMe.value,
+        }),
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const token = data.token;
+        localStorage.setItem("token", token);
+        window.dispatchEvent(new Event("storage"));
+        handleLogin();
+        setTimeout(() => {
+          router.push("/port");
+        }, 1800);
+      } else if (res.status === 400) {
+        failedMsg.value = "Incorrect username or password.";
+      }
+    } catch (err) {
+      console.error("Login Error:", err);
+      throw err;
     }
-  } catch (err) {
-    console.error("Login Error:", err);
-    throw err;
   }
-}
 };
 </script>
 
@@ -127,7 +131,7 @@ const login = async () => {
               />
               <div class="mt-2 text-xs flex items-center justify-between">
                 <label class="flex items-center gap-1 cursor-pointer">
-                  <input type="checkbox" />
+                  <input type="checkbox" v-model="isRememberMe" />
                   <span class="text-black">Remember me</span>
                 </label>
                 <span class="text-blue-600">Forgot password?</span>
@@ -168,10 +172,12 @@ const login = async () => {
 
 <style scoped>
 /* เอฟเฟกต์ให้ไอคอน ✓ ค่อย ๆ ปรากฏ */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.2s ease-out;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 p {
