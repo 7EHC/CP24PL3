@@ -1,3 +1,4 @@
+import authApi from "./Auth";
 const API_ROOT = import.meta.env.VITE_ROOT_API;
 
 class StockApi {
@@ -7,6 +8,11 @@ class StockApi {
       if (res.ok) {
         const ticker = await res.json();
         return ticker;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -21,6 +27,11 @@ class StockApi {
       if (res.ok) {
         const ticker = await res.json();
         return ticker;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -43,6 +54,11 @@ class StockApi {
       if (res.ok) {
         const ports = await res.json();
         return ports;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -57,6 +73,11 @@ class StockApi {
       if (res.ok) {
         const ports = await res.json();
         return ports;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -77,6 +98,11 @@ class StockApi {
       if (res.ok) {
         const data = await res.json();
         return data;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -97,6 +123,11 @@ class StockApi {
       if (res.ok) {
         const data = await res.json();
         return data;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -118,7 +149,12 @@ class StockApi {
       if (res.ok) {
         const transaction = await res.json();
         return transaction;
-      } else {
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
+      } else {  
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
     } catch (error) {
@@ -142,6 +178,11 @@ class StockApi {
       if (res.ok) {
         const transaction = await res.json();
         return transaction;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -162,6 +203,11 @@ class StockApi {
 
       if (res.ok) {
         return await res.json();
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.error(`ERROR: Server responded with status ${res.status}`);
       }
@@ -220,6 +266,11 @@ class StockApi {
       if (res.ok) {
         const user = await res.json();
         return user;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
       } else {
         console.log(`ERROR: Server responded with status ${res.status}`);
       }
@@ -238,8 +289,17 @@ class StockApi {
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await res.json();
-      return data;
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
+      } else {
+        console.log(`ERROR: Server responded with status ${res.status}`);
+      }
     } catch (error) {
       console.log(`ERROR cannot send data: ${error}`);
     }
@@ -258,8 +318,17 @@ class StockApi {
         },
         body: JSON.stringify({ portfolio_name: portName }),
       });
-      const data = await res.json();
-      return data;
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      } else if (res.status === 401) {
+        const newToken = await authApi.refreshToken();
+        if (newToken && newToken !== "Failed to refresh token") {
+          localStorage.setItem("token", newToken);
+        }
+      } else {
+        console.log(`ERROR: Server responded with status ${res.status}`);
+      }
     } catch (error) {
       console.log(`ERROR cannot send data: ${error}`);
     }
