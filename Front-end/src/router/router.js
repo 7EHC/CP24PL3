@@ -8,6 +8,7 @@ import Login from "../views/Login.vue";
 import History from "../views/History.vue"
 import Register from "../views/Register.vue";
 import VerifyUser from "../views/VerifyUser.vue";
+import authApi from "../composable/Auth";
 
 const router = createRouter({
     history: createWebHistory("/pl3"),
@@ -66,47 +67,60 @@ const router = createRouter({
     ]
 })
 
-// router.beforeEach((to, from, next) => {
-//     const token = localStorage.getItem("token")
-//     if (to.meta.requiresAuth && !token) {
-//       next("/login");
-//     } else {
-//       next();
-//     }
-//   });
-const isTokenExpired = () => {
-    const token = localStorage.getItem("token");
-    if (!token) return true; // No token, treat as expired (but don't show alert)
-  
+const isTokenExpired = async() => {
+  const token = localStorage.getItem("token");
+  if (token) {
     try {
-      const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+    const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
       const exp = payload.exp * 1000; // Convert seconds to milliseconds
       const now = Date.now();
       
       if (now >= exp) {
-        localStorage.removeItem("token"); // Remove expired token
-        return true; // Token is expired
+        const checkRefresh = await authApi.refreshToken()
+        console.log(checkRefresh);
+        
+        if (checkRefresh === "Failed to refresh token") {
+          localStorage.removeItem("token"); // Remove expired token
+          console.log('refresh token faled');
+          
+          return true; // Token is expired
+        } else {
+          return false
+        }
+      } else {
+        return false; // Token is valid
       }
-      return false; // Token is valid
     } catch (err) {
       console.error("Invalid token:", err);
       localStorage.removeItem("token"); // Remove corrupted token
       return true; // Treat as expired
     }
-  };
+  }
+};
   
   // Navigation guard to check authentication and token expiration
-  router.beforeEach((to, from, next) => {
+  router.beforeEach(async (to, from, next) => {
+    const token = localStorage.getItem("token");
+  
     if (to.meta.requiresAuth) {
-      if (isTokenExpired()) {
-        alert("This page need an authentication, please login again.");
-        next("/login"); // Redirect to login page if token is expired
+      if (token) {
+        const isExpired = await isTokenExpired();
+  
+        if (isExpired) {
+          alert("Session Expired, please login again.");
+          window.location.reload();
+          localStorage.removeItem("token");
+          next("/login");
+        } else {
+          next();
+        }
       } else {
-        next(); // Continue navigation if token is valid
+        alert("This page needs authentication, please login.");
+        next("/login");
       }
     } else {
-      next(); // Allow navigation if no auth is required
+      next();
     }
   });
-
+  
 export default router;
