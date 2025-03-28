@@ -67,7 +67,26 @@ class Auth {
       throw err;
     }
   }
-}
+
+  async refreshToken() {
+    try {
+      const res = await fetch(`${API_ROOT}/refresh-token`, {
+        method: "POST",
+        credentials: "include",
+      });
+    
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("token", data.token);
+        return data.token;
+      } else if (res.status === 403){
+        return "Failed to refresh token";
+      }
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      }
+    }
+  }
 
 const decodeToken = (token) => {
   if (!token) return null;
