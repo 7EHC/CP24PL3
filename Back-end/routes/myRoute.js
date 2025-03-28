@@ -57,8 +57,12 @@ cron.schedule("*/1 * * * *", async () => {
   console.log(`🔄 Checking pending transactions... at ${now}`);
 
   const pendingTrans = await transaction.find({ status: "pending" }).toArray();
+  console.log(pendingTrans);
+  
 
   for (const trans of pendingTrans) {
+    // console.log("pending transaction checked");
+
     const { _id, portId, symbol, bidPrice, action, expiredAt, quantity } =
       trans;
     const expTime = new Date(expiredAt);
@@ -119,10 +123,15 @@ cron.schedule("*/1 * * * *", async () => {
         (action === "buy" && marketPrice.toFixed(2) <= bidPrice) ||
         (action === "sell" && marketPrice.toFixed(2) >= bidPrice)
       ) {
-        await transaction.updateOne(
+        const result = await transaction.updateOne(
           { _id },
           { $set: { status: "match", actualPrice: marketPrice.toFixed(2) } }
         );
+        console.log("Transaction Update Result:", result);
+
+        const balanceChange =
+          action === "buy" ? -bidPrice * quantity : bidPrice * quantity;
+        console.log("Balance Change:", balanceChange);
 
         await userSchema.updateOne(
           { _id: userId },
@@ -193,11 +202,13 @@ router.get("/userDetails/:userId", authMiddleware, async (req, res) => {
 
 router.get("/getTicker/:identifier", async (req, res) => {
   try {
-    const identifier = req.params.identifier.toString().toUpperCase()
+    const identifier = req.params.identifier.toString().toUpperCase();
     const formForShow = {
       projection: { _id: 0, ticker: 1, name: 1, market: 1, type: 1 },
     };
-    const ResultTic = await ticker.find({ticker : identifier}, formForShow).toArray();
+    const ResultTic = await ticker
+      .find({ ticker: identifier }, formForShow)
+      .toArray();
 
     res.status(200).json(ResultTic); // ส่งผลลัพธ์กลับ
   } catch (error) {
@@ -753,44 +764,8 @@ const transporter = nodemailer.createTransport({
 
 //Login
 router.post("/login", async (req, res) => {
-  // const { username, password } = req.body;
 
-  // // ตรวจสอบว่ามี username และ password มาหรือไม่
-  // if (!username || !password) {
-  //   return res.status(400).send("All input is required");
-  // }
-
-  // try {
-  //   // ค้นหา user จากฐานข้อมูล
-  //   const user = await userSchema.findOne({ username });
-  //   if (!user) {
-  //     return res.status(400).send("Invalid Credentials");
-  //   }
-
-  //   // ตรวจสอบความถูกต้องของรหัสผ่าน
-  //   const isPasswordValid = await bcrypt.compare(password, user.password);
-  //   if (!isPasswordValid) {
-  //     return res.status(400).send("Invalid Credentials");
-  //   }
-
-  //   // สร้าง JWT token
-  //   const token = jwt.sign(
-  //     { user_id: user._id, username },
-  //     process.env.TOKEN_KEY,
-  //     { expiresIn: "1d" }
-  //   );
-
-  //   // ใส่ token ลงใน user object
-  //   user.token = token;
-
-  //   // ส่งกลับข้อมูล user โดยไม่แสดงรหัสผ่าน
-  //   const { password: pwd, ...userWithoutPassword } = user;
-  //   res.status(200).json(userWithoutPassword);
-  // } catch (err) {
-  //   console.error("Login Error:", err);
-  //   res.status(500).send("Internal Server Error");
-  // }
-  let { username, email, password } = req.body;
+  let { username, email, password, rememberMe } = req.body;
 
   // ตรวจสอบว่าได้รับ password หรือไม่ และต้องมี username หรือ email อย่างน้อยหนึ่งอย่าง
   if (!password || (!username && !email)) {
@@ -833,16 +808,55 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { user_id: user._id, username, email },
       process.env.TOKEN_KEY,
-      { expiresIn: "1d" }
+      { expiresIn: "1min" }
     );
+
+    let refreshToken = null
+    if (rememberMe === true) {
+      refreshToken = jwt.sign(
+        { user_id: user._id, username, email },
+        process.env.REFRESH_TOKEN_KEY,
+        { expiresIn: "2min" }
+      )
+    }
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true, 
+      secure: false, // true เฉพาะ https ถ้าจะทดสอบบน Localhost ต้องเป็น false
+      sameSite: "Strict", 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     // ส่งกลับข้อมูล user โดยไม่แสดงรหัสผ่าน
     const { password: _, ...userWithoutPassword } = user;
-    res.status(200).json({ ...userWithoutPassword, token });
+    res.status(200).json({ ...userWithoutPassword, token, refreshToken });
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).send("Internal Server Error");
   }
 });
+
+router.post("/refresh-token", async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  // console.log(refreshToken);
+  
+  if (!refreshToken) return res.status(401).send("Refresh Token required");
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
+    // console.log(decoded);
+    
+    const newAccessToken = jwt.sign(
+      { user_id: decoded.user_id, username: decoded.username, email: decoded.email },
+      process.env.TOKEN_KEY,
+      { expiresIn: "1min" }
+    );
+
+    res.status(200).json({ token: newAccessToken });
+  } catch (err) {
+    res.status(403).send("Invalid Refresh Token");
+  }
+});
+
 
 export default router;
