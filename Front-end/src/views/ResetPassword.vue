@@ -1,9 +1,12 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { jwtDecode } from "jwt-decode";
+import { ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 
 const API_ROOT = import.meta.env.VITE_ROOT_API;
 const router = useRouter();
+const route = useRoute();
+const token = ref(null);
 const newPassword = ref("");
 const confirmPassword = ref("");
 const successMessage = ref("");
@@ -62,8 +65,14 @@ const resetPassword = async () => {
 };
 
 onMounted(() => {
-  if (!route.params.token) {
-    router.push("/forgot-password"); // ส่งกลับไปที่หน้าลืมรหัสผ่าน
+  token.value = route.params.token;
+  const decodedToken = jwtDecode(token.value);
+  const dateNow = new Date().getTime();
+  const dateExp = decodedToken.exp * 1000;
+  if (dateNow > dateExp) {
+    alert("Link expired. Please request a new password reset link.");
+    // router.push("/forgot-password");
+    window.close();
   }
 });
 </script>
