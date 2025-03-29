@@ -10,7 +10,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 
-const VERIFY_API_ROOT = process.env.VITE_ROOT_VERIFY_API;
+const VERIFY_API_ROOT = process.env.VITE_ROOT_FRONT_API;
 const secret_key = process.env.JWT_SECRET_KEY;
 
 const router = express.Router();
@@ -109,7 +109,7 @@ router.post("/register", async (req, res) => {
             <h1>Welcome to SIT Invest</h1>
             <h2>Thank you for choosing SIT Invest. To get started, please verify your email address.</h2>
             <p>Click the button below to verify your email:</p>
-            <a href="${VERIFY_API_ROOT}/${frontToken}" 
+            <a href="${VERIFY_API_ROOT}/verify/${frontToken}" 
                 style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #22c55e; text-decoration: none; border-radius: 5px; cursor: pointer; border: none;">
                 Verify Email</a>
             </div>`,
