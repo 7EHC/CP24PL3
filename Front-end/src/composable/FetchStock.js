@@ -68,8 +68,15 @@ class StockApi {
   }
 
   async getPortDetails(id) {
+    const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`);
+      const res = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.ok) {
         const ports = await res.json();
         return ports;
@@ -87,11 +94,13 @@ class StockApi {
   }
 
   async buyStock(assetObj) {
+    const token = localStorage.getItem("token");
     try {
       const res = await fetch(`${API_ROOT}/buyStock`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(assetObj), // Ensure portfolioObj is passed here
       });
@@ -112,11 +121,13 @@ class StockApi {
   }
 
   async sellStock(assetObj) {
+    const token = localStorage.getItem("token");
     try {
       const res = await fetch(`${API_ROOT}/sellStock`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(assetObj), // Ensure portfolioObj is passed here
       });
@@ -192,11 +203,13 @@ class StockApi {
   }
 
   async createTransaction(transactionObj) {
+    const token = localStorage.getItem("token");
     try {
       const res = await fetch(`${API_ROOT}/createTransaction`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(transactionObj),
       });
