@@ -8,7 +8,7 @@ const email = ref("");
 const successMessage = ref("");
 const errorMessage = ref("");
 
-const resetPassword = async () => {
+const sendResetLink = async () => {
   errorMessage.value = "";
   successMessage.value = "";
 
@@ -67,9 +67,9 @@ const resetPassword = async () => {
               
               <div class="flex justify-center items-center mt-4">
                 <button
-                  @click="resetPassword"
+                  @click="sendResetLink"
                   class="relative flex items-center justify-center w-1/3 h-10 bg-white text-black font-semibold rounded-full transition-all duration-500 ease-in-out hover:bg-gray-100"
-                >
+                  >
                   Send Reset Link
                 </button>
               </div>
