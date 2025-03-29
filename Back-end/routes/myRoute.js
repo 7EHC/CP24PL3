@@ -9,6 +9,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import nodemailer from "nodemailer";
 
 const API_ROOT = process.env.VITE_ROOT_API;
+const RESET_API_ROOT = process.env.VITE_ROOT_FRONT_API;
 
 const router = express.Router();
 const ticker = db.collection("stock_ticker");
@@ -58,10 +59,9 @@ cron.schedule("*/1 * * * *", async () => {
 
   const pendingTrans = await transaction.find({ status: "pending" }).toArray();
   console.log(pendingTrans);
-  
 
   for (const trans of pendingTrans) {
-    // console.log("pending transaction checked");
+    console.log("pending transaction checked");
 
     const { _id, portId, symbol, bidPrice, action, expiredAt, quantity } =
       trans;
@@ -283,38 +283,42 @@ router.get("/portfolios", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/portfolios/portDetails/:portId", async (req, res) => {
-  try {
-    const { portId } = req.params; // ดึงค่า portId จาก URL
-    const fields = req.query; // ดึงค่าฟิลด์ที่ต้องการจาก query params
+router.get(
+  "/portfolios/portDetails/:portId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { portId } = req.params; // ดึงค่า portId จาก URL
+      const fields = req.query; // ดึงค่าฟิลด์ที่ต้องการจาก query params
 
-    // ดึงข้อมูลพอร์ตโฟลิโอ
-    const portfolioDetails = await portfolio.findOne({
-      _id: new ObjectId(portId),
-    });
+      // ดึงข้อมูลพอร์ตโฟลิโอ
+      const portfolioDetails = await portfolio.findOne({
+        _id: new ObjectId(portId),
+      });
 
-    if (!portfolioDetails) {
-      return res.status(404).json({ error: "Portfolio not found" });
-    }
-
-    // ถ้าผู้ใช้ระบุฟิลด์ที่ต้องการ return เฉพาะฟิลด์นั้น
-    if (Object.keys(fields).length > 0) {
-      const filteredData = {};
-      for (const field in fields) {
-        if (portfolioDetails.hasOwnProperty(field)) {
-          filteredData[field] = portfolioDetails[field];
-        }
+      if (!portfolioDetails) {
+        return res.status(404).json({ error: "Portfolio not found" });
       }
-      return res.status(200).json(filteredData);
-    }
 
-    // ถ้าไม่มี query params ส่งมาทั้ง object
-    res.status(200).json(portfolioDetails);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+      // ถ้าผู้ใช้ระบุฟิลด์ที่ต้องการ return เฉพาะฟิลด์นั้น
+      if (Object.keys(fields).length > 0) {
+        const filteredData = {};
+        for (const field in fields) {
+          if (portfolioDetails.hasOwnProperty(field)) {
+            filteredData[field] = portfolioDetails[field];
+          }
+        }
+        return res.status(200).json(filteredData);
+      }
+
+      // ถ้าไม่มี query params ส่งมาทั้ง object
+      res.status(200).json(portfolioDetails);
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   }
-});
+);
 
 router.delete(
   "/portfolios/delete/:portId",
@@ -359,7 +363,7 @@ router.delete(
   }
 );
 
-router.patch("/portfolios/update/:portId", async (req, res) => {
+router.patch("/portfolios/update/:portId", authMiddleware, async (req, res) => {
   try {
     const portId = req.params.portId;
     const newPortName = req.body.portfolio_name;
@@ -764,7 +768,6 @@ const transporter = nodemailer.createTransport({
 
 //Login
 router.post("/login", async (req, res) => {
-
   let { username, email, password, rememberMe } = req.body;
 
   // ตรวจสอบว่าได้รับ password หรือไม่ และต้องมี username หรือ email อย่างน้อยหนึ่งอย่าง
@@ -808,22 +811,22 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { user_id: user._id, username, email },
       process.env.TOKEN_KEY,
-      { expiresIn: "1min" }
+      { expiresIn: "1d" }
     );
 
-    let refreshToken = null
+    let refreshToken = null;
     if (rememberMe === true) {
       refreshToken = jwt.sign(
         { user_id: user._id, username, email },
         process.env.REFRESH_TOKEN_KEY,
-        { expiresIn: "2min" }
-      )
+        { expiresIn: "7d" }
+      );
     }
 
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, 
+      httpOnly: true,
       secure: false, // true เฉพาะ https ถ้าจะทดสอบบน Localhost ต้องเป็น false
-      sameSite: "Strict", 
+      sameSite: "Strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -839,17 +842,21 @@ router.post("/login", async (req, res) => {
 router.post("/refresh-token", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
   // console.log(refreshToken);
-  
+
   if (!refreshToken) return res.status(401).send("Refresh Token required");
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
     // console.log(decoded);
-    
+
     const newAccessToken = jwt.sign(
-      { user_id: decoded.user_id, username: decoded.username, email: decoded.email },
+      {
+        user_id: decoded.user_id,
+        username: decoded.username,
+        email: decoded.email,
+      },
       process.env.TOKEN_KEY,
-      { expiresIn: "1min" }
+      { expiresIn: "1d" }
     );
 
     res.status(200).json({ token: newAccessToken });
@@ -858,5 +865,103 @@ router.post("/refresh-token", async (req, res) => {
   }
 });
 
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Please enter an email." });
+  }
+
+  try {
+    const user = await userSchema.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "Email not found in the system." });
+    }
+
+    // สร้าง Token
+    const resetToken = jwt.sign(
+      { userId: user._id },
+      process.env.RESET_PASSWORD_KEY,
+      { expiresIn: "15min" }
+    );
+
+    // ส่งอีเมลรีเซ็ตรหัสผ่าน
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const resetUrl = `${RESET_API_ROOT}/reset-password/${resetToken}`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `<div style="text-align: center; background-color: #f3f4f6; padding: 20px;">
+    <h1>Reset Your Password</h1>
+    <h2>We received a request to reset your password for your SIT Invest account.</h2>
+    <p>If you did not request this, please ignore this email. Otherwise, click the button below to reset your password:</p>
+    <a href="${resetUrl}" 
+        style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #FACC15; text-decoration: none; border-radius: 5px; cursor: pointer; border: none;">
+        Reset Password
+    </a>
+    </div>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res
+      .status(200)
+      .json({ message: "Password reset link has been sent to your email." });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ message: "An error occurred, please try again." });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res
+      .status(400)
+      .json({ message: "Please provide both token and new password." });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.RESET_PASSWORD_KEY);
+
+    const user = await userSchema.findOne({
+      _id: new ObjectId(decoded.userId),
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password in the database
+    user.password = hashedPassword;
+    await userSchema.updateOne(
+      { _id: new ObjectId(user._id) },
+      { $set: { password: hashedPassword } }
+    );
+
+    res.status(200).json({ message: "Password has been successfully reset." });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    if (error.name === "JsonWebTokenError") {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+    res.status(500).json({ message: "An error occurred, please try again." });
+  }
+});
 
 export default router;
