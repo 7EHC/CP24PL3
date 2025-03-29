@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import registerRateLimiter from "../middlewares/rateLimit.js";
 
 const VERIFY_API_ROOT = process.env.VITE_ROOT_FRONT_API;
 const secret_key = process.env.JWT_SECRET_KEY;
@@ -27,7 +28,7 @@ let transporter = nodemailer.createTransport({
 });
 
 // 📌 1) API สำหรับสมัครสมาชิกและส่งอีเมลยืนยัน
-router.post("/register", async (req, res) => {
+router.post("/register",registerRateLimiter, async (req, res) => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -36,71 +37,69 @@ router.post("/register", async (req, res) => {
 
   try {
     let errors = {};
-    const existingUser = await userSchema.findOne({
-      username: username.toLowerCase(),
-    });
-    if (existingUser) {
-      errors.username = "Username is already registered.";
-    }
-    // 1) ตรวจสอบว่าอีเมลถูกใช้แล้วหรือยัง
-    const existingEmail = await userSchema.findOne({
-      email: email.toLowerCase(),
-    });
-    if (existingEmail) {
-      errors.email = "Email is already registered.";
-      //   return res.status(409).send("Email is already registered.");
+
+    // ✅ 1) Validate Format ก่อน
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/;
+
+    if (!emailRegex.test(email)) {
+      errors.email = "Invalid email format.";
     }
 
-    // 2) ตรวจสอบว่ามีอีเมลนี้รอการยืนยันอยู่หรือไม่
-    const pendingVerification = await verificationtoken.findOne({
-      email: email.toLowerCase(),
-    });
-    if (pendingVerification) {
-      errors.pendingEmail = "Email is already pending verification.";
-      //   return res.status(409).send("Email is already pending verification.");
+    if (!passwordRegex.test(password)) {
+      errors.password = "Password must be 8-15 characters, include an uppercase letter, a number, and a special character.";
     }
 
     if (Object.keys(errors).length > 0) {
-      return res.status(409).json(errors);
+      return res.status(400).json(errors); // ⛔ 400: Format ผิด
     }
 
-    // 3) เข้ารหัส password
+    // ✅ 2) ตรวจซ้ำใน DB (Check Conflict)
+    const existingUser = await userSchema.findOne({ username: username.toLowerCase() });
+    if (existingUser) {
+      errors.username = "Username is already registered.";
+    }
+
+    const existingEmail = await userSchema.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
+      errors.email = "Email is already registered.";
+    }
+
+    const pendingVerification = await verificationtoken.findOne({ email: email.toLowerCase() });
+    if (pendingVerification) {
+      errors.pendingEmail = "Email is already pending verification.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(409).json(errors); // ⛔ 409: Conflict (ซ้ำ)
+    }
+
+    // ✅ 3) เข้ารหัส password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4) สร้าง Token ยืนยันอีเมล
+    // ✅ 4) สร้าง token สำหรับยืนยัน
     const token = crypto.randomBytes(32).toString("hex");
 
-    // 5) บันทึกลง Collection `verificationtoken`
     await verificationtoken.insertOne({
       username: username.toLowerCase(),
       email: email.toLowerCase(),
       password: hashedPassword,
       token,
-      createdAt: new Date(), // ใช้ TTL Index เพื่อลบอัตโนมัติหลัง 1 ชั่วโมง
+      createdAt: new Date(), // TTL index จะลบอัตโนมัติหลัง 1 ชั่วโมง
     });
 
-    // // 6) ส่งอีเมลยืนยัน
-    // // const verificationLink = `localhost:5000/verify/verify-email?token=${token}`;
-    // const mailOptions = {
-    //     from: "sit.invest.pl3@gmail.com",
-    //     to: email,
-    //     subject: "Verify Your Email",
-    //     html: `<p>Click the link below to verify your email:</p>
-    //            <a href="http:localhost:5137/pl3/verify/${token}">http:localhost:5137/pl3/verify/${token}</a>`,
-    // };
-
-    // 6) สร้าง JWT Token สำหรับ Frontend (frontToken)
+    // ✅ 5) สร้าง JWT Token สำหรับ frontend
     const frontToken = jwt.sign(
       {
         email: email.toLowerCase(),
         username: username.toLowerCase(),
         token: token,
       },
-      secret_key, // คุณต้องตั้งค่า JWT_SECRET_KEY ใน .env
-      { expiresIn: "1h" } // ตั้งเวลาหมดอายุ JWT Token
+      secret_key,
+      { expiresIn: "1h" }
     );
 
-    // 7) ส่งอีเมลยืนยัน
+    // ✅ 6) ส่งอีเมลยืนยัน
     const mailOptions = {
       from: "sit.invest.pl3@gmail.com",
       to: email,

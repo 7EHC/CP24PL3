@@ -12,6 +12,7 @@ const confirmPassword = ref("");
 const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[_!@#$%^&*(),.?":{}|<>]).{8,}$/;
 const errors = ref({ username: "", password: "", confirmPassword: "" });
 const success = ref(false)
+const isLoading = ref(false)
 
 const validate = () => {
   username.value = username.value.trim()
@@ -31,7 +32,7 @@ const validate = () => {
   }else if (!/\S+@\S+\.\S+/.test(email.value)) {
   errors.value.email = "Please enter a valid email address.";
   valid = false;
-}
+  }
     if (!password.value || ( password.value.length < 8 || password.value.length > 15 ) || !regex.test(password.value)) {
     errors.value.password = "Password must be 8-15 characters with a mix of cases, a number, and a special character.";
     valid = false;
@@ -50,6 +51,7 @@ const validate = () => {
 const register = async () => {
   errors.value = { username: "", password: "", confirmPassword: "", email: "" };
   if (validate()) {
+    isLoading.value = true
     try {
       // const res = await fetch(`${API_ROOT}/register`, {
       const res = await fetch(`http://localhost:5000/verify/register`, {
@@ -64,7 +66,7 @@ const register = async () => {
         }),
       });
 
-      if (res.ok) {
+      if (res.status === 200) {
         success.value = true
       } else if (res.status === 409) {
         errors.value = await res.json();
@@ -75,6 +77,8 @@ const register = async () => {
       success.value = false
       console.error("Registration Error:", err);
       throw err;
+    }finally{
+      isLoading.value = false
     }
   } else {
     success.value = false
@@ -199,7 +203,11 @@ const register = async () => {
                   type="submit"
                   class="w-1/5 h-10 bg-white text-black font-semibold rounded-full hover:bg-gray-100 mt-3"
                 >
-                  Sign up
+                  <p v-if="isLoading===false">Sign up</p>
+                  <div v-if="isLoading === true" class="flex items-center justify-center" >
+                    <div class="w-6 h-6 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" ></div>
+                    <p class="font-light ml-2 text-xs"> Signing up...</p>
+                  </div>
                 </button>
               </div>
             </form>

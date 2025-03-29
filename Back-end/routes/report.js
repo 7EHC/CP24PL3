@@ -45,8 +45,8 @@ cron.schedule("0 0 1 * *", async () => {
             let transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
-                    user: "sit.invest.pl3@gmail.com",
-                    pass: "xgss blmw aakh jpww",
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
                 },
             });
 

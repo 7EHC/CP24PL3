@@ -27,8 +27,7 @@ const login = async () => {
   username.value = username.value.trim();
   password.value = password.value.trim();
   failedMsg.value = "";
-  console.log(username.value, password.value, isRememberMe.value);
-
+  isLoading.value = true;
   if (username.value.length !== 0 && password.value.length !== 0) {
     try {
       const res = await fetch(`${API_ROOT}/login`, {
@@ -39,9 +38,7 @@ const login = async () => {
         body: JSON.stringify({
           username: username.value.toLowerCase(),
           password: password.value,
-          rememberMe: isRememberMe.value,
         }),
-        credentials: "include",
       });
 
       if (res.ok) {
@@ -59,6 +56,8 @@ const login = async () => {
     } catch (err) {
       console.error("Login Error:", err);
       throw err;
+    } finally {
+      isLoading.value = false;
     }
   }
 };
@@ -140,7 +139,11 @@ const login = async () => {
                   <input type="checkbox" v-model="isRememberMe" />
                   <span class="text-black">Remember me</span>
                 </label>
-                <span class="text-blue-600 hover:underline cursor-pointer" @click="forgotPsw">Forgot password?</span>
+                <span
+                  class="text-blue-600 hover:underline cursor-pointer"
+                  @click="forgotPsw"
+                  >Forgot password?</span
+                >
               </div>
               <div v-if="failedMsg.length != 0">
                 <span class="text-red-500 text-xs">{{ failedMsg }}</span>
@@ -157,7 +160,16 @@ const login = async () => {
                       class="fas fa-check-circle text-green-500 mr-2 text-lg"
                     ></i>
                   </transition>
-                  Login
+                  <p v-if="isLoading === false">Login</p>
+                  <div
+                    v-if="isLoading === true"
+                    class="flex items-center justify-center"
+                  >
+                    <div
+                      class="w-6 h-6 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"
+                    ></div>
+                    <p class="font-light ml-2 text-xs">Logging in...</p>
+                  </div>
                 </button>
               </div>
             </form>

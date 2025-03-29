@@ -12,6 +12,23 @@ const period = ref(10);
 const totalDCA = ref(0);
 const assetPerYear = ref([]);
 
+// ✅ Watch หลายค่าในครั้งเดียว
+watch(
+  [initialCap, monthlyInvest, returnAnnual, period],
+  ([newCap, newMonthly, newReturn, newPeriod]) => {
+    if (isInvalidNumber(newCap)) initialCap.value = 0;
+    if (isInvalidNumber(newMonthly)) monthlyInvest.value = 0;
+    if (isInvalidNumber(newReturn)) returnAnnual.value = 0;
+    if (isInvalidNumber(newPeriod)) period.value = 0;
+  }
+);
+
+// ✅ ฟังก์ชันเช็กว่าเป็น "เลขที่ valid" หรือเปล่า
+function isInvalidNumber(val) {
+  const num = Number(val);
+  return isNaN(num) || num < 0;
+}
+
 const calculateDCA = () => {
   let P = parseFloat(initialCap.value) || 0;
   let M = parseFloat(monthlyInvest.value) || 0;
@@ -82,22 +99,22 @@ onMounted(() => {
     <div class="inputs-container">
       <div class="input-group">
         <label for="initialCap">Initial Capital</label>
-        <input v-model="initialCap" id="initialCap" type="number" step="1000" 
+        <input v-model="initialCap" id="initialCap" type="number" step="1000" min="0" 
         class="bg-white border-gray-300 border p-1 rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none"/>
       </div>
       <div class="input-group">
         <label for="monthlyInvest">Monthly Investment</label>
-        <input v-model="monthlyInvest" id="monthlyInvest" type="number" step="1000"
+        <input v-model="monthlyInvest" id="monthlyInvest" type="number" step="1000" min="0" 
         class="bg-white border-gray-300 border p-1 rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
       </div>
       <div class="input-group">
-        <label for="returnAnnual">Annual Return (%)</label>
-        <input v-model="returnAnnual" id="returnAnnual" type="number" 
+        <label for="returnAnnual">Annual Return (%)</label> 
+        <input v-model="returnAnnual" id="returnAnnual" type="number" min="0" 
         class="bg-white border-gray-300 border p-1 rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none"/>
       </div>
       <div class="input-group">
         <label for="period">Period (year)</label>
-        <input v-model="period" id="period" type="number"
+        <input v-model="period" id="period" type="number" min="0" 
         class="bg-white border-gray-300 border p-1 rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
       </div>
     </div>
