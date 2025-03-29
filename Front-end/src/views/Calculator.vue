@@ -12,6 +12,23 @@ const period = ref(10);
 const totalDCA = ref(0);
 const assetPerYear = ref([]);
 
+// ✅ Watch หลายค่าในครั้งเดียว
+watch(
+  [initialCap, monthlyInvest, returnAnnual, period],
+  ([newCap, newMonthly, newReturn, newPeriod]) => {
+    if (isInvalidNumber(newCap)) initialCap.value = 0;
+    if (isInvalidNumber(newMonthly)) monthlyInvest.value = 0;
+    if (isInvalidNumber(newReturn)) returnAnnual.value = 0;
+    if (isInvalidNumber(newPeriod)) period.value = 0;
+  }
+);
+
+// ✅ ฟังก์ชันเช็กว่าเป็น "เลขที่ valid" หรือเปล่า
+function isInvalidNumber(val) {
+  const num = Number(val);
+  return isNaN(num) || num < 0;
+}
+
 const calculateDCA = () => {
   let P = parseFloat(initialCap.value) || 0;
   let M = parseFloat(monthlyInvest.value) || 0;
