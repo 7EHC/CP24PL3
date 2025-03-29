@@ -10,6 +10,7 @@ const password = ref("");
 const isRememberMe = ref(false);
 const failedMsg = ref("");
 const isSuccess = ref(false);
+const isLoading = ref(false)
 const isForgotPsw = ref(false);
 
 const forgotPsw = () => {
