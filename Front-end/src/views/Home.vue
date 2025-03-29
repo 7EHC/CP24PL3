@@ -25,6 +25,8 @@ const searchStock = async (param) => {
 
 const searchModal = ()=>{
   search.value = !search.value
+  searchQuery.value = ""
+  searchResult.value = []
 }
 
 const selectStock = (stock) => {

@@ -9,6 +9,7 @@ const username = ref("");
 const password = ref("");
 const failedMsg = ref("");
 const isSuccess = ref(false)
+const isLoading = ref(false)
 
 const handleLogin = async () => {
   isSuccess.value = false;
@@ -20,6 +21,7 @@ const login = async () => {
   username.value = username.value.trim()
   password.value = password.value.trim()
   failedMsg.value = "";
+  isLoading.value = true
   if(username.value.length !== 0 && password.value.length !== 0) {
 
     try {
@@ -49,6 +51,8 @@ const login = async () => {
   } catch (err) {
     console.error("Login Error:", err);
     throw err;
+  }finally{
+    isLoading.value = false
   }
 }
 };
@@ -147,7 +151,11 @@ const login = async () => {
                       class="fas fa-check-circle text-green-500 mr-2 text-lg"
                     ></i>
                   </transition>
-                  Login
+                  <p v-if="isLoading === false">Login</p>
+                  <div v-if="isLoading === true" class="flex items-center justify-center" >
+                    <div class="w-6 h-6 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" ></div>
+                    <p class="font-light ml-2 text-xs">Logging in...</p>
+                  </div>
                 </button>
               </div>
             </form>
