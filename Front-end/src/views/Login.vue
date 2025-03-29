@@ -10,6 +10,12 @@ const password = ref("");
 const isRememberMe = ref(false);
 const failedMsg = ref("");
 const isSuccess = ref(false);
+const isForgotPsw = ref(false);
+
+const forgotPsw = () => {
+  isForgotPsw.value = true;
+  router.push("/forgot-password");
+};
 
 const handleLogin = async () => {
   isSuccess.value = false;
@@ -134,7 +140,7 @@ const login = async () => {
                   <input type="checkbox" v-model="isRememberMe" />
                   <span class="text-black">Remember me</span>
                 </label>
-                <span class="text-blue-600">Forgot password?</span>
+                <span class="text-blue-600 hover:underline cursor-pointer" @click="forgotPsw">Forgot password?</span>
               </div>
               <div v-if="failedMsg.length != 0">
                 <span class="text-red-500 text-xs">{{ failedMsg }}</span>
