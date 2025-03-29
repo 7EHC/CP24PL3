@@ -11,7 +11,7 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import registerRateLimiter from "../middlewares/rateLimit.js";
 
-const VERIFY_API_ROOT = process.env.VITE_ROOT_VERIFY_API;
+const VERIFY_API_ROOT = process.env.VITE_ROOT_FRONT_API;
 const secret_key = process.env.JWT_SECRET_KEY;
 
 const router = express.Router();
@@ -104,14 +104,14 @@ router.post("/register",registerRateLimiter, async (req, res) => {
       from: "sit.invest.pl3@gmail.com",
       to: email,
       subject: "Verify Your Email",
-      html: `<div style="text-align: center; background-color: #f3f4f6; padding: 20px;">
-        <h1>Welcome to SIT Invest</h1>
-        <h2>Thank you for choosing SIT Invest. To get started, please verify your email address.</h2>
-        <p>Click the button below to verify your email:</p>
-        <a href="${VERIFY_API_ROOT}/${frontToken}" 
-            style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #22c55e; text-decoration: none; border-radius: 5px; cursor: pointer;">
-            Verify Email</a>
-      </div>`,
+      html: `<div style = "text-align: center; background-color: #f3f4f6; padding: 20px;">
+            <h1>Welcome to SIT Invest</h1>
+            <h2>Thank you for choosing SIT Invest. To get started, please verify your email address.</h2>
+            <p>Click the button below to verify your email:</p>
+            <a href="${VERIFY_API_ROOT}/verify/${frontToken}" 
+                style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #22c55e; text-decoration: none; border-radius: 5px; cursor: pointer; border: none;">
+                Verify Email</a>
+            </div>`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {

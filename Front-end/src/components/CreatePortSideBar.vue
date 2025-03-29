@@ -88,6 +88,7 @@ const createPortPOST = async (portfolioObj) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(portfolioObj), // Ensure portfolioObj is passed here
     });
@@ -109,9 +110,10 @@ const fetchDetails = async (id) => {
   emit("updateDetails", {});
   try {
     // Fetch portfolio details
-    const response = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`);
-    if (response.ok) {
-      const portDetails = await response.json();
+    // const response = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`);
+    const response = await stockApi.getPortDetails(id);
+    // if (response.ok) {
+      const portDetails = response;
       console.log("Portfolio Details (Before Update):", portDetails);
 
       // Extract assets for stock symbols, quantities, and current market prices
@@ -166,9 +168,9 @@ const fetchDetails = async (id) => {
       };
 
       await fetchGrowthData(); // Fetch and add the growth field
-    } else {
-      console.error(`Error fetching details: ${response.status}`);
-    }
+    // } else {
+    //   console.error(`Error fetching details: ${response.status}`);
+    // }
   } catch (error) {
     console.error("Error fetching details:", error);
   } finally {
