@@ -17,11 +17,28 @@ app.use(cookieParser());
 //     res.end("<h1>Hello world!</h1>")
 // })
 
-app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+const allowedOrigins = [
+    "http://localhost:5173", 
+    "https://capstone24.sit.kmutt.ac.th/pl3"
+  ];
+  
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
-}));
+  }));
+
+// app.use(cors({
+//     origin: process.env.CLIENT_URL || "http://localhost:5173",
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+//     credentials: true,
+// }));
 app.use(express.json()); // Enable JSON body parsing middleware
 
 // Load myRoute routes
