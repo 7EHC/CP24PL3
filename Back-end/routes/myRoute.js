@@ -387,7 +387,7 @@ router.patch("/portfolios/update/:portId", authMiddleware, async (req, res) => {
     if (isDuplicate) {
       return res.status(400).json({
         success: false,
-        message: "Error: Portfolio name " + newPortName + " already exists.",
+        message: `Portfolio name "${newPortName}" already exists.`,
       });
     } else {
       await portfolio.updateOne(
