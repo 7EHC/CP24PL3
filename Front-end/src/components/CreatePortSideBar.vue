@@ -225,12 +225,12 @@ onMounted(async () => {
       <transition name="fade">
         <div
           v-if="msgAlert !== 'default'"
-          class="p-6 fixed right-10 top-20 z-50 border-l-4 shadow-lg rounded-sm"
+          class="p-6 fixed right-10 top-20 z-[100] border-l-4 shadow-lg rounded-sm"
           role="alert"
           :class="{
             'bg-green-100 border-green-500 text-green-700':
               msgAlert === 'success',
-            'bg-red-100 border-red-500 text-red-700': msgAlert === 'fail',
+            'bg-red-100 border-red-400 text-red-700': msgAlert === 'fail',
           }"
         >
           <p class="font-semibold">{{ msgDisplay }}</p>
