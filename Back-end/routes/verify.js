@@ -132,7 +132,7 @@ router.get("/verify-email", async (req, res) => {
   const { token } = req.query;
 
   if (!token) {
-    return res.status(400).send("Invalid verification link.");
+    return res.status(400).json({ message: "Invalid verification link." });
   }
 
   try {
@@ -140,7 +140,7 @@ router.get("/verify-email", async (req, res) => {
     const record = await verificationtoken.findOne({ token });
 
     if (!record) {
-      return res.status(400).send("Invalid or expired token.");
+      return res.status(400).json({ message: "Invalid or expired token." });
     }
 
     // 2) ย้ายข้อมูลไปยัง `user` collection
@@ -155,10 +155,10 @@ router.get("/verify-email", async (req, res) => {
     // 3) ลบ Token ที่ใช้ไปแล้ว
     await verificationtoken.deleteOne({ token });
 
-    res.status(200).send("Email verified successfully! You can now log in.");
+    res.status(200).json({ message: "Email verified successfully! You can now log in." });
   } catch (error) {
     console.error("Email Verification Error:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 

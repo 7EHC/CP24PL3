@@ -11,15 +11,37 @@ const returnAnnual = ref(8);
 const period = ref(10);
 const totalDCA = ref(0);
 const assetPerYear = ref([]);
+const isError = ref(false)
 
 // ✅ Watch หลายค่าในครั้งเดียว
 watch(
   [initialCap, monthlyInvest, returnAnnual, period],
   ([newCap, newMonthly, newReturn, newPeriod]) => {
-    if (isInvalidNumber(newCap)) initialCap.value = 0;
-    if (isInvalidNumber(newMonthly)) monthlyInvest.value = 0;
-    if (isInvalidNumber(newReturn)) returnAnnual.value = 0;
-    if (isInvalidNumber(newPeriod)) period.value = 0;
+    let hasNegative = false
+
+    if (isInvalidNumber(newCap)) {
+      initialCap.value = 0
+      hasNegative = true
+    }
+    if (isInvalidNumber(newMonthly)) {
+      monthlyInvest.value = 0
+      hasNegative = true
+    }
+    if (isInvalidNumber(newReturn)) {
+      returnAnnual.value = 0
+      hasNegative = true
+    }
+    if (isInvalidNumber(newPeriod)) {
+      period.value = 0
+      hasNegative = true
+    }
+
+    if (hasNegative) {
+      isError.value = true
+      setTimeout(() => {
+        isError.value = false
+      }, 3000)
+    }
   }
 );
 
@@ -117,6 +139,9 @@ onMounted(() => {
         <input v-model="period" id="period" type="number" min="0" 
         class="bg-white border-gray-300 border p-1 rounded-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
       </div>
+      <transition name="fade">
+        <p v-if="isError" class="text-red-600 font-semibold">The value must be a positive number.</p>
+      </transition>
     </div>
 
     <!-- Chart container -->
@@ -233,6 +258,13 @@ onMounted(() => {
     width: 100%;
     padding: 0 20px;
   }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s ease-in-out;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>
 

@@ -263,7 +263,7 @@ onMounted(async () => {
           v-if="editDelete === false"
           v-for="portfolio in portsList"
           :key="portfolio.id"
-          class="list bg-zinc-700 p-3 rounded hover:bg-zinc-600 duration-300 cursor-pointer"
+          class="list bg-zinc-700 p-3 rounded hover:bg-zinc-600 duration-300 cursor-pointer truncate max-w-full overflow-hidden"
           @click="handlePortfolioClick(portfolio._id)"
         >
           {{ portfolio.portfolio_name }}
@@ -273,7 +273,7 @@ onMounted(async () => {
           v-if="editDelete === true"
           v-for="portfolio in portsList"
           :key="portfolio.id"
-          class="list bg-zinc-700 p-3 rounded duration-300 cursor-pointer"
+          class="list bg-zinc-700 p-3 rounded duration-300 cursor-pointer "
         >
           <div class="flex justify-between items-center">
             <p>{{ portfolio.portfolio_name }}</p>
@@ -381,6 +381,7 @@ onMounted(async () => {
               >
               <input
                 v-model="portNameToUpdate"
+                maxlength="10"
                 type="text"
                 id="portfolioName"
                 class="mt-1 w-full px-4 py-2 border text-black bg-white border-gray-300 rounded-md"
