@@ -342,7 +342,9 @@ class StockApi {
           localStorage.setItem("token", newToken);
         }
       } else {
-        console.log(`ERROR: Server responded with status ${res.status}`);
+        const error = await res.json();
+        return error
+        // console.log(`ERROR: Server responded with status ${res.status}`);
       }
     } catch (error) {
       console.log(`ERROR cannot send data: ${error}`);
