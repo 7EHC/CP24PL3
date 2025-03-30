@@ -6,6 +6,7 @@ import Datepicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
 import { FilterIcon, DownloadIcon, ChartBarIcon, HomeIcon, ClockIcon, CurrencyDollarIcon } from '@heroicons/vue/outline';
 import {jwtDecode} from "jwt-decode";
+import { useUserStore } from '../stores/userStore';
 
 const allTrans = ref([]);
 const openIndex = ref(null);
@@ -20,6 +21,7 @@ const portOptions = ref()
 const cancelAlert = ref(false)
 const cancelMsg = ref('')
 const monthArray = ref()
+const userStore = useUserStore()
 
 const currentYear = new Date().getFullYear();
 const yearArray = Array.from({ length: 2 }, (_, i) => currentYear - i);
@@ -192,6 +194,7 @@ const applyFilter = async () => {
 
 onMounted(async () => {
   // allTrans.value = await stockApi.getAllTransaction();
+  userStore.fetchBalance(userId.value);
   const fetchTransactions = async () => {
     isLoading.value = true;
     try {

@@ -61,7 +61,7 @@ cron.schedule("*/1 * * * *", async () => {
   console.log(pendingTrans);
 
   for (const trans of pendingTrans) {
-    console.log("pending transaction checked");
+    // console.log("pending transaction checked");
 
     const { _id, portId, symbol, bidPrice, action, expiredAt, quantity } =
       trans;
