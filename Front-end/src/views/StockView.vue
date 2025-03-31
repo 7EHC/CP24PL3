@@ -688,8 +688,12 @@ const createNewChart = async (days, tic) => {
 onMounted(async () => {
   token.value && (userData.value = decodeToken(token.value));
   currentMaketPrice.value = await getMarketPrice(result.ticker);
+  const test = decodeToken(token.value)
+  // console.log(test.user_id)
+  await userStore.fetchBalance(test.user_id)
   checkBalance.value = Number(userStore.balance.replace(/,/g, ""))
-  console.log(checkBalance.value)
+  // checkBalance.value = userStore.balance
+  // console.log(checkBalance.value)
   // console.log(currentMaketPrice.value)
   // console.log("This is answer: "+params.details)
   // console.log(result)
