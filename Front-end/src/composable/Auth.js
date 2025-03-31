@@ -68,6 +68,29 @@ class Auth {
     }
   }
 
+  async logout() {
+    try {
+      const res = await fetch(`${API_ROOT}/api/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // console.log(data);
+        return data;
+      } else {
+        const error = await res.text();
+        throw new Error(error);
+      }
+    } catch (err) {
+      console.log("Logout Error:", err);
+      throw err;
+    }
+  }
+
   async refreshToken() {
     try {
       const res = await fetch(`${API_ROOT}/api/refresh-token`, {
