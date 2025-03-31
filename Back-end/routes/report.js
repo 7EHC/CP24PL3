@@ -298,17 +298,27 @@ router.get("/exportTransactions/:userId", async (req, res) => {
 
 
         // กำหนดชื่อไฟล์
-        const fileName = (year && month)
-    ? `Transaction_Report_${year}_${new Date(`${year}-${month}-01`).toLocaleString('en-US', { month: 'long' })}.xlsx`
-    : (year || month)
-    ? `Transaction_Report_${year || new Date().getFullYear()}_${new Date(`${year || new Date().getFullYear()}-${month || new Date().getMonth() + 1}-01`).toLocaleString('en-US', { month: 'long' })}.xlsx`
-    : `Transaction_Report_All.xlsx`;
-        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+    //     const fileName = (year && month)
+    // ? `Transaction_Report_${year}_${new Date(`${year}-${month}-01`).toLocaleString('en-US', { month: 'long' })}.xlsx`
+    // : (year || month)
+    // ? `Transaction_Report_${year || new Date().getFullYear()}_${new Date(`${year || new Date().getFullYear()}-${month || new Date().getMonth() + 1}-01`).toLocaleString('en-US', { month: 'long' })}.xlsx`
+    // : `Transaction_Report_All.xlsx`;
+    //     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    //     res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
         
-        // ส่งไฟล์ Excel
-        await workbook.xlsx.write(res);
-        res.end();
+    //     // ส่งไฟล์ Excel
+    //     await workbook.xlsx.write(res);
+    //     res.end();
+    const fileName = `Transaction_Report_${year}_${month}.xlsx`;
+    const safeFileName = fileName.replace(/[^\w\-\.]/g, '_');
+
+    // สร้าง buffer แทนการ stream
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // ตั้ง header แล้วส่งไฟล์เป็น buffer
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="${safeFileName}"`);
+    res.send(buffer);
     } catch (error) {
         console.error("Error exporting Excel:", error);
         res.status(500).send("Error generating Excel file.");
