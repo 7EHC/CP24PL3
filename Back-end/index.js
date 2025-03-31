@@ -48,7 +48,7 @@ app.use('/api', myRouter);
 // app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
 // Load report.js routes
-app.use("/test", reportRouter);
+app.use("/report", reportRouter);
 
 app.use("/verify", verify)
 
