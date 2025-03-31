@@ -144,7 +144,9 @@ cron.schedule("*/1 * * * *", async () => {
         );
 
         const apiUrl =
-          action === "buy" ? `${API_ROOT}/api/buyStock` : `${API_ROOT}/api/sellStock`;
+          action === "buy"
+            ? `${API_ROOT}/api/buyStock`
+            : `${API_ROOT}/api/sellStock`;
         await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -822,7 +824,7 @@ router.post("/login", async (req, res) => {
         { expiresIn: "7d" }
       );
     }
-    
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true, // true เฉพาะ https ถ้าจะทดสอบบน Localhost ต้องเป็น false
@@ -842,7 +844,6 @@ router.post("/login", async (req, res) => {
 router.post("/refresh-token", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
   // console.log(refreshToken);
-  
 
   if (!refreshToken) return res.status(401).send("Refresh Token required");
 
