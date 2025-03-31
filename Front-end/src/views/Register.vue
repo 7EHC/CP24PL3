@@ -68,7 +68,7 @@ const register = async () => {
 
       if (res.status === 200) {
         success.value = true
-      } else {
+      } else if (res.status === 400 || res.status === 409) {
         errors.value = await res.json();
         // console.log(errors.value);
       }
