@@ -67,7 +67,7 @@ router.post("/register",registerRateLimiter, async (req, res) => {
 
     const pendingVerification = await verificationtoken.findOne({ email: email.toLowerCase() });
     if (pendingVerification) {
-      errors.pendingEmail = "Email is already pending verification.";
+      errors.email = "Email is already pending verification.";
     }
 
     if (Object.keys(errors).length > 0) {
