@@ -74,6 +74,21 @@ onMounted(async () => {
       </RouterLink>
     </div>
   </div>
+  <div v-else>
+    <div class="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md">
+      <XCircleIcon class="text-red-500 w-16 h-16 mx-auto mb-4" />
+      <h1 class="text-2xl font-semibold text-gray-800">Access Denied</h1>
+      <p class="text-gray-600 mt-2">
+        You are not authorized to visit this page. Please ensure you have verified your email and try again.
+      </p>
+      <RouterLink
+        :to="{ name: 'Home' }"
+        class="mt-6 inline-block bg-red-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-red-400 transition"
+      >
+        Go to Home
+      </RouterLink>
+    </div>
+  </div>
   </div>
 </template>
 
