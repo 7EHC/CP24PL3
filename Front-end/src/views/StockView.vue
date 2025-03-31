@@ -385,7 +385,7 @@ const getMarketStatus = async () => {
 
   if (currDate.getDay() == 0) {
     dayToShowGraph.value = 2;
-  } else if (currDate.getDay() == 1) {
+  } else if (currDate.getDay() == 1 || currDate.getDay() == 2) {
     dayToShowGraph.value = 3;
   } else {
     dayToShowGraph.value = 1;
@@ -551,7 +551,9 @@ const createNewChart = async (days, tic) => {
   switch (days) {
     case 1: // 1 Day
       await getMarketStatus();
-      // console.log(dayToShowGraph.value);
+      console.log(marketOpen.value);
+      
+      console.log(dayToShowGraph.value);
 
       fromDate = getPreviousDate(toDate, dayToShowGraph.value);
       timeFrame = "hour";
