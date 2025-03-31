@@ -8,7 +8,6 @@ import { useUserStore } from "../stores/userStore";
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
-
 const token = ref(localStorage.getItem("token"));
 const userData = ref("");
 const showLogout = ref(false);
