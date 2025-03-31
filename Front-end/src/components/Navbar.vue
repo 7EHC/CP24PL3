@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, watchEffect, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
-import { decodeToken } from "../composable/Auth";
+import authApi, { decodeToken } from "../composable/Auth";
 import { jwtDecode } from "jwt-decode";
 import { useUserStore } from "../stores/userStore";
 
@@ -13,11 +13,13 @@ const userData = ref("");
 const showLogout = ref(false);
 const protectedRoutes = ["/port", "/history"];
 
-const logout = () => {
+const logout = async() => {
   localStorage.removeItem("token");
   token.value = "";
   userData.value = "";
   showLogout.value = false;
+
+  await authApi.logout();
 
   if (protectedRoutes.includes(route.path)) {
     router.push("/login");

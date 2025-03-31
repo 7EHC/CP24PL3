@@ -841,6 +841,16 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.post('/logout', (req, res) => {
+  res.clearCookie('refreshToken', { 
+      httpOnly: true,   
+      secure: true,     
+      sameSite: 'Strict',    
+      path: '/' 
+  });
+  res.send({ message: "Logged out successfully" });
+});
+
 router.post("/refresh-token", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
   // console.log(refreshToken);
