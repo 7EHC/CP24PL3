@@ -9,7 +9,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import nodemailer from "nodemailer";
 
 const API_ROOT = process.env.VITE_ROOT_API;
-const RESET_API_ROOT = import.meta.env.VITE_ROOT_FRONT_API;
+const RESET_API_ROOT = process.env.VITE_ROOT_FRONT_API;
 
 const router = express.Router();
 const ticker = db.collection("stock_ticker");
