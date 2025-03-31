@@ -30,17 +30,23 @@ cron.schedule("0 0 1 * *", async () => {
         for (const user of users) {
             const userId = user._id.toString();
             const email = user.email;
-
+        
+            // ตรวจสอบว่า email มีค่าหรือไม่
+            if (!email) {
+                console.error(`User with ID ${userId} has no email address`);
+                continue; // ข้ามผู้ใช้ที่ไม่มีอีเมล
+            }
+        
             console.log(`Generating report for user: ${userId} (${email})`);
-
+        
             // เรียก API เพื่อดึงไฟล์ Excel
             const response = await fetch(`${API_ROOT}/report/exportTransactions/${userId}?month=${previousMonthNumber}&year=${previousYear}`);
             if (!response.ok) throw new Error(`Failed to fetch report for ${userId}`);
-
+        
             // ใช้ arrayBuffer() แทน buffer()
             const arrayBuffer = await response.arrayBuffer();
             const excelBuffer = Buffer.from(arrayBuffer);
-
+        
             // ตั้งค่า Nodemailer
             let transporter = nodemailer.createTransport({
                 service: "gmail",
@@ -49,12 +55,10 @@ cron.schedule("0 0 1 * *", async () => {
                     pass: process.env.EMAIL_PASS,
                 },
             });
-
+        
             // หาค่าเดือนก่อนหน้า
-            const now = new Date();
-            const previousMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1));
             const startOfMonth = new Date(Date.UTC(previousMonth.getFullYear(), previousMonth.getMonth(), 1));
-            
+        
             // ตั้งค่าอีเมล
             let mailOptions = {
                 from: "sit.invest.pl3@gmail.com",
@@ -68,7 +72,7 @@ cron.schedule("0 0 1 * *", async () => {
                     }
                 ]
             };
-
+        
             // ส่งอีเมล
             await transporter.sendMail(mailOptions);
             console.log(`Email sent to ${email}`);
