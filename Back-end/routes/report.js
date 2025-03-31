@@ -67,7 +67,7 @@ cron.schedule("0 0 1 * *", async () => {
                 text: "Attached is your monthly transaction report.",
                 attachments: [
                     {
-                        filename: `Transaction_Report_${startOfMonth.toLocaleString('default', { month: 'long' })}.xlsx`,
+                        filename: `Transaction_Report_${startOfMonth.toLocaleString('en-US', { month: 'long' })}.xlsx`,
                         content: excelBuffer
                     }
                 ]
@@ -132,7 +132,7 @@ router.get("/exportTransactions/:userId", async (req, res) => {
 
         // สร้างไฟล์ Excel
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet(`Transactions ${startOfMonth.toLocaleString('default', { month: 'long' })}`); // ชื่อชีทจะเป็นชื่อเดือน
+        const worksheet = workbook.addWorksheet(`Transactions ${startOfMonth.toLocaleString('en-US', { month: 'long' })}`); // ชื่อชีทจะเป็นชื่อเดือน
 
         // หัวตาราง
         worksheet.columns = [
@@ -299,9 +299,9 @@ router.get("/exportTransactions/:userId", async (req, res) => {
 
         // กำหนดชื่อไฟล์
         const fileName = (year && month)
-    ? `Transaction_Report_${year}_${new Date(`${year}-${month}-01`).toLocaleString('default', { month: 'long' })}.xlsx`
+    ? `Transaction_Report_${year}_${new Date(`${year}-${month}-01`).toLocaleString('en-US', { month: 'long' })}.xlsx`
     : (year || month)
-    ? `Transaction_Report_${year || new Date().getFullYear()}_${new Date(`${year || new Date().getFullYear()}-${month || new Date().getMonth() + 1}-01`).toLocaleString('default', { month: 'long' })}.xlsx`
+    ? `Transaction_Report_${year || new Date().getFullYear()}_${new Date(`${year || new Date().getFullYear()}-${month || new Date().getMonth() + 1}-01`).toLocaleString('en-US', { month: 'long' })}.xlsx`
     : `Transaction_Report_All.xlsx`;
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
