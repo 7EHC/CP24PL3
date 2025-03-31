@@ -40,7 +40,7 @@ router.post("/register",registerRateLimiter, async (req, res) => {
 
     // ✅ 1) Validate Format ก่อน
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!_@#$%^&*]{8,15}$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!_@#$%^&*])[A-Za-z\d!_@#$%^&*]{8,15}$/;
 
     if (!emailRegex.test(email)) {
       errors.email = "Invalid email format.";
