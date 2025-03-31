@@ -9,7 +9,7 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 import nodemailer from "nodemailer";
 import ExcelJS from "exceljs";
 
-const API_ROOT = process.env.VITE_ROOT_API;
+const REPORT_API_ROOT = process.env.VITE_ROOT_REPORT_API;
 
 const router = express.Router();
 const transaction = db.collection("transaction");
@@ -34,7 +34,7 @@ cron.schedule("0 0 1 * *", async () => {
             console.log(`Generating report for user: ${userId} (${email})`);
 
             // เรียก API เพื่อดึงไฟล์ Excel
-            const response = await fetch(`http://localhost:5000/test/exportTransactions/${userId}?month=${previousMonthNumber}&year=${previousYear}`);
+            const response = await fetch(`${REPORT_API_ROOT}/exportTransactions/${userId}?month=${previousMonthNumber}&year=${previousYear}`);
             if (!response.ok) throw new Error(`Failed to fetch report for ${userId}`);
 
             // ใช้ arrayBuffer() แทน buffer()

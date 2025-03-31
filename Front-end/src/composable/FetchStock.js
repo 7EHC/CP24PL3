@@ -1,5 +1,6 @@
 import authApi from "./Auth";
 const API_ROOT = import.meta.env.VITE_ROOT_API;
+const REPORT_API_ROOT = import.meta.env.VITE_ROOT_REPORT_API;
 
 class StockApi {
   async searchTicker(tick) {
@@ -232,7 +233,7 @@ class StockApi {
   async exportExcel(userId, year, month) {
     try {
       const res = await fetch(
-        `http://localhost:5000/test/exportTransactions/${userId}?year=${year}&month=${month}`
+        `${REPORT_API_ROOT}/exportTransactions/${userId}?year=${year}&month=${month}`
       );
 
       if (!res.ok) {
