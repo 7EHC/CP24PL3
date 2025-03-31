@@ -19,7 +19,7 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "https://capstone24.sit.kmutt.ac.th/pl3",
+  "https://capstone24.sit.kmutt.ac.th",
 ];
 
 app.use(
