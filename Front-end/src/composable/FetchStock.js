@@ -234,21 +234,27 @@ class StockApi {
       const res = await fetch(
         `${API_ROOT}/report/exportTransactions/${userId}?year=${year}&month=${month}`
       );
-
+  
       if (!res.ok) {
         console.error(`ERROR: Server responded with status ${res.status}`);
         return;
       }
-
-      // รับข้อมูลเป็น Blob (รองรับไฟล์ทุกประเภท รวมถึง application/octet-stream)
+  
+      const contentType = res.headers.get("Content-Type");
+      if (!contentType.includes("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
+        const errorText = await res.text();
+        console.error("Expected Excel file, but got:", contentType);
+        console.error("Response content:", errorText.slice(0, 300));
+        return;
+      }
+  
       const blob = await res.blob();
-
-      // Debug: ตรวจสอบ MIME Type ว่าเป็น application/octet-stream หรือไม่
-      // console.log("MIME Type from response:", blob.type);
-
-      // แปลง Blob เป็น URL และดาวน์โหลดไฟล์
+      console.log("Blob size:", blob.size);
+  
+      const fallbackYear = year || new Date().getFullYear();
+      const fallbackMonth = month || new Date().getMonth() + 1;
       const fileUrl = URL.createObjectURL(blob);
-      this.downloadFile(fileUrl, `Transaction_Report_${year}_${month}.xlsx`);
+      this.downloadFile(fileUrl, `Transaction_Report_${fallbackYear}_${fallbackMonth}.xlsx`);
     } catch (error) {
       console.error(`ERROR cannot read data: ${error}`);
     }
