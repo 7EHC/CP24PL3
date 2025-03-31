@@ -11,7 +11,7 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import registerRateLimiter from "../middlewares/rateLimit.js";
 
-const VERIFY_API_ROOT = import.meta.env.VITE_ROOT_FRONT_API;
+const VERIFY_API_ROOT = process.env.VITE_ROOT_FRONT_API;
 const secret_key = process.env.JWT_SECRET_KEY;
 
 const router = express.Router();
