@@ -25,6 +25,8 @@ const handleLogin = async () => {
 };
 
 const login = async () => {
+  // console.log(username.value, password.value, isRememberMe.value);
+  
   username.value = username.value.trim();
   password.value = password.value.trim();
   failedMsg.value = "";
@@ -33,12 +35,14 @@ const login = async () => {
     try {
       const res = await fetch(`${API_ROOT}/api/login`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username: username.value.toLowerCase(),
           password: password.value,
+          rememberMe: isRememberMe.value,
         }),
       });
 

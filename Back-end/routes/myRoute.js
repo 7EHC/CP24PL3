@@ -58,7 +58,7 @@ cron.schedule("*/1 * * * *", async () => {
   console.log(`🔄 Checking pending transactions... at ${now}`);
 
   const pendingTrans = await transaction.find({ status: "pending" }).toArray();
-  console.log(pendingTrans);
+  // console.log(pendingTrans);
 
   for (const trans of pendingTrans) {
     // console.log("pending transaction checked");
@@ -144,7 +144,9 @@ cron.schedule("*/1 * * * *", async () => {
         );
 
         const apiUrl =
-          action === "buy" ? `${API_ROOT}/api/buyStock` : `${API_ROOT}/api/sellStock`;
+          action === "buy"
+            ? `${API_ROOT}/api/buyStock`
+            : `${API_ROOT}/api/sellStock`;
         await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

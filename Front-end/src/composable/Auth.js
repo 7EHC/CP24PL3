@@ -3,7 +3,7 @@ const API_ROOT = import.meta.env.VITE_ROOT_API;
 class Auth {
   async register(username, password) {
     try {
-      const res = await fetch(`${API_ROOT}verify/register`, {
+      const res = await fetch(`${API_ROOT}/verify/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
