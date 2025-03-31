@@ -144,7 +144,7 @@ cron.schedule("*/1 * * * *", async () => {
         );
 
         const apiUrl =
-          action === "buy" ? `${API_ROOT}/buyStock` : `${API_ROOT}/sellStock`;
+          action === "buy" ? `${API_ROOT}/api/buyStock` : `${API_ROOT}/api/sellStock`;
         await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -735,7 +735,7 @@ router.put("/updateTransaction/:id", authMiddleware, async (req, res) => {
 
 const buyStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
   try {
-    await fetch(`${API_ROOT}/buyStock`, {
+    await fetch(`${API_ROOT}/api/buyStock`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ _id, symbol, quantity, current_mkt_price }),
@@ -747,7 +747,7 @@ const buyStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
 
 const sellStockHandler = async (_id, symbol, quantity, current_mkt_price) => {
   try {
-    await fetch(`${API_ROOT}/sellStock`, {
+    await fetch(`${API_ROOT}/api/sellStock`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ _id, symbol, quantity, current_mkt_price }),

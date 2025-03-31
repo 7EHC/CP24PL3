@@ -54,7 +54,7 @@ const register = async () => {
     isLoading.value = true
     try {
       // const res = await fetch(`${API_ROOT}/register`, {
-      const res = await fetch(`http://localhost:5000/verify/register`, {
+      const res = await fetch(`${API_ROOT}/verify/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

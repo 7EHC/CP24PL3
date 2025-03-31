@@ -31,7 +31,7 @@ const login = async () => {
   isLoading.value = true;
   if (username.value.length !== 0 && password.value.length !== 0) {
     try {
-      const res = await fetch(`${API_ROOT}/login`, {
+      const res = await fetch(`${API_ROOT}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

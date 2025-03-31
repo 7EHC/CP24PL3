@@ -1,11 +1,10 @@
 import authApi from "./Auth";
 const API_ROOT = import.meta.env.VITE_ROOT_API;
-const REPORT_API_ROOT = import.meta.env.VITE_ROOT_REPORT_API;
 
 class StockApi {
   async searchTicker(tick) {
     try {
-      const res = await fetch(`${API_ROOT}/searchTickers/${tick}`);
+      const res = await fetch(`${API_ROOT}/api/searchTickers/${tick}`);
       if (res.ok) {
         const ticker = await res.json();
         return ticker;
@@ -24,7 +23,7 @@ class StockApi {
 
   async getTickerInfo(tick) {
     try {
-      const res = await fetch(`${API_ROOT}/getTicker/${tick}`);
+      const res = await fetch(`${API_ROOT}/api/getTicker/${tick}`);
       if (res.ok) {
         const ticker = await res.json();
         return ticker;
@@ -45,7 +44,7 @@ class StockApi {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`${API_ROOT}/portfolios`, {
+      const res = await fetch(`${API_ROOT}/api/portfolios`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +70,7 @@ class StockApi {
   async getPortDetails(id) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/portfolios/portDetails/${id}`, {
+      const res = await fetch(`${API_ROOT}/api/portfolios/portDetails/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +96,7 @@ class StockApi {
   async buyStock(assetObj) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/buyStock`, {
+      const res = await fetch(`${API_ROOT}/api/buyStock`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +123,7 @@ class StockApi {
   async sellStock(assetObj) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/sellStock`, {
+      const res = await fetch(`${API_ROOT}/api/sellStock`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -151,7 +150,7 @@ class StockApi {
   async getAllTransaction(filter) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/getAllTransaction?${filter}`, {
+      const res = await fetch(`${API_ROOT}/api/getAllTransaction?${filter}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -178,7 +177,7 @@ class StockApi {
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(
-        `${API_ROOT}/updateTransaction/${id}?status=${status}`,
+        `${API_ROOT}/api/updateTransaction/${id}?status=${status}`,
         {
           method: "PUT",
           headers: {
@@ -206,7 +205,7 @@ class StockApi {
   async createTransaction(transactionObj) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/createTransaction`, {
+      const res = await fetch(`${API_ROOT}/api/createTransaction`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -233,7 +232,7 @@ class StockApi {
   async exportExcel(userId, year, month) {
     try {
       const res = await fetch(
-        `${REPORT_API_ROOT}/exportTransactions/${userId}?year=${year}&month=${month}`
+        `${API_ROOT}/report/exportTransactions/${userId}?year=${year}&month=${month}`
       );
 
       if (!res.ok) {
@@ -270,7 +269,7 @@ class StockApi {
   async getUserDetails(userId) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/userDetails/${userId}`, {
+      const res = await fetch(`${API_ROOT}/api/userDetails/${userId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -296,7 +295,7 @@ class StockApi {
   async deletePortfolio(portId) {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/portfolios/delete/${portId}`, {
+      const res = await fetch(`${API_ROOT}/api/portfolios/delete/${portId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -326,7 +325,7 @@ class StockApi {
 
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${API_ROOT}/portfolios/update/${portId}`, {
+      const res = await fetch(`${API_ROOT}/api/portfolios/update/${portId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
