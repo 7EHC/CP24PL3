@@ -40,7 +40,7 @@ const resetPassword = async () => {
       return;
     }
 
-    const response = await fetch(`${API_ROOT}/reset-password`, {
+    const response = await fetch(`${API_ROOT}/api/reset-password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

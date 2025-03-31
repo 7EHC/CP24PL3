@@ -3,7 +3,7 @@ const API_ROOT = import.meta.env.VITE_ROOT_API;
 class Auth {
   async register(username, password) {
     try {
-      const res = await fetch(`${API_ROOT}/register`, {
+      const res = await fetch(`${API_ROOT}verify/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,7 +26,7 @@ class Auth {
 
   async verify(token) {
     try {
-      const res = await fetch(`http://localhost:5000/verify/verify-email?token=${token}`, {
+      const res = await fetch(`${API_ROOT}/verify/verify-email?token=${token}`, {
         method: "GET", // Change to GET
         headers: {
           "Content-Type": "application/json", // You can still keep the headers, though they are not required for GET requests
@@ -48,7 +48,7 @@ class Auth {
 
   async login(username, password) {
     try {
-      const res = await fetch(`${API_ROOT}/login`, {
+      const res = await fetch(`${API_ROOT}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +70,7 @@ class Auth {
 
   async refreshToken() {
     try {
-      const res = await fetch(`${API_ROOT}/refresh-token`, {
+      const res = await fetch(`${API_ROOT}/api/refresh-token`, {
         method: "POST",
         credentials: "include",
       });

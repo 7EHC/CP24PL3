@@ -84,7 +84,7 @@ const confirmRename = async () => {
 
 const createPortPOST = async (portfolioObj) => {
   try {
-    const res = await fetch(`${API_ROOT}/portfolios/create`, {
+    const res = await fetch(`${API_ROOT}/api/portfolios/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

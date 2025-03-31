@@ -13,7 +13,7 @@ const sendResetLink = async () => {
   successMessage.value = "";
 
   try {
-    const res = await fetch(`${API_ROOT}/forgot-password`, {
+    const res = await fetch(`${API_ROOT}/api/forgot-password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
