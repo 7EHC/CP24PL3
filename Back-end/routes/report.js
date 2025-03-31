@@ -316,8 +316,13 @@ router.get("/exportTransactions/:userId", async (req, res) => {
     const buffer = await workbook.xlsx.writeBuffer();
 
     // ตั้ง header แล้วส่งไฟล์เป็น buffer
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="${safeFileName}"`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Transfer-Encoding", "binary");
+    res.setHeader("Cache-Control", "must-revalidate");
+    res.setHeader("Pragma", "public");
+    res.setHeader("Expires", "0");
+    console.log("Buffer size:", buffer.length);
     res.send(buffer);
     } catch (error) {
         console.error("Error exporting Excel:", error);
