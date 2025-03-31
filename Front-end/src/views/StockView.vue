@@ -550,9 +550,8 @@ const createNewChart = async (days, tic) => {
   // Determine the fromDate based on the selected days using a switch statement
   switch (days) {
     case 1: // 1 Day
-      // isMarketOpen();
-      getMarketStatus();
-      console.log(dayToShowGraph.value);
+      await getMarketStatus();
+      // console.log(dayToShowGraph.value);
 
       fromDate = getPreviousDate(toDate, dayToShowGraph.value);
       timeFrame = "hour";
@@ -593,7 +592,7 @@ const createNewChart = async (days, tic) => {
   }
 
   let results;
-  console.log(marketOpen.value);
+  // console.log(marketOpen.value);
 
   if (days !== 1) {
     // Fetch the stock data
