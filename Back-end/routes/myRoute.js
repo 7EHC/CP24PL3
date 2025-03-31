@@ -825,7 +825,7 @@ router.post("/login", async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false, // true เฉพาะ https ถ้าจะทดสอบบน Localhost ต้องเป็น false
+      secure: true, // true เฉพาะ https ถ้าจะทดสอบบน Localhost ต้องเป็น false
       sameSite: "Strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
