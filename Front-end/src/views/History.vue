@@ -53,7 +53,9 @@ const cancelTransaction = async (status) => {
 
     console.log("Transaction Update Result:", result);
     closeCancelModal();
-    allTrans.value = await stockApi.getAllTransaction();
+    const result2 = await stockApi.getAllTransaction();
+    allTrans.value = Array.isArray(result2) ? result2 : [];
+
 
     // ตั้งเวลา 3 วินาที (3000 มิลลิวินาที) แล้วเปลี่ยนเป็น "default"
     setTimeout(() => {
@@ -111,8 +113,13 @@ const clearFilter = () => {
 
 // คอยดึงข้อมูลเมื่อ allTrans เปลี่ยน
 watch(allTrans, (newTrans) => {
-  newTrans.forEach((trans) => getName(trans.portId));
+  if (Array.isArray(newTrans)) {
+    newTrans.forEach((trans) => getName(trans.portId));
+  } else {
+    console.warn("Watcher: allTrans is not array", newTrans);
+  }
 }, { immediate: true });
+
 
 const formatDate = (dateString) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -176,7 +183,9 @@ const applyFilter = async () => {
 
     console.log(queryString); // ตรวจสอบค่า query string ที่สร้างได้
 
-    allTrans.value = await stockApi.getAllTransaction(queryString);
+    const result = await stockApi.getAllTransaction(queryString);
+    allTrans.value = Array.isArray(result) ? result : [];
+
     if(Array.isArray(allTrans.value)){
       isHaveTrans.value = allTrans.value.length === 0;
     }else{
@@ -198,7 +207,8 @@ onMounted(async () => {
   const fetchTransactions = async () => {
     isLoading.value = true;
     try {
-        allTrans.value = await stockApi.getAllTransaction();
+        const result = await stockApi.getAllTransaction();
+        allTrans.value = Array.isArray(result) ? result : [];
         portOptions.value = await stockApi.getAllTransaction();
         isHaveTrans.value = allTrans.value.length === 0; // ถ้าไม่มี transaction ให้เป็น true
     } catch (error) {
