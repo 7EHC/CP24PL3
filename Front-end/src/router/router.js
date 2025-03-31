@@ -36,7 +36,7 @@ const router = createRouter({
       component: StockView,
     },
     {
-      path: "/verify/:token",
+      path: "/verifyUser/:token",
       name: "VerifyUser",
       component: VerifyUser,
     },
